@@ -4,7 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#151A21">
+<meta name="description" content="Calculadora de preço de venda para impressão 3D: filamento, energia, máquina, mão de obra, insumos, falhas e taxa — com catálogo de produtos, controle de compras e orçamento em PDF.">
 <title>Calculadora 3D — Preço de Venda</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icone-192.png" sizes="192x192" type="image/png">
+<link rel="apple-touch-icon" href="icone-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Calculadora 3D">
+<meta name="mobile-web-app-capable" content="yes">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -1149,7 +1157,10 @@ var fmtBRL = new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'});
 function brl(n){ return fmtBRL.format(isFinite(n)?n:0); }
 function dec(n,d){ return (isFinite(n)?n:0).toLocaleString('pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d}); }
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
-function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+var ESCMAP = {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','`':'&#96;'};
+function esc(s){ return String(s==null?'':s).replace(/[&<>"'`]/g,function(c){return ESCMAP[c];}); }
+/* cor vinda de backup importado ou da nuvem nunca entra crua num style= */
+function safeColor(c, fb){ return /^#[0-9a-fA-F]{6}$/.test(String(c||'')) ? String(c) : (fb || '#5A6672'); }
 function $(id){ return document.getElementById(id); }
 function each(list, fn){ Array.prototype.forEach.call(list, fn); }
 function qsa(root, sel){ return (root||document).querySelectorAll(sel); }
@@ -1219,7 +1230,29 @@ var last = null;
 var activeProductId = null;
 
 /* ============ IndexedDB: fotos ============ */
-var IDBP = null, PCACHE = {}, PPEND = {};
+var IDBP = null, PPEND = {};
+/* O cache guardava thumb + full (~250 KB por foto) para sempre: 50 produtos com
+   3 fotos passavam de 35 MB e travavam celular fraco. Agora é um LRU curto — o
+   que sai é relido do IndexedDB, que é rápido. */
+var PCACHE = {}, PORDER = [], PCACHE_MAX = 20;
+function pcacheTouch(id){
+  var i = PORDER.indexOf(id);
+  if(i > -1) PORDER.splice(i, 1);
+  PORDER.push(id);
+}
+function pcacheGet(id){ var v = PCACHE[id]; if(v) pcacheTouch(id); return v; }
+function pcacheSet(id, v){
+  PCACHE[id] = v; pcacheTouch(id);
+  while(PORDER.length > PCACHE_MAX){
+    var old = PORDER.shift();
+    if(old !== id) delete PCACHE[old];
+  }
+}
+function pcacheDel(id){
+  delete PCACHE[id];
+  var i = PORDER.indexOf(id);
+  if(i > -1) PORDER.splice(i, 1);
+}
 function idbInit(){
   if(IDBP) return IDBP;
   IDBP = new Promise(function(res){
@@ -1253,7 +1286,8 @@ function photoLocalDel(id){ return idbOp('readwrite', function(st){ st.delete(id
 function photoLocalKeys(){ return idbOp('readonly', function(st){ return st.getAllKeys(); }); }
 
 function photoGet(id){
-  if(PCACHE[id]) return Promise.resolve(PCACHE[id]);
+  var hit = pcacheGet(id);
+  if(hit) return Promise.resolve(hit);
   if(PPEND[id]) return PPEND[id];
   PPEND[id] = photoLocalGet(id).then(function(v){
     if(v && v.thumb) return v;
@@ -1263,7 +1297,7 @@ function photoGet(id){
     });
   }).then(function(v){
     delete PPEND[id];
-    if(v) PCACHE[id] = v;
+    if(v) pcacheSet(id, v);
     return v || null;
   }, function(){ delete PPEND[id]; return null; });
   return PPEND[id];
@@ -1271,11 +1305,36 @@ function photoGet(id){
 /* devolve uma promessa com `true` só quando o IndexedDB confirmou a gravação —
    é o que permite avisar o usuário quando o armazenamento do navegador estoura */
 function photoPut(id, v){
-  PCACHE[id] = v;
+  pcacheSet(id, v);
   cloudPhotoPut(id, v);
   return photoLocalPut(id, v).then(function(ok){ return !!ok; }, function(){ return false; });
 }
-function photoDel(id){ delete PCACHE[id]; photoLocalDel(id); cloudPhotoDel(id); }
+function photoDel(id){ pcacheDel(id); photoLocalDel(id); cloudPhotoDel(id); }
+
+/* Fotos que nenhum produto ou compra referencia mais ficavam para sempre: sobra
+   de item apagado em outro aparelho, de import, de duplicação interrompida.
+   Limpa só o IndexedDB local — a cópia na nuvem segue como rede de segurança e
+   photoGet() sabe buscá-la de volta se a referência reaparecer. */
+function photoGC(){
+  /* só roda contra um estado confiável. Com o localStorage bloqueado, S pode ser
+     apenas o padrão de fábrica e TUDO pareceria órfão; conectando ou com alguma
+     coleção ainda sem resposta da nuvem, o estado está incompleto. */
+  if(!hasLS) return Promise.resolve(0);
+  if(SYNC.status === 'connecting') return Promise.resolve(0);
+  if(online() && COLLS.some(function(c){ return !SYNC.ready[c]; })) return Promise.resolve(0);
+  var live = {};
+  ['products','buys'].forEach(function(c){
+    (S[c]||[]).forEach(function(it){ (it.photos||[]).forEach(function(id){ live[id] = 1; }); });
+  });
+  return photoLocalKeys().then(function(keys){
+    var dead = (keys ? Array.prototype.slice.call(keys) : []).filter(function(id){
+      return !live[id] && !PPEND[id];
+    });
+    if(!dead.length) return 0;
+    return Promise.all(dead.map(function(id){ pcacheDel(id); return photoLocalDel(id); }))
+      .then(function(){ return dead.length; });
+  }).catch(function(){ return 0; });
+}
 
 function hydratePhotos(root){
   each(qsa(root, 'img[data-photo]'), function(img){
@@ -1318,19 +1377,30 @@ function drawTo(img, maxDim, q){
   ctx.drawImage(img, 0, 0, cw, ch);
   return c.toDataURL('image/jpeg', q);
 }
+/* Antes varria 5 dimensões × 4 qualidades — até 20 codificações de canvas em
+   sequência, o que trava a thread principal por segundos numa foto de 12 MP.
+   Agora estima o próximo passo a partir do tamanho obtido (bytes ≈ área) e
+   devolve o controle ao navegador entre as tentativas: 3 a 6 codificações,
+   com a interface respondendo. */
+function encodeFull(img){
+  var dim = 1080, q = 0.74, tries = 0;
+  function step(){
+    var full = drawTo(img, dim, q);
+    if(full.length <= FULL_BUDGET || tries >= 4) return full;
+    tries++;
+    if(q > 0.46) q = Math.max(0.44, q - 0.14);
+    else dim = Math.max(420, Math.round(dim * Math.min(0.9, Math.sqrt(FULL_BUDGET / full.length) * 0.94)));
+    return new Promise(function(res){ setTimeout(function(){ res(step()); }, 0); });
+  }
+  return Promise.resolve(step());
+}
 function makePhoto(file){
   return loadImageFile(file).then(function(img){
-    var dims = [1080, 900, 760, 620, 500], qs = [0.74, 0.64, 0.54, 0.44];
-    var full = null, done = false;
-    for(var i = 0; i < dims.length && !done; i++){
-      for(var j = 0; j < qs.length; j++){
-        full = drawTo(img, dims[i], qs[j]);
-        if(full.length <= FULL_BUDGET){ done = true; break; }
-      }
-    }
-    var thumb = drawTo(img, 320, 0.6);
-    if(img.close) { try { img.close(); } catch(e){} }
-    return {id:uid(), thumb:thumb, full:full, at:Date.now()};
+    return encodeFull(img).then(function(full){
+      var thumb = drawTo(img, 320, 0.6);
+      if(img.close) { try { img.close(); } catch(e){} }
+      return {id:uid(), thumb:thumb, full:full, at:Date.now()};
+    });
   });
 }
 function addPhotos(files, target, msgEl, after){
@@ -1524,11 +1594,16 @@ function compute(){
   var supplies = extrasTotal(extras);
 
   var subtotal = material + energy + machine + labor + supplies;
-  var failR = Math.min(0.95, Math.max(0, num($('f-fail').value)/100));
+  var notes = [];
+  var failIn = num($('f-fail').value)/100;
+  var failR = Math.min(0.95, Math.max(0, failIn));
+  if(failIn > 0.95) notes.push('A reserva de falhas foi limitada a 95%: acima disso o custo cresce sem limite.');
   var cost = subtotal/(1 - failR);
   var reserve = cost - subtotal;
 
-  var feeR = Math.min(0.95, Math.max(0, num(st.fee)/100));
+  var feeIn = num(st.fee)/100;
+  var feeR = Math.min(0.95, Math.max(0, feeIn));
+  if(feeIn > 0.95) notes.push('A taxa sobre a venda foi limitada a 95%.');
   var mR = Math.max(0, margin/100);
   var suggested, warn = '';
 
@@ -1557,7 +1632,7 @@ function compute(){
     material:material, energy:energy, machine:machine, labor:labor, supplies:supplies,
     subtotal:subtotal, reserve:reserve, cost:cost, fee:fee, feeR:feeR,
     suggested:suggested, chosen:usedChosen ? chosen : 0, usedChosen:usedChosen,
-    price:price, profit:profit, realMargin:realMargin, realMarkup:realMarkup, warn:warn,
+    price:price, profit:profit, realMargin:realMargin, realMarkup:realMarkup, warn:warn, notes:notes,
     machineHour:machineHour(p),
     waste:waste, failR:failR, watts:num(p.watts), kwh:num(st.kwh), hourRate:num(st.hour),
     prep:num($('f-prep').value), finish:num($('f-finish').value)
@@ -1597,10 +1672,18 @@ function fxHtml(r){
 
 function roundSuggestions(v){
   if(!(v > 0)) return [];
-  var out = [], add = function(x){ if(x > 0 && out.indexOf(x) < 0) out.push(x); };
-  var a = Math.floor(v) + 0.90; if(a < v) a += 1; add(Math.round(a*100)/100);
-  add(Math.ceil(v/5)*5);
+  /* descarta candidatos praticamente iguais entre si: para R$ 100,00 não faz
+     sentido oferecer "R$ 100,00" e "R$ 100,90" lado a lado */
+  var out = [], tol = Math.max(0.5, v * 0.02);
+  var add = function(x){
+    x = Math.round(x * 100) / 100;
+    if(!(x > 0) || x < v) return;
+    for(var i = 0; i < out.length; i++){ if(Math.abs(out[i] - x) < tol) return; }
+    out.push(x);
+  };
   add(Math.ceil(v/10)*10);
+  add(Math.ceil(v/5)*5);
+  add(v <= Math.floor(v) + 0.90 ? Math.floor(v) + 0.90 : Math.floor(v) + 1.90);
   return out.sort(function(x,y){ return x-y; }).slice(0,3);
 }
 
@@ -1613,8 +1696,10 @@ function render(){
   $('r-tag').innerHTML      = r.usedChosen ? '<span class="tagset">escolhido</span>' : '';
   $('r-profit').textContent = r.price > 0 ? brl(r.profit) : '—';
 
-  $('r-alert').innerHTML = r.warn ? '<div class="alert bad">'+esc(r.warn)+'</div>'
-    : (r.price > 0 && r.profit < 0 ? '<div class="alert">Este preço não cobre o custo. Reveja a margem ou os custos.</div>' : '');
+  $('r-alert').innerHTML =
+    (r.warn ? '<div class="alert bad">'+esc(r.warn)+'</div>'
+            : (r.price > 0 && r.profit < 0 ? '<div class="alert">Este preço não cobre o custo. Reveja a margem ou os custos.</div>' : ''))+
+    r.notes.map(function(t){ return '<div class="alert">'+esc(t)+'</div>'; }).join('');
 
   var shown = BANDS.map(function(b){ return {b:b, v: Math.max(0, r[b.k]||0)}; }).filter(function(x){ return x.v > 0.0001; });
   var sum = shown.reduce(function(a,x){ return a + x.v; }, 0) || 1;
@@ -1814,13 +1899,13 @@ function renderFilaments(){
     var pg = num(f.spoolWeight) > 0 ? num(f.spoolPrice)/num(f.spoolWeight) : 0;
     var u = safeUrl(f.url);
     return '<div class="item"><div class="head" data-open="f'+i+'">'+
-      '<span class="swatch" style="background:'+esc(f.color||'#ccc')+'"></span>'+
+      '<span class="swatch" style="background:'+esc(safeColor(f.color,'#ccc'))+'"></span>'+
       '<span class="nm">'+esc(f.name||'Sem nome')+'</span>'+
       '<span class="meta">'+brl(pg)+'/g</span></div>'+
       '<div class="body" id="body-f'+i+'" hidden>'+
         pField('Apelido','','fn'+i,i,'name',f.name,false)+
         '<div class="row">'+pField('Material','','fm'+i,i,'material',f.material,false)+
-        '<div class="field"><label for="fc'+i+'">Cor</label><input id="fc'+i+'" type="color" value="'+esc(f.color||'#FF6B2C')+'" data-list="'+i+'" data-key="color" style="padding:4px"></div></div>'+
+        '<div class="field"><label for="fc'+i+'">Cor</label><input id="fc'+i+'" type="color" value="'+esc(safeColor(f.color,'#FF6B2C'))+'" data-list="'+i+'" data-key="color" style="padding:4px"></div></div>'+
         '<div class="row">'+pField('Preço do rolo','R$','fp'+i,i,'spoolPrice',f.spoolPrice,true)+
         pField('Peso do rolo','g','fw'+i,i,'spoolWeight',f.spoolWeight,true)+'</div>'+
         pField('Marca / loja','','fb'+i,i,'brand',f.brand||'',false)+
@@ -1909,7 +1994,7 @@ function renderCats(){
   el.innerHTML = S.categories.map(function(c,i){
     return '<div class="extra">'+
       '<input type="text" value="'+esc(c.name)+'" placeholder="Nome da categoria" data-cat="'+i+'" data-ck="name">'+
-      '<input type="color" value="'+esc(c.color||'#FF6B2C')+'" data-cat="'+i+'" data-ck="color" style="flex:none;width:52px;padding:4px">'+
+      '<input type="color" value="'+esc(safeColor(c.color,'#FF6B2C'))+'" data-cat="'+i+'" data-ck="color" style="flex:none;width:52px;padding:4px">'+
       '<button type="button" data-catdel="'+i+'" aria-label="Remover">×</button></div>';
   }).join('') || '<div class="empty" style="padding:16px">Nenhuma categoria ainda.</div>';
   each(qsa(el,'[data-cat]'), function(inp){
@@ -1965,7 +2050,7 @@ function renderCatFilter(){
   var html = '<button type="button" data-cf="all" aria-pressed="'+(catFilter==='all')+'">Todos <span class="n">'+counts.all+'</span></button>';
   html += S.categories.map(function(c){
     return '<button type="button" data-cf="'+esc(c.id)+'" aria-pressed="'+(catFilter===c.id)+'">'+
-      '<span class="cdot" style="background:'+esc(c.color||'#ccc')+'"></span>'+esc(c.name)+' <span class="n">'+(counts[c.id]||0)+'</span></button>';
+      '<span class="cdot" style="background:'+esc(safeColor(c.color,'#ccc'))+'"></span>'+esc(c.name)+' <span class="n">'+(counts[c.id]||0)+'</span></button>';
   }).join('');
   if(counts.none) html += '<button type="button" data-cf="none" aria-pressed="'+(catFilter==='none')+'">Sem categoria <span class="n">'+counts.none+'</span></button>';
   $('cat-filter').innerHTML = html;
@@ -2005,7 +2090,7 @@ function renderProducts(){
       '<span class="pbody">'+
         '<span class="nm">'+esc(p.name||'Sem nome')+'</span>'+
         '<span class="pr">'+(price > 0 ? brl(price) : '—')+'</span>'+
-        '<span class="cat">'+(c ? '<span class="cdot" style="background:'+esc(c.color||'#ccc')+';width:8px;height:8px;border-radius:50%;display:inline-block;flex:none"></span><span class="t">'+esc(c.name)+'</span>' : '<span class="t" style="color:var(--ink3)">sem categoria</span>')+'</span>'+
+        '<span class="cat">'+(c ? '<span class="cdot" style="background:'+esc(safeColor(c.color,'#ccc'))+';width:8px;height:8px;border-radius:50%;display:inline-block;flex:none"></span><span class="t">'+esc(c.name)+'</span>' : '<span class="t" style="color:var(--ink3)">sem categoria</span>')+'</span>'+
       '</span></button>';
   }).join('');
   $('product-empty').innerHTML = list.length ? '' :
@@ -2130,8 +2215,9 @@ function sortedBuys(){
     return d !== 0 ? d : (num(b.createdAt) - num(a.createdAt));
   });
 }
+function buyKind(b){ return KINDS[b && b.kind] ? b.kind : 'outro'; }
 function matchBuy(b){
-  if(buyFilter !== 'all' && (b.kind||'outro') !== buyFilter) return false;
+  if(buyFilter !== 'all' && buyKind(b) !== buyFilter) return false;
   if(buyQuery){
     var hay = ((b.desc||'')+' '+(b.supplier||'')+' '+(b.invoice||'')+' '+(b.note||'')+' '+(KINDS[b.kind]||'')).toLowerCase();
     if(hay.indexOf(buyQuery) < 0) return false;
@@ -2140,7 +2226,7 @@ function matchBuy(b){
 }
 function renderBuyFilter(){
   var counts = {all:S.buys.length};
-  S.buys.forEach(function(b){ var k = b.kind||'outro'; counts[k] = (counts[k]||0)+1; });
+  S.buys.forEach(function(b){ var k = buyKind(b); counts[k] = (counts[k]||0)+1; });
   var html = '<button type="button" data-bf="all" aria-pressed="'+(buyFilter==='all')+'">Todas <span class="n">'+counts.all+'</span></button>';
   html += Object.keys(KINDS).map(function(k){
     if(!counts[k]) return '';
@@ -2305,10 +2391,22 @@ function flushPending(){
   if(pendingRender.categories){ pendingRender.categories = false; renderCats(); }
 }
 
-function persist(){
+/* persist() era chamado a cada tecla e serializava o banco inteiro toda vez.
+   Agora agrupa a rajada numa gravação só; nada fica pendente mais que 250 ms e
+   o flush em pagehide/visibilitychange garante que nada se perde ao fechar. */
+var persistT = null;
+function persistNow(){
+  if(persistT){ clearTimeout(persistT); persistT = null; }
   save('calc3d', JSON.stringify(S));
   syncPush();
 }
+function flushPersist(){ if(persistT) persistNow(); }
+function persist(){
+  if(persistT) return;
+  persistT = setTimeout(function(){ persistT = null; persistNow(); }, 250);
+}
+window.addEventListener('pagehide', flushPersist);
+document.addEventListener('visibilitychange', function(){ if(document.hidden) flushPersist(); });
 function refreshShadow(){
   COLLS.forEach(function(c){
     var m = {};
@@ -2537,6 +2635,7 @@ function attach(){
 }
 function keepLocalBackup(){
   if(load('calc3d_backup_local')) return;
+  flushPersist();   /* o backup precisa incluir o que ainda estava na fila */
   save('calc3d_backup_local', load('calc3d') || '');
   /* força o painel a redesenhar para mostrar o aviso de dados locais guardados */
   var b = $('sync-body'); if(b) b.removeAttribute('data-st');
@@ -2621,7 +2720,12 @@ function syncBody(){
       '<div class="btnrow" style="margin-top:12px"><button type="button" class="btn" id="sy-upload">Enviar dados deste aparelho</button>'+
       '<button type="button" class="btn" id="sy-out">Sair da conta</button></div>'+
       '<div id="sy-msg"></div>'+
-      (load('calc3d_backup_local') ? '<p class="note">Havia dados só neste aparelho quando você conectou. Eles ficaram guardados — toque em <b>Enviar dados deste aparelho</b> se quiser juntá-los à nuvem.</p>' : '');
+      (load('calc3d_backup_local')
+        ? '<p class="note">Havia dados só neste aparelho quando você conectou, e a nuvem tinha outros. Os locais ficaram guardados aqui.</p>'+
+          '<div class="btnrow"><button type="button" class="btn" id="sy-bkp-get">Baixar os dados locais guardados</button>'+
+          '<button type="button" class="btn ghost" id="sy-bkp-del">Descartar</button></div>'+
+          '<p class="note">O arquivo baixado volta pelo <b>Importar</b>, lá embaixo em Backup.</p>'
+        : '');
   }
   return '';
 }
@@ -2677,6 +2781,17 @@ function wireSyncBody(){
     if(!confirm('Sair da conta? Os dados continuam salvos neste aparelho e na nuvem.')) return;
     SYNC.U.signOut(SYNC.auth);
   });
+  if((el = $('sy-bkp-get'))) el.addEventListener('click', function(){
+    var raw = load('calc3d_backup_local');
+    if(!raw){ return; }
+    downloadBlob(raw, 'application/json', 'calculadora-3d-dados-locais.json');
+  });
+  if((el = $('sy-bkp-del'))) el.addEventListener('click', function(){
+    if(!confirm('Descartar a cópia dos dados que estavam só neste aparelho? Isso não pode ser desfeito.')) return;
+    save('calc3d_backup_local', '');
+    var b = $('sync-body'); if(b) b.removeAttribute('data-st');
+    updateSyncUI();
+  });
   if((el = $('sy-upload'))) el.addEventListener('click', function(){
     if(!confirm('Enviar impressoras, filamentos, categorias, produtos, compras, fotos e orçamentos deste aparelho para a nuvem?\nItens com o mesmo nome/identificador na nuvem serão sobrescritos por estes.')) return;
     var m = $('sy-msg'); m.innerHTML = '<p class="note"><span class="spin"></span> Enviando…</p>';
@@ -2706,6 +2821,14 @@ function buildPrint(){
       '<tbody><tr><td>'+esc(piece)+'</td><td class="r">'+r.qty+'</td><td class="r">'+brl(r.price)+'</td><td class="r">'+brl(r.price*r.qty)+'</td></tr></tbody></table>'+
       '<div class="tot"><span>Total</span><span>'+brl(r.price*r.qty)+'</span></div>'+
       '<div class="note">Válido até '+vd+'.<br>Impressão em '+esc(curFilament().material||'filamento')+'. Prazo de produção estimado: '+dec(Math.ceil(r.h*r.qty),0)+' h de máquina.<br>Valores sujeitos a alteração em caso de mudança no projeto.</div>';
+    /* sem esperar a decodificação, a foto podia sair em branco no PDF */
+    var im = $('print').querySelector('img');
+    if(!im) return null;
+    if(im.decode) return im.decode().catch(function(){});
+    return new Promise(function(res){
+      im.onload = im.onerror = res;
+      setTimeout(res, 1000);
+    });
   });
 }
 
@@ -2956,18 +3079,24 @@ function downloadBlob(text, type, name){
 }
 
 var SMAP = {'s-kwh':'kwh','s-hour':'hour','s-waste':'waste','s-fail':'fail','s-fee':'fee','s-biz':'biz','s-contact':'contact','s-valid':'valid'};
+var STXT = {biz:1, contact:1};
+/* 0.75 aparecia com ponto num app que pede vírgula em todo o resto */
+function settingStr(k){
+  var v = S.settings[k];
+  return STXT[k] ? (v || '') : String(num(v)).replace('.', ',');
+}
 function refreshSettingsInputs(){
   Object.keys(SMAP).forEach(function(id){
     var el = $(id);
-    if(el && document.activeElement !== el) el.value = S.settings[SMAP[id]];
+    if(el && document.activeElement !== el) el.value = settingStr(SMAP[id]);
   });
 }
 function bindSettings(){
   Object.keys(SMAP).forEach(function(id){
     var k = SMAP[id];
-    $(id).value = S.settings[k];
+    $(id).value = settingStr(k);
     $(id).addEventListener('input', function(){
-      S.settings[k] = (k==='biz'||k==='contact') ? this.value : num(this.value);
+      S.settings[k] = STXT[k] ? this.value : num(this.value);
       persist();
       if(k==='waste') $('f-waste').value = S.settings.waste;
       if(k==='fail')  $('f-fail').value  = S.settings.fail;
@@ -3022,6 +3151,7 @@ function bindSettings(){
       });
       persist();
       boot(true);
+      setTimeout(function(){ photoGC(); }, 1500);
       alert('Dados importados.');
     };
     fr.readAsText(file);
@@ -3100,6 +3230,14 @@ else if(mqWide.addListener) mqWide.addListener(placeStrip);
 
 document.addEventListener('focusout', function(){ setTimeout(flushPending, 60); });
 
+/* App instalável e utilizável sem rede. O service worker só entra em https —
+   em file:// o registro estoura e não há o que cachear. */
+if('serviceWorker' in navigator && window.isSecureContext){
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('sw.js').catch(function(){});
+  });
+}
+
 buildNav();
 placeStrip();
 bindHelp();
@@ -3113,6 +3251,8 @@ refreshShadow();
 boot(false);
 go('calc');
 startSync();
+/* fora do caminho crítico: só depois que a tela está de pé e a nuvem respondeu */
+setTimeout(function(){ photoGC(); }, 8000);
 })();
 </script>
 </body>
