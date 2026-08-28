@@ -272,3 +272,84 @@ Resina, leitura de `.gcode` e custo fixo mensal ficam para depois.
 ## Fontes consultadas
 
 Precifi3D, CalculaSTL, Tamo Tudo 3D, CaniveteMEI, PrintCal, National 3D, Galpão das Máquinas, Snapmaker, Firgelli, PrintNexus, 3DPCC, 3D Costify, Ecommerce na Prática, Anymarket, Irroba, Calcularte, YAV.
+
+---
+
+# Adendo — v2 (agosto/2026)
+
+A v1 era um app de cálculo. A v2 vira um app de **controle**: o preço que você
+escolheu fica salvo, o produto tem foto e categoria, e tudo aparece igual nos
+2 ou 3 aparelhos que você usa.
+
+## 11. O que entrou
+
+### 11.1 Sincronização na nuvem (Firebase)
+Estava em "fora do escopo" na v1 pelo motivo certo: nuvem antes de a conta
+estar correta é distração. Com a conta pronta, ela virou a peça que faltava —
+não adianta cadastrar produto no celular e não achar no computador.
+
+- **Firebase Auth (e‑mail/senha)** + **Firestore**, carregados por CDN só
+  quando você configura. Sem configuração, o app não faz nenhuma requisição e
+  segue 100% local, como antes.
+- Todos os aparelhos entram com o **mesmo e‑mail e senha** — é o login que
+  amarra os dados.
+- Sincronização em tempo real por `onSnapshot`, um documento por item. Duas
+  pessoas editando coisas diferentes não se atropelam.
+- Cache offline do Firestore ligado: sem internet o app continua funcionando e
+  envia sozinho quando a conexão volta.
+- Passo a passo e regras de segurança no arquivo `FIREBASE.md`.
+
+### 11.2 Preço escolhido
+O app sugeria um preço e você perdia esse número ao fechar a tela. Agora:
+
+- Campo **"Preço que eu vou cobrar"**, com atalhos de arredondamento
+  (R$ 48,90 / R$ 50) calculados a partir do sugerido.
+- A conferência recalcula lucro e margem **reais** com o seu preço, e mostra
+  quanto você está cobrando a mais ou a menos que o sugerido.
+- O preço escolhido fica salvo no produto e no orçamento.
+
+### 11.3 Catálogo de produtos
+- Cadastro com **até 3 fotos** por produto (câmera ou galeria), comprimidas no
+  próprio navegador para caber na nuvem e no aparelho.
+- **Categorias** editáveis (nome + cor), com filtro por categoria e busca.
+- **Link do modelo / STL** (MakerWorld, Printables, Thingiverse, Cults…) —
+  para reimprimir sem caçar o arquivo e para conferir a licença.
+- Guarda os parâmetros do cálculo: gramas, horas, impressora, filamento,
+  margem, desperdício, falhas, mão de obra e insumos. Um toque em **Abrir na
+  calculadora** e o produto volta exatamente como estava.
+
+### 11.4 Compras e notas fiscais
+- Registro de compra com data, valor, tipo, loja, **nº da nota/pedido**, link
+  do pedido e **foto do comprovante**.
+- Total do mês e total do filtro no topo, busca e exportação em **CSV** para
+  fechar o mês na planilha.
+- Atalho **"Registrar compra deste rolo"** dentro do cadastro de filamento.
+
+### 11.5 Link de compra do filamento
+Cadastro de filamento ganhou **marca/loja** e **link de compra** — quando o
+rolo acabar, é um toque para recomprar o mesmo e conferir se o preço mudou.
+
+### 11.6 Explicações no lugar onde a dúvida aparece
+Botão `?` ao lado dos campos que confundem — margem × markup, desperdício,
+reserva de falhas, preparo × acabamento, tarifa de kWh, custo/hora da máquina,
+1 peça × mesa toda. Passe o mouse no computador, toque no celular.
+
+## 12. Estrutura do app na v2
+
+Seis abas: **Calcular · Produtos · Compras · Salvos · Cadastros · Ajustes**.
+Impressoras e filamentos ficam juntos em *Cadastros*; a sincronização mora em
+*Ajustes*.
+
+## 13. Técnica
+
+- Continua **um único `index.html`**, vanilla JS, sem build.
+- Fotos em **IndexedDB** no aparelho (o `localStorage` não aguentaria) e num
+  documento por foto no Firestore. `localStorage` segue guardando o resto.
+- Firebase carregado por `import()` dinâmico, com fallback de versão. Se o
+  navegador não suportar módulos ES, o app avisa e segue no modo local.
+- Backup `.json` agora inclui categorias, produtos, compras e as fotos.
+
+## 14. Continua fora do escopo
+
+Leitura de `.gcode`, resina/SLA, torre de purga calculada, custo fixo mensal
+rateado, frete por CEP e comparador de marketplaces.
