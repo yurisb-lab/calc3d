@@ -360,3 +360,91 @@ Impressoras e filamentos ficam juntos em *Cadastros*; a sincronização mora em
 
 Leitura de `.gcode`, resina/SLA, torre de purga calculada, custo fixo mensal
 rateado, frete por CEP e comparador de marketplaces.
+
+---
+
+# Adendo — v3 (agosto/2026)
+
+A v2 fechou a conta e o controle. A v3 fecha a **venda**: o orçamento deixa de
+ser uma peça solta e vira um pedido — com cliente, várias peças, desconto,
+frete, envio pelo WhatsApp e acompanhamento até o dinheiro entrar. E o app,
+que já prometia funcionar offline, passa a cumprir isso de fato.
+
+## 15. O que entrou
+
+### 15.1 PWA completo — abre e instala sem depender da rede
+A v2 prometia "funciona offline depois do primeiro carregamento" e "adicionar à
+tela de início", mas isso dependia do cache HTTP do navegador.
+
+- `manifest.webmanifest` com ícones (192, 512 e maskable), `display:standalone`,
+  cores de tema e `apple-touch-icon` para o iOS.
+- **Service worker** (`sw.js`): a casca do app fica em cache e abre sem rede. A
+  página usa *network-first* de propósito — o app é um arquivo só, e um HTML
+  velho preso no cache seria uma versão inteira congelada no aparelho. O cache
+  é a rede de segurança do modo offline, nunca a fonte preferida.
+- Nada de origem externa passa pelo service worker: as fontes do Google e o
+  Firebase (que usa conexões longas e streaming) vão direto para a rede.
+- As **fontes não seguram mais a tela**: a folha do Google Fonts é carregada
+  sem bloquear o render e entra quando chega. Numa feira sem sinal, o app abre
+  na hora com a pilha de fallback em vez de esperar o tempo de conexão.
+- Botão **Instalar o app** em *Ajustes*, guardando o `beforeinstallprompt` — o
+  Chrome só oferece a instalação uma vez, e o evento morre se ninguém o
+  guardar. No iOS, onde esse evento não existe, aparece a instrução do Safari.
+
+### 15.2 Orçamento com cliente e várias peças
+Pedido real é "3 chaveiros + 1 vaso", não uma peça só.
+
+- **Cliente** (nome e WhatsApp) e **observações** no orçamento.
+- Várias linhas no mesmo orçamento: calcule uma peça, toque em **+ Adicionar
+  esta peça ao orçamento**, calcule a próxima. Cada item guarda o cálculo
+  inteiro — dá para **editar** um item, que volta para a calculadora do jeito
+  que estava, e salvar a alteração no lugar.
+- **Desconto** em R$ ou %, **frete/entrega** e **total do pedido**, com lucro
+  estimado do pedido inteiro. O frete aparece como repasse, fora do lucro.
+- Enquanto ninguém adiciona nada, o orçamento **espelha a peça que está na
+  calculadora**. Quem só quer o preço de uma peça não precisa saber que existe
+  uma lista — o caminho rápido continua de um toque.
+- O rascunho do orçamento fica **só neste aparelho**: um pedido meio montado
+  pulando de celular para celular no meio de uma venda confundiria mais do que
+  ajudaria.
+
+### 15.3 Enviar pelo WhatsApp
+O público vende por WhatsApp; até aqui o único jeito de mandar o preço era
+gerar o PDF e caçar o arquivo.
+
+- **Enviar no WhatsApp**: monta o texto formatado (itens, quantidade, unitário,
+  subtotal, desconto, frete, total, prazo de produção e validade) e abre a
+  conversa direto no número do cliente. O número brasileiro é aceito digitado
+  de qualquer jeito; sem número, o WhatsApp abre a lista de contatos.
+- **Copiar orçamento** para colar em qualquer lugar, com fallback para
+  navegadores sem a API de área de transferência.
+- **Compartilhar** via `navigator.share` onde o aparelho oferece.
+- O **PDF** passou a aceitar as várias linhas, o bloco do cliente, desconto e
+  frete — a tabela já tinha a estrutura, ganhou as linhas.
+
+### 15.4 Salvos virou gestão de pedidos
+Antes a aba só abria e excluía. Agora um orçamento salvo é um pedido em
+andamento:
+
+- **Status**: orçado → aprovado → imprimindo → entregue → pago.
+- **Data de entrega** por pedido.
+- **Busca** por peça, cliente ou observação, e **filtro por status** com
+  contagem.
+- **Em aberto** e **recebido este mês** no topo — o mês do recebido conta a
+  data em que o pedido foi marcado como pago.
+- **Duplicar** (o cliente que sempre pede a mesma coisa), **abrir de volta**
+  no orçamento e mandar o WhatsApp direto do pedido salvo.
+
+## 16. Compatibilidade
+
+Pedidos salvos na v2 eram uma peça só e sem status. Eles continuam abrindo:
+viram um pedido de um item, com status *orçado*, sem precisar reescrever nada
+no armazenamento.
+
+## 17. Continua fora do escopo
+
+O de sempre — leitura de `.gcode`, resina/SLA, torre de purga calculada, custo
+fixo mensal rateado, frete por CEP e comparador de marketplaces — mais:
+anexar o PDF no `navigator.share` (exigiria uma biblioteca de PDF embarcada, e
+o app gera o orçamento pela impressão do próprio navegador) e cadastro de
+clientes com histórico próprio.

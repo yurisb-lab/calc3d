@@ -15,7 +15,10 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<!-- as fontes nunca seguram a tela: sem rede (ou com sinal ruim numa feira) o app
+     abre na hora com a pilha de fallback e troca sozinho quando a folha chega -->
+<link rel="stylesheet" media="print" onload="this.media='all';this.onload=null"
+      href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
 <style>
 /* ============================================================
    TOKENS — tema claro (padrão) e escuro em [data-theme="dark"]
@@ -474,7 +477,73 @@ h2.section .amt{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size
   #print .tot{display:flex;justify-content:space-between;font-size:15pt;font-weight:700;border-top:2px solid #000;padding-top:11px;margin-top:4px}
   #print .note{margin-top:26px;font-size:10pt;color:#555;line-height:1.6}
   #print .pimg{width:48mm;height:48mm;object-fit:cover;border-radius:3mm;margin:0 0 16px;display:block}
+  #print .pclient{border:1px solid #CCC;border-radius:2mm;padding:8px 11px;margin-bottom:16px;font-size:10.5pt;line-height:1.5}
+  #print .pclient b{display:block;font-size:8.5pt;letter-spacing:.1em;text-transform:uppercase;color:#777;font-weight:700;margin-bottom:2px}
+  #print td .sb{display:block;font-size:9pt;color:#777;margin-top:2px}
+  #print .sub{display:flex;justify-content:space-between;font-size:11pt;color:#444;padding:4px 0}
+  #print .sub.dsc{color:#0A6E3E}
+  #print tr{page-break-inside:avoid}
 }
+
+/* ---------- orcamento com varios itens ---------- */
+.oline{display:flex;gap:9px;align-items:center;padding:10px 0;border-bottom:1px dashed var(--line)}
+.oline:first-child{padding-top:2px}
+.oline:last-child{border-bottom:0}
+.oline .mid{flex:1;min-width:0}
+.oline .top{display:flex;gap:10px;align-items:baseline}
+.oline .nm{flex:1;min-width:0;font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.oline .sb{display:block;font-size:11.5px;color:var(--ink3);font-family:'IBM Plex Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.oline .vl{flex:none;font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:14px;white-space:nowrap}
+.oline .act{
+  flex:none;width:40px;height:40px;min-height:40px;padding:0;border:1px solid var(--line);
+  background:var(--surface);border-radius:var(--r-sm);color:var(--ink2);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;box-shadow:var(--sh-1);
+}
+.oline .act:hover{border-color:var(--line2);color:var(--ink)}
+.oline .act svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.oline .act.kill{color:var(--red);font-size:19px;line-height:1}
+.oline .act.kill:hover{background:var(--err-bg);border-color:var(--err-line)}
+.oline.edit{background:var(--hot-soft);border-radius:var(--r-sm);padding-left:8px;padding-right:8px}
+.osum{margin-top:14px;padding-top:4px;border-top:1px solid var(--line)}
+.osum .kv{font-size:13.5px;color:var(--ink2)}
+.osum .kv .v{color:var(--ink)}
+.osum .kv.tot{border-bottom:0;border-top:2px solid var(--ink);margin-top:6px;padding-top:11px;font-weight:700;font-size:15px;color:var(--ink)}
+.osum .kv.tot .v{font-size:18px}
+.oempty{font-size:13px;color:var(--ink3);padding:14px 0;text-align:center}
+.discrow{display:flex;gap:8px;align-items:flex-end}
+.discrow .field{flex:1;min-width:0;margin-bottom:0}
+.discrow .seg{flex:none;width:104px}
+
+/* ---------- status do pedido ---------- */
+.stpill{
+  display:inline-flex;align-items:center;gap:6px;background:var(--surface3);color:var(--ink2);
+  border-radius:20px;padding:4px 10px;font-size:10.5px;font-weight:700;
+  letter-spacing:.05em;text-transform:uppercase;white-space:nowrap;flex:none;
+}
+.stpill .stdot{width:8px;height:8px;border-radius:50%;flex:none;background:currentColor}
+.st-aprovado{color:var(--blue)}
+.st-imprimindo{color:var(--amber)}
+.st-entregue{color:var(--violet)}
+.st-pago{color:var(--teal)}
+.jhead{display:flex;align-items:center;gap:9px;padding:12px var(--pad);cursor:pointer;min-height:60px}
+.jhead:hover{background:var(--surface2)}
+.jhead .mid{flex:1;min-width:0}
+.jhead .nm{display:block;font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.jhead .sb{display:block;font-size:11.5px;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.jhead .amt{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:14.5px;white-space:nowrap;flex:none}
+.stgrid{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.stgrid button{
+  flex:none;border:1px solid var(--line);background:var(--surface);border-radius:20px;
+  font:inherit;font-size:12.5px;font-weight:600;color:var(--ink2);padding:7px 12px;
+  cursor:pointer;min-height:38px;box-shadow:var(--sh-1);transition:background .15s,color .15s,border-color .15s;
+}
+.stgrid button:hover{border-color:var(--line2);color:var(--ink)}
+.stgrid button[aria-pressed="true"]{background:var(--btn-pri-bg);border-color:var(--btn-pri-line);color:var(--btn-pri-fg);box-shadow:var(--sh-2)}
+.jlines{margin:0 0 12px;padding:11px 13px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);font-size:13px}
+.jlines .l{display:flex;gap:10px;justify-content:space-between;padding:4px 0}
+.jlines .l .n{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.jlines .l .v{flex:none;font-family:'IBM Plex Mono',monospace;font-weight:600}
+.jlines .l.tt{border-top:1px solid var(--line);margin-top:5px;padding-top:7px;font-weight:700}
 
 /* ---------- produtos ---------- */
 .toolbar{display:flex;gap:8px;margin-bottom:10px}
@@ -819,11 +888,57 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
       </div>
 
       <div class="btnrow" style="margin-top:16px">
-        <button type="button" class="btn" id="btn-save">Salvar orçamento</button>
-        <button type="button" class="btn primary" id="btn-pdf">Gerar PDF</button>
+        <button type="button" class="btn" id="btn-save-product">Salvar como produto</button>
+        <button type="button" class="btn ghost" id="btn-clear">Limpar campos</button>
       </div>
-      <div class="btnrow"><button type="button" class="btn" id="btn-save-product">Salvar como produto</button></div>
-      <div class="btnrow"><button type="button" class="btn ghost" id="btn-clear">Limpar campos</button></div>
+
+      <h2 class="section amtrow">Orçamento<button type="button" class="help" data-h="orcamento" aria-label="O que é isso?">?</button><span class="amt" id="ord-total">R$ 0,00</span></h2>
+      <div class="card">
+        <div id="ord-items"></div>
+        <div class="btnrow" id="ord-addrow" style="margin-top:10px"></div>
+
+        <div class="field" style="margin-top:16px">
+          <label for="o-client">Cliente <span class="hint">— opcional</span></label>
+          <input id="o-client" type="text" placeholder="Ex.: Maria da papelaria">
+        </div>
+        <div class="field">
+          <label for="o-contact">WhatsApp do cliente <span class="hint">— DDD + número</span></label>
+          <input id="o-contact" type="tel" inputmode="tel" placeholder="(11) 91234-5678">
+        </div>
+        <div class="discrow" style="margin-bottom:14px">
+          <div class="field">
+            <label for="o-discount">Desconto</label>
+            <input id="o-discount" type="text" inputmode="decimal" placeholder="0">
+          </div>
+          <div class="seg" id="seg-disc">
+            <button type="button" data-v="brl" aria-pressed="true">R$</button>
+            <button type="button" data-v="pct" aria-pressed="false">%</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="o-shipping">Frete / entrega <span class="hint">R$</span></label>
+          <input id="o-shipping" type="text" inputmode="decimal" placeholder="0">
+        </div>
+        <div class="field" style="margin-bottom:0">
+          <label for="o-note">Observações <span class="hint">— entram no orçamento</span></label>
+          <input id="o-note" type="text" placeholder="Ex.: entrega em 5 dias úteis, cor a combinar">
+        </div>
+
+        <div class="osum" id="ord-sum"></div>
+      </div>
+
+      <div class="btnrow" style="margin-top:14px">
+        <button type="button" class="btn primary" id="btn-wa">Enviar no WhatsApp</button>
+      </div>
+      <div class="btnrow">
+        <button type="button" class="btn" id="btn-copy">Copiar orçamento</button>
+        <button type="button" class="btn" id="btn-share" hidden>Compartilhar</button>
+      </div>
+      <div class="btnrow">
+        <button type="button" class="btn" id="btn-save">Salvar orçamento</button>
+        <button type="button" class="btn" id="btn-pdf">Gerar PDF</button>
+      </div>
+      <div class="btnrow"><button type="button" class="btn ghost" id="btn-ord-clear">Limpar orçamento</button></div>
     </section>
 
     <!-- ============ PRODUTOS ============ -->
@@ -998,7 +1113,15 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
 
     <!-- ============ SALVOS ============ -->
     <section class="view" id="v-saved" hidden>
-      <h2 class="section">Orçamentos salvos</h2>
+      <h2 class="section">Pedidos e orçamentos</h2>
+      <div class="sumbar">
+        <div><span class="k" id="job-k1">Em aberto</span><span class="v" id="job-v1">R$ 0,00</span></div>
+        <div><span class="k">Recebido este mês</span><span class="v" id="job-v2">R$ 0,00</span></div>
+      </div>
+      <div class="toolbar">
+        <input id="j-search" type="search" placeholder="Buscar por peça, cliente ou observação...">
+      </div>
+      <div class="filterbar" id="job-filter"></div>
       <div id="saved-list"></div>
     </section>
 
@@ -1031,6 +1154,14 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
           </div>
           <p class="note" id="theme-note"></p>
         </div>
+      </div>
+
+      <h2 class="section">Instalar no aparelho</h2>
+      <div class="card tight">
+        <div class="btnrow" id="install-row" hidden>
+          <button type="button" class="btn primary" id="btn-install">Instalar o app</button>
+        </div>
+        <p class="note" id="install-note"></p>
       </div>
 
       <h2 class="section">Seus números</h2>
@@ -1184,6 +1315,16 @@ function brDate(iso){
 }
 
 /* ============ estado ============ */
+/* status do pedido, usado já na migração dos dados antigos */
+var STATUS = {
+  orcado:     {n:'Orçado',     next:'aprovado'},
+  aprovado:   {n:'Aprovado',   next:'imprimindo'},
+  imprimindo: {n:'Imprimindo', next:'entregue'},
+  entregue:   {n:'Entregue',   next:'pago'},
+  pago:       {n:'Pago',       next:''}
+};
+var STATUS_ORDER = ['orcado','aprovado','imprimindo','entregue','pago'];
+
 var COLLS = ['printers','filaments','categories','products','buys','jobs'];
 var DEFAULTS = {
   /* ids fixos: dois aparelhos que semeiam o mesmo padrão geram o MESMO documento
@@ -1199,7 +1340,11 @@ var DEFAULTS = {
   products:[],
   buys:[],
   settings:{kwh:0.75,hour:25,waste:8,fail:8,fee:0,biz:'',contact:'',valid:7},
-  jobs:[]
+  jobs:[],
+  /* orçamento em montagem: fica só neste aparelho (não entra em COLLS, não sincroniza).
+     Um rascunho meio pronto pulando de celular para celular no meio de uma venda
+     confundiria mais do que ajudaria. */
+  order:{client:'',contact:'',note:'',items:[],discount:0,discountType:'brl',shipping:0}
 };
 var S;
 try { S = JSON.parse(load('calc3d')) || null; } catch(e){ S = null; }
@@ -1220,7 +1365,24 @@ function migrate(seed){
   });
   S.filaments.forEach(function(f){ if(f.brand==null) f.brand=''; if(f.url==null) f.url=''; });
   Object.keys(DEFAULTS.settings).forEach(function(k){ if(S.settings[k]===undefined) S.settings[k] = DEFAULTS.settings[k]; });
+
+  if(!S.order || typeof S.order !== 'object') S.order = JSON.parse(JSON.stringify(DEFAULTS.order));
+  if(!Array.isArray(S.order.items)) S.order.items = [];
+  ['client','contact','note'].forEach(function(k){ if(typeof S.order[k] !== 'string') S.order[k] = ''; });
+  if(S.order.discountType !== 'pct') S.order.discountType = 'brl';
+  S.order.items.forEach(function(it){ if(!it.id) it.id = uid(); });
+
+  /* pedidos antigos foram salvos como uma peça só e sem status */
+  S.jobs.forEach(function(j){
+    if(!STATUS[j.status]) j.status = 'orcado';
+    if(typeof j.client !== 'string') j.client = '';
+    if(typeof j.contact !== 'string') j.contact = '';
+    if(typeof j.note !== 'string') j.note = '';
+    if(typeof j.due !== 'string') j.due = '';
+    if(j.discountType !== 'pct') j.discountType = 'brl';
+  });
 }
+
 
 var extras = [];
 var scope = 'unit';
@@ -1443,6 +1605,7 @@ var HELP = {
   falhas:{t:'Reserva de falhas', d:'Peça que soltou da mesa, rolo embolado, arquivo com defeito. Referência: 5% a 15%. O app DIVIDE (custo ÷ 0,92), não soma — é assim que a peça boa paga a peça perdida.', e:'R$ 26,71 ÷ 0,92 = R$ 29,03'},
   preparo:{t:'Preparo (por lote)', d:'Minutos para fatiar, limpar a mesa, trocar filamento e ligar. É gasto uma vez por lote, então o app divide pela quantidade de peças.', e:''},
   acabamento:{t:'Acabamento (por peça)', d:'Minutos com a mão em CADA peça: tirar suporte, lixar, pintar, montar, embalar. Em peça pequena costuma ser o maior custo de todos.', e:''},
+  orcamento:{t:'Orçamento do pedido', d:'Pedido de verdade quase nunca é uma peça só. Adicione cada peça calculada à lista, ponha o nome do cliente, o desconto e o frete — e mande tudo de uma vez pelo WhatsApp ou em PDF. Se você não adicionar nada, o orçamento sai com a peça que está na calculadora.', e:'3x Chaveiro — R$ 12,00 cada\n1x Vaso — R$ 80,00\nDesconto R$ 10,00 · Frete R$ 15,00\nTotal R$ 121,00'},
   insumos:{t:'Insumos e acessórios', d:'Tudo que vai junto com a peça: embalagem, etiqueta, sacola, ímã, argola, parafuso, LED, cola, tinta. O preço é unitário e a quantidade é por peça — 4 parafusos de R$ 0,30 viram R$ 1,20 na peça.', e:'Argola R$ 0,35 × 1\nSaquinho R$ 0,20 × 1\nCartão R$ 1,00 × 1\nTotal R$ 1,55 por peça'},
   kwh:{t:'Tarifa de energia', d:'O valor do kWh na SUA conta de luz, já com impostos e bandeira — não a tarifa "seca" da ANEEL. Divida o total da conta pelo consumo em kWh para achar.', e:''},
   hora:{t:'Valor da sua hora', d:'Quanto vale uma hora do seu trabalho. Só conta o tempo com a mão na peça — a impressora imprime sozinha e não precisa de você ao lado.', e:''},
@@ -1753,6 +1916,7 @@ function render(){
   }
 
   renderActiveBanner();
+  renderOrder();
 }
 
 function renderActiveBanner(){
@@ -1762,6 +1926,293 @@ function renderActiveBanner(){
   el.innerHTML = '<div class="banner"><span class="t">Editando o produto <b>'+esc(p.name||'sem nome')+'</b></span>'+
     '<button type="button" id="ab-x" aria-label="Desvincular">×</button></div>';
   $('ab-x').addEventListener('click', function(){ activeProductId = null; renderActiveBanner(); });
+}
+
+/* ============ orcamento: varios itens, cliente, desconto e frete ============ */
+/* O orcamento e o carrinho da venda. Enquanto ninguem adiciona nada, ele espelha
+   a peca que esta na calculadora — quem so quer o preco de uma peca nao precisa
+   saber que existe um carrinho. Assim que o primeiro item entra, ele passa a
+   mandar: o PDF, o WhatsApp e o "Salvar" trabalham sobre a lista. */
+var PENSVG = '<svg viewBox="0 0 24 24"><path d="M4 20h4l10.5-10.5a2.1 2.1 0 00-3-3L5 17v3z"/><line x1="14.5" y1="6.5" x2="17.5" y2="9.5"/></svg>';
+var editingItemId = null;
+
+function calcPayload(){
+  var r = compute();
+  return {
+    piece:$('f-piece').value || '',
+    grams:num($('f-grams').value), hours:num($('f-h').value) + num($('f-m').value)/60,
+    qty:r.qty, waste:num($('f-waste').value), fail:num($('f-fail').value),
+    prep:num($('f-prep').value), finish:num($('f-finish').value),
+    extras:cloneExtras(extras), printer:$('f-printer').value, filament:$('f-filament').value,
+    scope:scope, mode:mode, margin:margin,
+    priceSet:r.usedChosen ? r.chosen : 0, suggested:r.suggested,
+    productId:activeProductId || ''
+  };
+}
+/* item do orcamento: numeros JA por unidade, para nao depender do escopo depois */
+function makeItem(){
+  var r = compute(), c = calcPayload();
+  return {
+    id:uid(), name:c.piece || 'Peca em impressao 3D',
+    qty:r.qty, unit:r.price, cost:r.cost, profit:r.profit,
+    grams:r.g, hours:r.h, material:curFilament().material || '',
+    productId:c.productId, calc:c
+  };
+}
+function itemQty(it){ return Math.max(1, Math.round(num(it.qty)) || 1); }
+
+function orderLines(){
+  if(S.order.items.length) return S.order.items;
+  var r = compute();
+  return r.price > 0 ? [makeItem()] : [];
+}
+/* 12,5% precisa aparecer como 12,5% — arredondar so o rotulo faria a tela
+   dizer um numero diferente do que esta sendo cobrado */
+function pctLabel(v){ return String(num(v)).replace('.', ','); }
+function orderTotals(lines, o){
+  o = o || {};
+  var sub = 0, cost = 0, profit = 0, hours = 0, grams = 0, qty = 0;
+  lines.forEach(function(it){
+    var q = itemQty(it);
+    sub += num(it.unit) * q; cost += num(it.cost) * q; profit += num(it.profit) * q;
+    hours += num(it.hours) * q; grams += num(it.grams) * q; qty += q;
+  });
+  var disc = o.discountType === 'pct'
+    ? sub * Math.max(0, Math.min(100, num(o.discount)))/100
+    : Math.max(0, num(o.discount));
+  disc = Math.min(disc, sub);
+  var ship = Math.max(0, num(o.shipping));
+  return {sub:sub, disc:disc, ship:ship, total:sub - disc + ship,
+          cost:cost, profit:profit - disc, hours:hours, grams:grams, qty:qty, n:lines.length};
+}
+
+function restoreCalc(c){
+  if(!c) return;
+  $('f-piece').value = c.piece || '';
+  $('f-grams').value = c.grams;
+  $('f-h').value = Math.floor(num(c.hours));
+  $('f-m').value = Math.round((num(c.hours) - Math.floor(num(c.hours)))*60);
+  $('f-qty').value = c.qty;
+  $('f-waste').value = c.waste; $('f-fail').value = c.fail;
+  $('f-prep').value = c.prep; $('f-finish').value = c.finish;
+  extras = cloneExtras(c.extras);
+  if(c.printer && S.printers.some(function(x){ return x.id === c.printer; })) $('f-printer').value = c.printer;
+  if(c.filament && S.filaments.some(function(x){ return x.id === c.filament; })) $('f-filament').value = c.filament;
+  scope = c.scope || 'unit'; setSeg('seg-scope', scope);
+  mode = c.mode || 'margem'; setSeg('seg-mode', mode);
+  margin = num(c.margin); $('f-margin').value = c.margin; syncMarginLabel();
+  $('f-final').value = num(c.priceSet) > 0 ? dec(num(c.priceSet),2) : '';
+  activeProductId = c.productId || null;
+  renderExtras(); render();
+}
+
+function refreshOrderInputs(){
+  var o = S.order;
+  var set = function(id, v){ var el = $(id); if(el && document.activeElement !== el) el.value = v; };
+  set('o-client', o.client || '');
+  set('o-contact', o.contact || '');
+  set('o-note', o.note || '');
+  /* porcentagem nao pode ser arredondada na exibicao: 12,5% viraria 13% e o
+     numero na tela deixaria de bater com o desconto que esta sendo aplicado */
+  set('o-discount', num(o.discount) > 0
+    ? (o.discountType === 'pct' ? String(num(o.discount)).replace('.', ',') : dec(num(o.discount),2))
+    : '');
+  set('o-shipping', num(o.shipping) > 0 ? dec(num(o.shipping),2) : '');
+  setSeg('seg-disc', o.discountType);
+}
+
+function renderOrder(){
+  var o = S.order, lines = orderLines(), t = orderTotals(lines, o);
+  var el = $('ord-items');
+
+  if(o.items.length){
+    el.innerHTML = o.items.map(function(it){
+      var q = itemQty(it);
+      return '<div class="oline'+(editingItemId === it.id ? ' edit' : '')+'">'+
+        '<span class="mid">'+
+          '<span class="top"><span class="nm">'+esc(it.name || 'Sem nome')+'</span>'+
+          '<span class="vl">'+brl(num(it.unit)*q)+'</span></span>'+
+          '<span class="sb">'+q+' &times; '+brl(num(it.unit))+' &middot; '+dec(num(it.grams)*q,0)+' g &middot; '+dec(num(it.hours)*q,1)+' h</span>'+
+        '</span>'+
+        '<button type="button" class="act" data-oe="'+esc(it.id)+'" aria-label="Editar item">'+PENSVG+'</button>'+
+        '<button type="button" class="act kill" data-ox="'+esc(it.id)+'" aria-label="Remover item">&times;</button>'+
+        '</div>';
+    }).join('');
+  } else {
+    el.innerHTML = '<div class="oempty">'+(lines.length
+      ? 'Ainda sem lista: o orçamento sai com a peça calculada acima.<br>Toque em <b>+ Adicionar</b> para montar um pedido com várias peças.'
+      : 'Preencha gramas e tempo para montar o orçamento.')+'</div>';
+  }
+  each(qsa(el,'[data-oe]'), function(b){ b.addEventListener('click', function(){ orderEdit(b.getAttribute('data-oe')); }); });
+  each(qsa(el,'[data-ox]'), function(b){ b.addEventListener('click', function(){ orderRemove(b.getAttribute('data-ox')); }); });
+
+  var editing = editingItemId && o.items.some(function(x){ return x.id === editingItemId; });
+  $('ord-addrow').innerHTML = editing
+    ? '<button type="button" class="btn primary" id="btn-ord-save">Salvar alterações no item</button>'+
+      '<button type="button" class="btn ghost" id="btn-ord-cancel">Cancelar</button>'
+    : '<button type="button" class="btn ghost" id="btn-ord-add">+ Adicionar esta peça ao orçamento</button>';
+  if(editing){
+    $('btn-ord-save').addEventListener('click', orderApplyEdit);
+    $('btn-ord-cancel').addEventListener('click', function(){ editingItemId = null; renderOrder(); });
+  } else {
+    $('btn-ord-add').addEventListener('click', orderAdd);
+  }
+
+  var rows = '<div class="kv"><span>Subtotal'+(t.n > 1 ? ' &middot; '+t.qty+' peças' : '')+'</span><span class="v">'+brl(t.sub)+'</span></div>';
+  if(t.disc > 0) rows += '<div class="kv"><span>Desconto'+(o.discountType === 'pct' ? ' ('+pctLabel(o.discount)+'%)' : '')+'</span><span class="v">&minus;'+brl(t.disc)+'</span></div>';
+  if(t.ship > 0) rows += '<div class="kv"><span>Frete / entrega</span><span class="v">'+brl(t.ship)+'</span></div>';
+  rows += '<div class="kv tot"><span>Total do pedido</span><span class="v">'+brl(t.total)+'</span></div>';
+  if(t.total > 0){
+    rows += '<p class="note" style="margin:10px 0 0">Lucro estimado <b>'+brl(t.profit)+'</b>'+
+      (t.hours > 0 ? ' &middot; <b>'+dec(Math.ceil(t.hours),0)+' h</b> de impressão' : '')+
+      (t.ship > 0 ? ' &middot; o frete entra como repasse, fora do lucro' : '')+'.</p>';
+  }
+  $('ord-sum').innerHTML = rows;
+  $('ord-total').textContent = brl(t.total);
+}
+
+function orderAdd(){
+  var r = compute();
+  if(!(r.price > 0)){ alert('Preencha gramas e tempo antes de adicionar ao orçamento.'); return; }
+  S.order.items.push(makeItem());
+  editingItemId = null;
+  persist(); renderOrder();
+  var b = $('btn-ord-add'); if(b) flash(b, 'Adicionado ✓');
+}
+function orderEdit(id){
+  var it = S.order.items.filter(function(x){ return x.id === id; })[0];
+  if(!it) return;
+  editingItemId = id;
+  restoreCalc(it.calc);
+  window.scrollTo(0,0);
+}
+function orderApplyEdit(){
+  var r = compute();
+  if(!(r.price > 0)){ alert('Preencha gramas e tempo antes de salvar o item.'); return; }
+  var i = -1;
+  S.order.items.forEach(function(x, k){ if(x.id === editingItemId) i = k; });
+  if(i < 0){ editingItemId = null; renderOrder(); return; }
+  var it = makeItem();
+  it.id = editingItemId;
+  S.order.items[i] = it;
+  editingItemId = null;
+  persist(); renderOrder();
+}
+function orderRemove(id){
+  S.order.items = S.order.items.filter(function(x){ return x.id !== id; });
+  if(editingItemId === id) editingItemId = null;
+  persist(); renderOrder();
+}
+function orderClear(){
+  var o = S.order;
+  if((o.items.length || o.client || o.contact || o.note || num(o.discount) || num(o.shipping)) &&
+     !confirm('Limpar o orçamento (itens, cliente, desconto e frete)?')) return;
+  S.order = JSON.parse(JSON.stringify(DEFAULTS.order));
+  editingItemId = null;
+  persist(); refreshOrderInputs(); renderOrder();
+}
+
+/* ============ enviar o orcamento ============ */
+function flash(btn, msg){
+  if(!btn) return;
+  if(btn.__t) clearTimeout(btn.__t); else btn.__lbl = btn.textContent;
+  btn.textContent = msg;
+  btn.__t = setTimeout(function(){ btn.textContent = btn.__lbl; btn.__t = null; }, 1600);
+}
+/* o texto que vai pro WhatsApp: pensado pra ser lido no celular, sem tabela */
+function quoteText(o, lines, when){
+  var st = S.settings, d = when || new Date();
+  var t = orderTotals(lines, o);
+  var vd = new Date(d.getTime() + num(st.valid)*86400000).toLocaleDateString('pt-BR');
+  var out = [];
+  out.push('*' + (st.biz || 'Orçamento') + '*');
+  out.push('Orçamento de ' + d.toLocaleDateString('pt-BR'));
+  if(o.client) out.push('Cliente: ' + o.client);
+  out.push('');
+  lines.forEach(function(it){
+    var q = itemQty(it);
+    out.push('• ' + q + 'x ' + (it.name || 'Peça') +
+      (q > 1 ? ' — ' + brl(num(it.unit)) + ' cada' : '') +
+      ' = ' + brl(num(it.unit) * q));
+  });
+  out.push('');
+  if(t.disc > 0 || t.ship > 0) out.push('Subtotal: ' + brl(t.sub));
+  if(t.disc > 0) out.push('Desconto: -' + brl(t.disc));
+  if(t.ship > 0) out.push('Frete / entrega: ' + brl(t.ship));
+  out.push('*Total: ' + brl(t.total) + '*');
+  out.push('');
+  if(t.hours > 0) out.push('Prazo estimado de produção: ' + dec(Math.ceil(t.hours),0) + ' h de impressão.');
+  out.push('Orçamento válido até ' + vd + '.');
+  if(o.note) out.push(o.note);
+  if(st.contact){ out.push(''); out.push(st.contact); }
+  return out.join('\n');
+}
+function orderText(){ return quoteText(S.order, orderLines(), new Date()); }
+
+/* numero brasileiro digitado de qualquer jeito vira o formato que o wa.me aceita */
+function waPhone(v){
+  var d = String(v == null ? '' : v).replace(/\D/g,'');
+  if(!d) return '';
+  if(d.length === 10 || d.length === 11) d = '55' + d;
+  if(d.length === 12 && d.slice(0,2) !== '55') return '';
+  return (d.length >= 12 && d.length <= 15) ? d : '';
+}
+function waOpen(txt, phone){
+  var url = 'https://wa.me/' + waPhone(phone) + '?text=' + encodeURIComponent(txt);
+  var w = window.open(url, '_blank', 'noopener');
+  if(!w) location.href = url;   /* bloqueador de pop-up: vai na propria aba */
+}
+function copyText(txt, btn){
+  var done = function(ok){ flash(btn, ok ? 'Copiado ✓' : 'Não deu para copiar'); };
+  var fallback = function(){
+    var ta = document.createElement('textarea');
+    ta.value = txt; ta.setAttribute('readonly','');
+    ta.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;opacity:0';
+    document.body.appendChild(ta);
+    ta.select(); try { ta.setSelectionRange(0, txt.length); } catch(e){}
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch(e){ ok = false; }
+    ta.parentNode.removeChild(ta);
+    done(ok);
+  };
+  if(navigator.clipboard && navigator.clipboard.writeText && window.isSecureContext){
+    navigator.clipboard.writeText(txt).then(function(){ done(true); }, fallback);
+  } else fallback();
+}
+
+function bindOrder(){
+  var OMAP = {'o-client':'client','o-contact':'contact','o-note':'note'};
+  Object.keys(OMAP).forEach(function(id){
+    $(id).addEventListener('input', function(){ S.order[OMAP[id]] = this.value; persist(); });
+  });
+  ['o-discount','o-shipping'].forEach(function(id){
+    var k = id === 'o-discount' ? 'discount' : 'shipping';
+    $(id).addEventListener('input', function(){ S.order[k] = num(this.value); persist(); renderOrder(); });
+  });
+  each(qsa($('seg-disc'),'button'), function(b){
+    b.addEventListener('click', function(){
+      S.order.discountType = b.getAttribute('data-v');
+      setSeg('seg-disc', S.order.discountType);
+      persist(); renderOrder();
+    });
+  });
+  $('btn-ord-clear').addEventListener('click', orderClear);
+
+  $('btn-wa').addEventListener('click', function(){
+    if(!orderLines().length){ alert('Preencha gramas e tempo antes de enviar o orçamento.'); return; }
+    waOpen(orderText(), S.order.contact);
+  });
+  $('btn-copy').addEventListener('click', function(){
+    if(!orderLines().length){ alert('Preencha gramas e tempo antes de copiar o orçamento.'); return; }
+    copyText(orderText(), this);
+  });
+  if(navigator.share){
+    $('btn-share').hidden = false;
+    $('btn-share').addEventListener('click', function(){
+      if(!orderLines().length){ alert('Preencha gramas e tempo antes de compartilhar.'); return; }
+      navigator.share({title:'Orçamento', text:orderText()}).catch(function(){});
+    });
+  }
 }
 
 /* ============ insumos ============ */
@@ -2292,51 +2743,211 @@ function buysCSV(){
   }).join('\r\n');
 }
 
-/* ============ orçamentos salvos ============ */
-function renderSaved(){
-  var el = $('saved-list');
-  var jobs = S.jobs.slice().sort(function(a,b){ return num(b.createdAt) - num(a.createdAt); });
-  if(!jobs.length){ el.innerHTML = '<div class="empty">Nenhum orçamento salvo ainda.<br>Calcule uma peça e toque em Salvar orçamento.</div>'; return; }
-  el.innerHTML = jobs.map(function(j,i){
-    return '<div class="item"><div class="head" data-open="j'+i+'">'+
-      '<span class="nm">'+esc(j.piece||'Sem nome')+'</span>'+
-      '<span class="meta">'+brl(j.price)+'</span></div>'+
-      '<div class="body" id="body-j'+i+'" hidden>'+
-      '<p style="font-size:13.5px;color:var(--ink2);margin:0 0 14px">'+esc(j.date)+' · '+dec(j.grams,0)+' g · '+dec(j.hours,1)+' h · '+j.qty+' un · pedido '+brl(num(j.price)*num(j.qty))+'</p>'+
-      '<div class="btnrow"><button type="button" class="btn" data-open-j="'+esc(j.id)+'">Abrir</button>'+
-      '<button type="button" class="btn danger" data-del-j="'+esc(j.id)+'">Excluir</button></div></div></div>';
+/* ============ pedidos e orcamentos salvos ============ */
+/* Um orcamento salvo e um PEDIDO em andamento: nasce orcado e caminha ate pago.
+   Por isso a aba tem status, data de entrega, busca e duplicar — e nao so abrir
+   e excluir. */
+var jobFilter = 'all', jobQuery = '', jobOpen = {};
+
+/* pedidos antigos foram gravados como uma peca so: viram um item unico aqui,
+   sem precisar reescrever nada no armazenamento */
+function jobItems(j){
+  if(Array.isArray(j.items) && j.items.length) return j.items;
+  var q = Math.max(1, Math.round(num(j.qty)) || 1);
+  var div = (j.scope === 'plate') ? q : 1;   /* o valor antigo era da mesa toda */
+  var c = {
+    piece:j.piece || '', grams:num(j.grams), hours:num(j.hours), qty:q,
+    waste:num(j.waste), fail:num(j.fail), prep:num(j.prep), finish:num(j.finish),
+    extras:cloneExtras(j.extras), printer:j.printer || '', filament:j.filament || '',
+    scope:j.scope || 'unit', mode:j.mode || 'margem', margin:num(j.margin),
+    priceSet:num(j.priceSet), suggested:num(j.suggested), productId:j.productId || ''
+  };
+  return [{
+    id:'legacy-'+j.id, name:j.piece || 'Sem nome', qty:q,
+    unit:num(j.price), cost:num(j.cost), profit:num(j.price) - num(j.cost),
+    grams:num(j.grams)/div, hours:num(j.hours)/div, material:'',
+    productId:j.productId || '', calc:c
+  }];
+}
+function jobTotals(j){ return orderTotals(jobItems(j), j); }
+function jobStatus(j){ return STATUS[j.status] ? j.status : 'orcado'; }
+function jobLabel(j){
+  return jobItems(j).map(function(it){ return itemQty(it)+'x '+(it.name || 'Sem nome'); }).join(' + ');
+}
+function statusPill(st){
+  return '<span class="stpill st-'+st+'"><span class="stdot"></span>'+STATUS[st].n+'</span>';
+}
+function jobMatch(j){
+  if(jobFilter !== 'all' && jobStatus(j) !== jobFilter) return false;
+  if(!jobQuery) return true;
+  var hay = [j.client || '', j.note || '', jobLabel(j)].join(' ').toLowerCase();
+  return hay.indexOf(jobQuery) > -1;
+}
+function sortedJobs(){
+  return S.jobs.slice().sort(function(a,b){ return num(b.createdAt) - num(a.createdAt); });
+}
+function renderJobFilter(){
+  var counts = {all:S.jobs.length};
+  S.jobs.forEach(function(j){ var k = jobStatus(j); counts[k] = (counts[k]||0)+1; });
+  var html = '<button type="button" data-jf="all" aria-pressed="'+(jobFilter === 'all')+'">Todos <span class="n">'+counts.all+'</span></button>';
+  html += STATUS_ORDER.map(function(k){
+    if(!counts[k]) return '';
+    return '<button type="button" data-jf="'+k+'" aria-pressed="'+(jobFilter === k)+'">'+STATUS[k].n+' <span class="n">'+counts[k]+'</span></button>';
   }).join('');
-  each(qsa(el,'[data-open]'), function(h){
-    h.addEventListener('click', function(){ var b=$('body-'+h.getAttribute('data-open')); if(b) b.hidden=!b.hidden; });
+  $('job-filter').innerHTML = html;
+  each(qsa($('job-filter'),'[data-jf]'), function(b){
+    b.addEventListener('click', function(){ jobFilter = b.getAttribute('data-jf'); renderJobFilter(); renderSaved(); });
   });
-  each(qsa(el,'[data-open-j]'), function(b){
-    b.addEventListener('click', function(){
-      restore(S.jobs.filter(function(x){return x.id===b.getAttribute('data-open-j');})[0]);
+}
+function renderSaved(){
+  renderJobFilter();
+
+  var ym = todayISO().slice(0,7);
+  var openTot = 0, paidTot = 0;
+  S.jobs.forEach(function(j){
+    var t = jobTotals(j);
+    if(jobStatus(j) === 'pago'){
+      if(String(j.paidAt || '').slice(0,7) === ym) paidTot += t.total;
+    } else openTot += t.total;
+  });
+  $('job-v1').textContent = brl(openTot);
+  $('job-v2').textContent = brl(paidTot);
+
+  var list = sortedJobs().filter(jobMatch);
+  var el = $('saved-list');
+  if(!list.length){
+    el.innerHTML = '<div class="empty">'+(S.jobs.length
+      ? 'Nenhum pedido com esse filtro.'
+      : 'Nenhum orçamento salvo ainda.<br>Monte o orçamento na aba Calcular e toque em <b>Salvar orçamento</b>.')+'</div>';
+    return;
+  }
+
+  el.innerHTML = list.map(function(j){
+    var st = jobStatus(j), t = jobTotals(j), items = jobItems(j);
+    var sub = [j.date || ''];
+    if(t.n > 1) sub.push(t.n + ' itens');
+    if(j.due) sub.push('entrega ' + brDate(j.due));
+    if(j.client) sub.push(jobLabel(j));
+
+    var lines = items.map(function(it){
+      var q = itemQty(it);
+      return '<div class="l"><span class="n">'+q+'x '+esc(it.name || 'Sem nome')+'</span><span class="v">'+brl(num(it.unit)*q)+'</span></div>';
+    }).join('');
+    if(t.disc > 0) lines += '<div class="l"><span class="n">Desconto</span><span class="v">&minus;'+brl(t.disc)+'</span></div>';
+    if(t.ship > 0) lines += '<div class="l"><span class="n">Frete / entrega</span><span class="v">'+brl(t.ship)+'</span></div>';
+    lines += '<div class="l tt"><span class="n">Total</span><span class="v">'+brl(t.total)+'</span></div>';
+
+    return '<div class="item">'+
+      '<div class="jhead" data-j="'+esc(j.id)+'">'+statusPill(st)+
+        '<span class="mid"><span class="nm">'+esc(j.client || jobLabel(j) || 'Sem nome')+'</span>'+
+        '<span class="sb">'+esc(sub.join(' · '))+'</span></span>'+
+        '<span class="amt">'+brl(t.total)+'</span></div>'+
+      '<div class="body" id="jb-'+esc(j.id)+'"'+(jobOpen[j.id] ? '' : ' hidden')+'>'+
+        '<div class="jlines">'+lines+'</div>'+
+        (j.note ? '<p class="note" style="margin:-4px 0 12px">'+esc(j.note)+'</p>' : '')+
+        '<label style="display:block;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink3);font-weight:700;margin-bottom:7px">Status do pedido</label>'+
+        '<div class="stgrid">'+STATUS_ORDER.map(function(k){
+          return '<button type="button" data-js="'+esc(j.id)+'" data-v="'+k+'" aria-pressed="'+(st === k)+'">'+STATUS[k].n+'</button>';
+        }).join('')+'</div>'+
+        '<div class="field"><label for="jd-'+esc(j.id)+'">Data de entrega</label>'+
+        '<input id="jd-'+esc(j.id)+'" type="date" data-jd="'+esc(j.id)+'" value="'+esc(j.due || '')+'"></div>'+
+        '<div class="btnrow"><button type="button" class="btn primary" data-jw="'+esc(j.id)+'">WhatsApp</button>'+
+        '<button type="button" class="btn" data-jc="'+esc(j.id)+'">Copiar</button></div>'+
+        '<div class="btnrow"><button type="button" class="btn" data-jo="'+esc(j.id)+'">Abrir</button>'+
+        '<button type="button" class="btn" data-jp="'+esc(j.id)+'">Duplicar</button></div>'+
+        '<div class="btnrow"><button type="button" class="btn danger" data-jx="'+esc(j.id)+'">Excluir</button></div>'+
+      '</div></div>';
+  }).join('');
+
+  var byId = function(id){ return S.jobs.filter(function(x){ return x.id === id; })[0]; };
+
+  each(qsa(el,'[data-j]'), function(h){
+    h.addEventListener('click', function(){
+      var id = h.getAttribute('data-j'), b = $('jb-'+id);
+      if(!b) return;
+      b.hidden = !b.hidden;
+      jobOpen[id] = !b.hidden;
     });
   });
-  each(qsa(el,'[data-del-j]'), function(b){
+  each(qsa(el,'[data-js]'), function(b){
     b.addEventListener('click', function(){
-      if(!confirm('Excluir este orçamento?')) return;
-      var id = b.getAttribute('data-del-j');
+      var j = byId(b.getAttribute('data-js'));
+      if(!j) return;
+      j.status = b.getAttribute('data-v');
+      /* a data do pagamento e o que faz o "recebido este mes" fechar */
+      if(j.status === 'pago'){ if(!j.paidAt) j.paidAt = todayISO(); }
+      else j.paidAt = '';
+      persist(); renderSaved();
+    });
+  });
+  each(qsa(el,'[data-jd]'), function(inp){
+    inp.addEventListener('change', function(){
+      var j = byId(inp.getAttribute('data-jd'));
+      if(!j) return;
+      j.due = inp.value || '';
+      persist(); renderSaved();
+    });
+  });
+  each(qsa(el,'[data-jw]'), function(b){
+    b.addEventListener('click', function(){
+      var j = byId(b.getAttribute('data-jw'));
+      if(j) waOpen(quoteText(j, jobItems(j), new Date(num(j.createdAt) || Date.now())), j.contact);
+    });
+  });
+  each(qsa(el,'[data-jc]'), function(b){
+    b.addEventListener('click', function(){
+      var j = byId(b.getAttribute('data-jc'));
+      if(j) copyText(quoteText(j, jobItems(j), new Date(num(j.createdAt) || Date.now())), b);
+    });
+  });
+  each(qsa(el,'[data-jo]'), function(b){
+    b.addEventListener('click', function(){ restore(byId(b.getAttribute('data-jo'))); });
+  });
+  each(qsa(el,'[data-jp]'), function(b){
+    b.addEventListener('click', function(){ duplicateJob(byId(b.getAttribute('data-jp'))); });
+  });
+  each(qsa(el,'[data-jx]'), function(b){
+    b.addEventListener('click', function(){
+      if(!confirm('Excluir este pedido?')) return;
+      var id = b.getAttribute('data-jx');
       S.jobs = S.jobs.filter(function(x){ return x.id !== id; });
+      delete jobOpen[id];
       persist(); renderSaved();
     });
   });
 }
+
+function duplicateJob(j){
+  if(!j) return;
+  var c = JSON.parse(JSON.stringify(j));
+  c.id = uid(); c.createdAt = Date.now(); c.date = new Date().toLocaleDateString('pt-BR');
+  c.status = 'orcado'; c.due = ''; c.paidAt = '';
+  c.items = jobItems(j).map(function(it){ var n = JSON.parse(JSON.stringify(it)); n.id = uid(); return n; });
+  S.jobs.unshift(c);
+  if(S.jobs.length > 200) S.jobs.length = 200;
+  jobOpen[c.id] = true;
+  persist(); renderSaved();
+  window.scrollTo(0,0);
+}
+
+/* abre um pedido salvo de volta na calculadora: os itens voltam para o orcamento
+   e a PRIMEIRA peca volta para os campos, pronta para ser ajustada */
 function restore(j){
   if(!j) return;
-  $('f-piece').value=j.piece||''; $('f-grams').value=j.grams; $('f-h').value=Math.floor(num(j.hours));
-  $('f-m').value=Math.round((num(j.hours)-Math.floor(num(j.hours)))*60); $('f-qty').value=j.qty;
-  $('f-waste').value=j.waste; $('f-fail').value=j.fail; $('f-prep').value=j.prep; $('f-finish').value=j.finish;
-  extras = cloneExtras(j.extras);
-  if(j.printer && S.printers.some(function(x){return x.id===j.printer;})) $('f-printer').value=j.printer;
-  if(j.filament && S.filaments.some(function(x){return x.id===j.filament;})) $('f-filament').value=j.filament;
-  setSeg('seg-scope', j.scope||'unit'); scope=j.scope||'unit';
-  setSeg('seg-mode', j.mode||'margem'); mode=j.mode||'margem';
-  margin=num(j.margin); $('f-margin').value=j.margin; syncMarginLabel();
-  $('f-final').value = num(j.priceSet) > 0 ? dec(num(j.priceSet),2) : '';
-  activeProductId = j.productId || null;
-  renderExtras(); render(); go('calc');
+  var o = S.order;
+  var dirty = o.items.length || o.client || o.contact || o.note || num(o.discount) || num(o.shipping);
+  if(dirty && !confirm('Abrir este pedido substitui o orçamento que está em montagem. Continuar?')) return;
+
+  var items = jobItems(j).map(function(it){ var n = JSON.parse(JSON.stringify(it)); n.id = uid(); return n; });
+  S.order = {
+    client:j.client || '', contact:j.contact || '', note:j.note || '',
+    items:items, discount:num(j.discount),
+    discountType:j.discountType === 'pct' ? 'pct' : 'brl', shipping:num(j.shipping)
+  };
+  editingItemId = null;
+  restoreCalc(items[0] && items[0].calc);
+  persist();
+  refreshOrderInputs(); renderOrder(); go('calc');
 }
 
 /* ============ segmentos e chips ============ */
@@ -2801,26 +3412,60 @@ function wireSyncBody(){
   });
 }
 
-/* ============ orçamento em PDF ============ */
+/* ============ orcamento em PDF ============ */
 function buildPrint(){
-  var r = last || compute();
-  var st = S.settings;
+  var o = S.order, lines = orderLines(), t = orderTotals(lines, o), st = S.settings;
   var d = new Date();
   var dd = d.toLocaleDateString('pt-BR');
   var vd = new Date(d.getTime() + num(st.valid)*86400000).toLocaleDateString('pt-BR');
-  var piece = $('f-piece').value || 'Peça em impressão 3D';
-  var p = activeProductId ? S.products.filter(function(x){return x.id===activeProductId;})[0] : null;
-  var pid = p && (p.photos||[])[0];
+
+  /* uma foto so: a do primeiro item que tiver produto com imagem */
+  var pid = '';
+  for(var i = 0; i < lines.length && !pid; i++){
+    var want = lines[i].productId;
+    if(!want) continue;
+    var pr = null;
+    for(var k = 0; k < S.products.length; k++){ if(S.products[k].id === want) pr = S.products[k]; }
+    if(pr && (pr.photos||[])[0]) pid = pr.photos[0];
+  }
+
+  var mats = [];
+  lines.forEach(function(it){ if(it.material && mats.indexOf(it.material) < 0) mats.push(it.material); });
+  if(!mats.length) mats.push(curFilament().material || 'filamento');
+
   return (pid ? photoGet(pid) : Promise.resolve(null)).then(function(ph){
+    var rows = lines.map(function(it){
+      var q = itemQty(it);
+      return '<tr><td>'+esc(it.name || 'Peça em impressão 3D')+
+        /* o material só vira subtítulo quando o pedido mistura materiais;
+           com um só, ele já aparece na nota do rodapé */
+        (it.material && mats.length > 1 ? '<span class="sb">'+esc(it.material)+'</span>' : '')+
+        '</td><td class="r">'+q+'</td><td class="r">'+brl(num(it.unit))+'</td><td class="r">'+brl(num(it.unit)*q)+'</td></tr>';
+    }).join('');
+
+    var subs = '';
+    if(t.disc > 0 || t.ship > 0){
+      subs += '<div class="sub"><span>Subtotal</span><span>'+brl(t.sub)+'</span></div>';
+      if(t.disc > 0) subs += '<div class="sub dsc"><span>Desconto'+(o.discountType === 'pct' ? ' ('+pctLabel(o.discount)+'%)' : '')+'</span><span>&minus;'+brl(t.disc)+'</span></div>';
+      if(t.ship > 0) subs += '<div class="sub"><span>Frete / entrega</span><span>'+brl(t.ship)+'</span></div>';
+    }
+
     $('print').innerHTML =
       '<h1>'+esc(st.biz || 'Orçamento')+'</h1>'+
-      '<div class="pmeta">'+esc(st.contact||'')+'</div>'+
+      '<div class="pmeta">'+esc(st.contact || '')+'</div>'+
       '<div class="ptitle">Orçamento · '+dd+'</div>'+
+      (o.client || o.contact ? '<div class="pclient"><b>Cliente</b>'+esc(o.client || '')+
+        (o.contact ? (o.client ? '<br>' : '')+esc(o.contact) : '')+'</div>' : '')+
       (ph ? '<img class="pimg" src="'+ph.full+'" alt="">' : '')+
       '<table><thead><tr><th>Item</th><th class="r">Qtd</th><th class="r">Unitário</th><th class="r">Total</th></tr></thead>'+
-      '<tbody><tr><td>'+esc(piece)+'</td><td class="r">'+r.qty+'</td><td class="r">'+brl(r.price)+'</td><td class="r">'+brl(r.price*r.qty)+'</td></tr></tbody></table>'+
-      '<div class="tot"><span>Total</span><span>'+brl(r.price*r.qty)+'</span></div>'+
-      '<div class="note">Válido até '+vd+'.<br>Impressão em '+esc(curFilament().material||'filamento')+'. Prazo de produção estimado: '+dec(Math.ceil(r.h*r.qty),0)+' h de máquina.<br>Valores sujeitos a alteração em caso de mudança no projeto.</div>';
+      '<tbody>'+rows+'</tbody></table>'+
+      subs+
+      '<div class="tot"><span>Total</span><span>'+brl(t.total)+'</span></div>'+
+      '<div class="note">Válido até '+vd+'.<br>'+
+        'Impressão 3D em '+esc(mats.join(', '))+'. Prazo de produção estimado: '+dec(Math.ceil(t.hours),0)+' h de máquina.'+
+        (o.note ? '<br>'+esc(o.note) : '')+
+        '<br>Valores sujeitos a alteração em caso de mudança no projeto.</div>';
+
     /* sem esperar a decodificação, a foto podia sair em branco no PDF */
     var im = $('print').querySelector('img');
     if(!im) return null;
@@ -2860,23 +3505,23 @@ function bindCalc(){
   $('btn-extra').addEventListener('click', function(){ extras.push({n:'',v:'',q:1}); renderExtras(); render(); });
 
   $('btn-save').addEventListener('click', function(){
-    var r = compute();
-    if(r.price <= 0){ alert('Preencha gramas e tempo antes de salvar.'); return; }
+    var lines = orderLines();
+    if(!lines.length){ alert('Preencha gramas e tempo antes de salvar.'); return; }
+    var o = S.order, t = orderTotals(lines, o), first = lines[0];
     S.jobs.unshift({
       id:uid(), createdAt:Date.now(), date:new Date().toLocaleDateString('pt-BR'),
-      piece:$('f-piece').value || 'Sem nome',
-      grams:num($('f-grams').value), hours:num($('f-h').value)+num($('f-m').value)/60,
-      qty:r.qty, waste:num($('f-waste').value), fail:num($('f-fail').value),
-      prep:num($('f-prep').value), finish:num($('f-finish').value),
-      extras:cloneExtras(extras), printer:$('f-printer').value, filament:$('f-filament').value,
-      scope:scope, mode:mode, margin:margin, price:r.price, cost:r.cost,
-      priceSet:r.usedChosen ? r.chosen : 0, suggested:r.suggested,
-      productId:activeProductId || ''
+      status:'orcado', due:'', paidAt:'',
+      client:o.client || '', contact:o.contact || '', note:o.note || '',
+      discount:num(o.discount), discountType:o.discountType, shipping:num(o.shipping),
+      items:JSON.parse(JSON.stringify(lines)),
+      subtotal:t.sub, total:t.total, cost:t.cost, profit:t.profit,
+      grams:t.grams, hours:t.hours, qty:t.qty,
+      /* resumo da primeira peça: mantém legível quem só olha os campos antigos */
+      piece:first.name, price:num(first.unit), productId:first.productId || ''
     });
     if(S.jobs.length > 200) S.jobs.length = 200;
     persist();
-    this.textContent = 'Salvo ✓';
-    var b = this; setTimeout(function(){ b.textContent = 'Salvar orçamento'; }, 1400);
+    flash(this, 'Salvo ✓');
   });
 
   $('btn-save-product').addEventListener('click', function(){
@@ -2901,15 +3546,14 @@ function bindCalc(){
   });
 
   $('btn-pdf').addEventListener('click', function(){
-    var r = compute();
-    if(r.price <= 0){ alert('Preencha gramas e tempo antes de gerar o orçamento.'); return; }
+    if(!orderLines().length){ alert('Preencha gramas e tempo antes de gerar o orçamento.'); return; }
     buildPrint().then(function(){ window.print(); });
   });
 
   $('btn-clear').addEventListener('click', function(){
-    if(!confirm('Limpar os campos da calculadora?')) return;
+    if(!confirm('Limpar os campos da calculadora? Os itens já adicionados ao orçamento continuam lá.')) return;
     ['f-piece','f-grams','f-h','f-m','f-prep','f-finish','f-final'].forEach(function(id){ $(id).value=''; });
-    $('f-qty').value = 1; extras = []; activeProductId = null;
+    $('f-qty').value = 1; extras = []; activeProductId = null; editingItemId = null;
     renderExtras(); render();
   });
 
@@ -3164,6 +3808,65 @@ function bindSettings(){
   }
 }
 
+/* ============ busca dos pedidos ============ */
+function bindSaved(){
+  $('j-search').addEventListener('input', function(){
+    jobQuery = this.value.trim().toLowerCase();
+    renderSaved();
+  });
+}
+
+/* ============ instalar na tela inicial ============ */
+/* O Chrome so oferece a instalacao uma vez, num evento que morre se ninguem o
+   guardar. Guardamos aqui para que o botao funcione quando o usuario procurar
+   por ele — e nao so no instante em que o navegador resolveu perguntar. */
+var deferredInstall = null;
+function standalone(){
+  return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
+         navigator.standalone === true;
+}
+function paintInstall(){
+  var row = $('install-row'), note = $('install-note');
+  if(!row) return;
+  if(standalone()){
+    row.hidden = true;
+    note.textContent = 'O app já está instalado neste aparelho. Ele abre sem rede e guarda tudo aqui.';
+    return;
+  }
+  if(deferredInstall){
+    row.hidden = false;
+    note.textContent = 'Instala como aplicativo: abre em tela cheia, aparece na lista de apps e funciona sem internet.';
+    return;
+  }
+  row.hidden = true;
+  note.innerHTML = /iPad|iPhone|iPod/.test(navigator.userAgent)
+    ? 'No iPhone e no iPad: toque em <b>Compartilhar</b> na barra do Safari e escolha <b>Adicionar à Tela de Início</b>.'
+    : 'Para instalar, abra o menu do navegador e escolha <b>Instalar aplicativo</b> ou <b>Adicionar à tela inicial</b>.';
+}
+function bindInstall(){
+  window.addEventListener('beforeinstallprompt', function(e){
+    e.preventDefault();
+    deferredInstall = e;
+    paintInstall();
+  });
+  window.addEventListener('appinstalled', function(){
+    deferredInstall = null;
+    paintInstall();
+  });
+  $('btn-install').addEventListener('click', function(){
+    if(!deferredInstall){ paintInstall(); return; }
+    var b = this;
+    b.disabled = true;
+    deferredInstall.prompt();
+    deferredInstall.userChoice.then(function(){
+      deferredInstall = null;
+      b.disabled = false;
+      paintInstall();
+    }, function(){ b.disabled = false; });
+  });
+  paintInstall();
+}
+
 /* ============ tema (claro / escuro / automático) ============ */
 var THEME_LABEL = {auto:'Acompanha o sistema do aparelho.', light:'Sempre claro.', dark:'Sempre escuro.'};
 function paintTheme(){
@@ -3214,6 +3917,7 @@ function boot(reload){
   renderCats(); renderCatFilter(); renderProducts();
   renderBuyFilter(); renderBuys();
   syncMarginLabel();
+  refreshOrderInputs();
   if(reload) refreshSettingsInputs();
   render();
 }
@@ -3242,9 +3946,12 @@ buildNav();
 placeStrip();
 bindHelp();
 bindCalc();
+bindOrder();
 bindProducts();
 bindBuys();
+bindSaved();
 bindSettings();
+bindInstall();
 bindTheme();
 bindScrollShadow();
 refreshShadow();
