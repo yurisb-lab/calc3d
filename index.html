@@ -192,6 +192,39 @@ details.fold>summary span.tag{font-size:12px;font-weight:500;color:var(--ink3);m
 .extra input:nth-child(2){flex:1}
 .extra button{flex:none;width:48px;min-height:48px;border:1px solid var(--line);background:#fff;border-radius:10px;color:var(--red);font-size:20px;cursor:pointer;line-height:1}
 
+/* ---------- insumos ---------- */
+h2.section.amtrow{display:flex;align-items:center;gap:8px}
+h2.section .amt{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;color:var(--ink);letter-spacing:0;text-transform:none}
+.suphint{font-size:12.5px;color:var(--ink3);margin:0 0 10px}
+.chips button.preset{display:flex;align-items:baseline;gap:6px;padding:8px 12px;min-height:40px;font-size:13px;font-weight:600}
+.chips button.preset .cat{font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);font-weight:700}
+.chips button.preset .pv{color:var(--ink3);font-weight:500;font-family:'IBM Plex Mono',monospace;font-size:12px}
+.chips button.more{color:var(--hot);border-style:dashed}
+.sup{border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:8px;background:#fff}
+.sup .top{display:flex;gap:8px;align-items:center}
+.sup .top input{flex:1;min-width:0}
+.sup .kill{flex:none;width:46px;min-height:46px;border:1px solid var(--line);background:#fff;border-radius:10px;color:var(--red);font-size:20px;cursor:pointer;line-height:1}
+.sup .line{display:flex;gap:8px;align-items:center;margin-top:8px}
+.sup .price{display:flex;align-items:center;gap:6px;flex:1;min-width:0}
+.sup .price .rs{font-size:12.5px;color:var(--ink3);flex:none}
+.sup .price input{min-width:0}
+.sup .sub{flex:none;min-width:76px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600}
+.qty{display:flex;align-items:center;border:1px solid var(--line);border-radius:10px;overflow:hidden;flex:none;background:#fff}
+.qty button{width:38px;min-height:46px;border:0;background:#fff;font:inherit;font-size:18px;color:var(--ink2);cursor:pointer;line-height:1}
+.qty input{width:42px;min-height:46px;border:0;border-left:1px solid var(--line);border-right:1px solid var(--line);border-radius:0;text-align:center;padding:0;font-family:'IBM Plex Mono',monospace}
+
+/* ---------- custo/hora da maquina ---------- */
+.hourbox{background:var(--bg);border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:13px;color:var(--ink2)}
+.hourbox b{font-family:'IBM Plex Mono',monospace;color:var(--ink)}
+.hourbox span{display:block;color:var(--ink3);font-size:12px;margin-top:3px}
+
+/* ---------- formulas do custo ---------- */
+.fx .r{display:flex;gap:10px;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px dashed var(--line);font-size:13.5px}
+.fx .r:last-child{border-bottom:0}
+.fx .nm{min-width:0}
+.fx .f{display:block;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--ink3);margin-top:3px}
+.fx .vl{flex:none;font-family:'IBM Plex Mono',monospace;font-weight:600}
+
 /* ---------- tabbar ---------- */
 .tabbar{
   position:fixed;left:0;right:0;bottom:0;z-index:50;
@@ -483,13 +516,16 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
               <input id="f-finish" type="text" inputmode="decimal" value="0">
             </div>
           </div>
-          <div class="field" style="margin-bottom:0">
-            <label>Insumos e ferragens <span class="hint">— por peça</span><button type="button" class="help" data-h="insumos" aria-label="O que é isso?">?</button></label>
-            <div id="extras"></div>
-            <button type="button" class="btn ghost" id="btn-extra" style="margin-top:2px">+ Adicionar item</button>
-          </div>
         </div>
       </details>
+
+      <h2 class="section amtrow">Insumos e acessórios<button type="button" class="help" data-h="insumos" aria-label="O que é isso?">?</button><span class="amt" id="sup-total">R$ 0,00</span></h2>
+      <div class="card">
+        <p class="suphint">Toque para somar da lista — os preços são sugestões, ajuste para o seu custo. A quantidade é por peça.</p>
+        <div class="chips" id="sup-presets"></div>
+        <div id="extras" style="margin-top:14px"></div>
+        <button type="button" class="btn ghost" id="btn-extra">+ Item personalizado</button>
+      </div>
 
       <h2 class="section">Lucro</h2>
       <div class="card">
@@ -799,6 +835,10 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
         <div><span class="k">Por hora</span><span class="v" id="r-ph">—</span></div>
         <div><span class="k">Pedido</span><span class="v" id="r-total">—</span></div>
       </div>
+      <details class="fold" id="fold-fx" style="margin:14px 0 0">
+        <summary>Como esse custo foi montado</summary>
+        <div class="body"><div class="fx" id="fx"></div></div>
+      </details>
       <h2 class="section">Conferência<button type="button" class="help" data-h="conferencia" aria-label="O que é isso?">?</button></h2>
       <div class="check" id="check"></div>
     </div>
@@ -1040,7 +1080,7 @@ var HELP = {
   falhas:{t:'Reserva de falhas', d:'Peça que soltou da mesa, rolo embolado, arquivo com defeito. Referência: 5% a 15%. O app DIVIDE (custo ÷ 0,92), não soma — é assim que a peça boa paga a peça perdida.', e:'R$ 26,71 ÷ 0,92 = R$ 29,03'},
   preparo:{t:'Preparo (por lote)', d:'Minutos para fatiar, limpar a mesa, trocar filamento e ligar. É gasto uma vez por lote, então o app divide pela quantidade de peças.', e:''},
   acabamento:{t:'Acabamento (por peça)', d:'Minutos com a mão em CADA peça: tirar suporte, lixar, pintar, montar, embalar. Em peça pequena costuma ser o maior custo de todos.', e:''},
-  insumos:{t:'Insumos e ferragens', d:'Tudo que vai junto com a peça: embalagem, etiqueta, sacola, ímã, argola, parafuso, LED, cola, tinta. Valor por peça.', e:''},
+  insumos:{t:'Insumos e acessórios', d:'Tudo que vai junto com a peça: embalagem, etiqueta, sacola, ímã, argola, parafuso, LED, cola, tinta. O preço é unitário e a quantidade é por peça — 4 parafusos de R$ 0,30 viram R$ 1,20 na peça.', e:'Argola R$ 0,35 × 1\nSaquinho R$ 0,20 × 1\nCartão R$ 1,00 × 1\nTotal R$ 1,55 por peça'},
   kwh:{t:'Tarifa de energia', d:'O valor do kWh na SUA conta de luz, já com impostos e bandeira — não a tarifa "seca" da ANEEL. Divida o total da conta pelo consumo em kWh para achar.', e:''},
   hora:{t:'Valor da sua hora', d:'Quanto vale uma hora do seu trabalho. Só conta o tempo com a mão na peça — a impressora imprime sozinha e não precisa de você ao lado.', e:''},
   taxa:{t:'Taxa sobre a venda', d:'Percentual que a maquininha, o Pix taxado ou o marketplace tiram do preço. Deixe 0 para venda direta no Pix ou dinheiro. O app calcula por divisão, porque a taxa incide sobre o preço final.', e:''},
@@ -1157,6 +1197,15 @@ function fillSelects(){
 }
 function curPrinter(){ return S.printers.filter(function(x){return x.id===$('f-printer').value;})[0] || S.printers[0] || {watts:0,price:0,life:1,maint:0,hoursYear:1,override:''}; }
 function curFilament(){ return S.filaments.filter(function(x){return x.id===$('f-filament').value;})[0] || S.filaments[0] || {spoolPrice:0,spoolWeight:1000}; }
+function machineHourHtml(p){
+  var dep = num(p.life) > 0 ? num(p.price)/num(p.life) : 0;
+  var mnt = num(p.hoursYear) > 0 ? num(p.maint)/num(p.hoursYear) : 0;
+  var manual = (p.override !== '' && p.override != null && num(p.override) > 0);
+  return 'Custo por hora de funcionamento: <b>'+brl(machineHour(p))+'/h</b>'+
+    '<span>'+(manual
+      ? 'Valor manual. Pelo cálculo automático daria '+brl(dep+mnt)+'/h.'
+      : 'Depreciação '+brl(dep)+'/h + manutenção '+brl(mnt)+'/h.')+'</span>';
+}
 function machineHour(p){
   if(p.override !== '' && p.override != null && num(p.override) > 0) return num(p.override);
   var dep = num(p.life) > 0 ? num(p.price)/num(p.life) : 0;
@@ -1179,7 +1228,7 @@ function compute(){
   var energy   = (num(p.watts)/1000) * h * num(st.kwh);
   var machine  = machineHour(p) * h;
   var labor    = (num($('f-prep').value)/60 * num(st.hour))/qty + (num($('f-finish').value)/60 * num(st.hour));
-  var supplies = extras.reduce(function(a,x){ return a + num(x.v); }, 0);
+  var supplies = extrasTotal(extras);
 
   var subtotal = material + energy + machine + labor + supplies;
   var failR = Math.min(0.95, Math.max(0, num($('f-fail').value)/100));
@@ -1216,7 +1265,9 @@ function compute(){
     subtotal:subtotal, reserve:reserve, cost:cost, fee:fee, feeR:feeR,
     suggested:suggested, chosen:usedChosen ? chosen : 0, usedChosen:usedChosen,
     price:price, profit:profit, realMargin:realMargin, realMarkup:realMarkup, warn:warn,
-    machineHour:machineHour(p)
+    machineHour:machineHour(p),
+    waste:waste, failR:failR, watts:num(p.watts), kwh:num(st.kwh), hourRate:num(st.hour),
+    prep:num($('f-prep').value), finish:num($('f-finish').value)
   };
 }
 
@@ -1230,6 +1281,26 @@ var BANDS = [
   {k:'fee',      n:'Taxa',        c:'#B0BAC4'},
   {k:'profit',   n:'Lucro',       c:'#0F9D8F'}
 ];
+
+function fxRow(n,f,v){
+  return '<div class="r"><span class="nm">'+n+'<span class="f">'+f+'</span></span><span class="vl">'+brl(v)+'</span></div>';
+}
+function fxHtml(r){
+  var out = '';
+  out += fxRow('Filamento', dec(r.g,1)+' g'+(r.waste > 0 ? ' + '+dec(r.waste*100,0)+'% desperdício' : '')+' × '+brl(r.perGram)+'/g', r.material);
+  out += fxRow('Energia', '('+dec(r.watts,0)+' W ÷ 1000) × '+dec(r.h,2)+' h × '+brl(r.kwh)+'/kWh', r.energy);
+  out += fxRow('Máquina', brl(r.machineHour)+'/h × '+dec(r.h,2)+' h  (depreciação + manutenção)', r.machine);
+  if(r.labor > 0){
+    var f = [];
+    if(r.prep > 0)   f.push(dec(r.prep,0)+' min ÷ '+r.qty+(r.qty === 1 ? ' peça' : ' peças'));
+    if(r.finish > 0) f.push(dec(r.finish,0)+' min/peça');
+    out += fxRow('Mão de obra', f.join(' + ')+' × '+brl(r.hourRate)+'/h', r.labor);
+  }
+  if(r.supplies > 0) out += fxRow('Insumos', extras.length+(extras.length === 1 ? ' item da lista' : ' itens da lista'), r.supplies);
+  if(r.reserve > 0)  out += fxRow('Reserva de falhas', brl(r.subtotal)+' ÷ '+dec(1-r.failR,2)+' — reserva de '+dec(r.failR*100,0)+'%', r.reserve);
+  out += fxRow('<b>Custo da peça</b>', '', r.cost);
+  return out;
+}
 
 function roundSuggestions(v){
   if(!(v > 0)) return [];
@@ -1282,6 +1353,7 @@ function render(){
   '<p style="font-size:12.5px;color:var(--ink3);margin:12px 0 0">Equivale a <b>'+dec(r.realMarkup*100,0)+'% de markup</b> sobre o custo e <b>'+dec(r.realMargin*100,0)+'% de margem</b> sobre o preço.</p>';
 
   $('fine-tag').textContent = dec(num($('f-waste').value),0)+'% desp · '+dec(num($('f-fail').value),0)+'% falhas';
+  $('fx').innerHTML = fxHtml(r);
 
   /* preço escolhido */
   var chips = roundSuggestions(r.suggested);
@@ -1315,22 +1387,103 @@ function renderActiveBanner(){
 }
 
 /* ============ insumos ============ */
+/* catálogo rápido: preços de partida, sempre editáveis na linha */
+var SUPPLY_PRESETS = [
+  {c:'Chaveiro',  n:'Argola c/ corrente',   v:0.35},
+  {c:'Embalagem', n:'Saquinho PP 10x15',    v:0.20},
+  {c:'Brinde',    n:'Cartão de agradecimento', v:1.00},
+  {c:'Etiqueta',  n:'Tag personalizada',     v:0.35},
+  {c:'Ímã',       n:'Ímã neodímio 10x2',     v:0.60},
+  {c:'Ferragem',  n:'Parafuso + porca M3',   v:0.30},
+  {c:'Chaveiro',  n:'Argola simples de aço', v:0.15},
+  {c:'Embalagem', n:'Caixa pequena',         v:1.50},
+  {c:'Etiqueta',  n:'Fita de cetim 30 cm',   v:0.25},
+  {c:'Ferragem',  n:'Rolamento 608ZZ',       v:2.50},
+  {c:'Eletrônica',n:'LED + bateria CR2032',  v:2.00},
+  {c:'Acabamento',n:'Feltro adesivo',        v:0.30},
+  {c:'Acabamento',n:'Cola instantânea',      v:0.20},
+  {c:'Acabamento',n:'Tinta spray',           v:1.20}
+];
+var SUPPLY_SHOWN = 6, supplyAll = false;
+function exQty(x){
+  var q = Math.round(num(x && (x.q == null || x.q === '') ? 1 : x.q));
+  return q > 0 ? Math.min(999, q) : 1;
+}
+function exSub(x){ return num(x.v) * exQty(x); }
+function extrasTotal(list){ return (list||[]).reduce(function(a,x){ return a + exSub(x); }, 0); }
+function cloneExtras(list){
+  return (list||[]).map(function(x){
+    return {n:x.n||'', v:(typeof x.v === 'number' ? dec(x.v,2) : x.v), q:exQty(x)};
+  });
+}
+
+function renderSupplyPresets(){
+  var el = $('sup-presets');
+  if(!el) return;
+  var list = supplyAll ? SUPPLY_PRESETS : SUPPLY_PRESETS.slice(0, SUPPLY_SHOWN);
+  el.innerHTML = list.map(function(sp,i){
+    return '<button type="button" class="preset" data-sup="'+i+'"><span class="cat">'+esc(sp.c)+'</span>'+
+      esc(sp.n)+' <span class="pv">'+brl(sp.v)+'</span></button>';
+  }).join('') +
+  (SUPPLY_PRESETS.length > SUPPLY_SHOWN
+    ? '<button type="button" class="more" id="sup-more">'+(supplyAll ? 'ver menos' : '+ '+(SUPPLY_PRESETS.length-SUPPLY_SHOWN)+' itens')+'</button>'
+    : '');
+  if($('sup-more')) $('sup-more').addEventListener('click', function(){ supplyAll = !supplyAll; renderSupplyPresets(); });
+  each(qsa(el,'[data-sup]'), function(b){
+    b.addEventListener('click', function(){
+      var sp = SUPPLY_PRESETS[+b.getAttribute('data-sup')], hit = null;
+      for(var i = 0; i < extras.length; i++){ if((extras[i].n||'') === sp.n){ hit = extras[i]; break; } }
+      if(hit) hit.q = exQty(hit) + 1;
+      else extras.push({n:sp.n, v:dec(sp.v,2), q:1});
+      renderExtras(); render();
+    });
+  });
+}
+function refreshExtraRow(i){
+  var row = $('extras').children[i];
+  if(row){ var sub = row.querySelector('.sub'); if(sub) sub.textContent = brl(exSub(extras[i])); }
+  $('sup-total').textContent = brl(extrasTotal(extras));
+}
 function renderExtras(){
   $('extras').innerHTML = extras.map(function(x,i){
-    return '<div class="extra">'+
-      '<input type="text" placeholder="Embalagem, argola..." value="'+esc(x.n)+'" data-ex="n" data-i="'+i+'">'+
-      '<input type="text" inputmode="decimal" placeholder="R$" value="'+esc(x.v)+'" data-ex="v" data-i="'+i+'">'+
-      '<button type="button" data-exdel="'+i+'" aria-label="Remover">×</button></div>';
+    return '<div class="sup">'+
+      '<div class="top">'+
+        '<input type="text" placeholder="Embalagem, argola, ímã..." value="'+esc(x.n)+'" data-ex="n" data-i="'+i+'" aria-label="Nome do insumo">'+
+        '<button type="button" class="kill" data-exdel="'+i+'" aria-label="Remover">×</button>'+
+      '</div>'+
+      '<div class="line">'+
+        '<span class="price"><span class="rs">R$</span>'+
+          '<input type="text" inputmode="decimal" placeholder="0,00" value="'+esc(x.v)+'" data-ex="v" data-i="'+i+'" aria-label="Preço unitário"></span>'+
+        '<div class="qty">'+
+          '<button type="button" data-exq="-1" data-i="'+i+'" aria-label="Diminuir quantidade">−</button>'+
+          '<input type="text" inputmode="numeric" value="'+exQty(x)+'" data-ex="q" data-i="'+i+'" aria-label="Quantidade">'+
+          '<button type="button" data-exq="1" data-i="'+i+'" aria-label="Aumentar quantidade">+</button>'+
+        '</div>'+
+        '<span class="sub">'+brl(exSub(x))+'</span>'+
+      '</div></div>';
   }).join('');
   each(qsa($('extras'),'[data-ex]'), function(inp){
     inp.addEventListener('input', function(){
-      extras[+inp.getAttribute('data-i')][inp.getAttribute('data-ex')] = inp.value;
+      var i = +inp.getAttribute('data-i');
+      extras[i][inp.getAttribute('data-ex')] = inp.value;
+      refreshExtraRow(i);
+      render();
+    });
+  });
+  each(qsa($('extras'),'[data-exq]'), function(b){
+    b.addEventListener('click', function(){
+      var i = +b.getAttribute('data-i');
+      extras[i].q = Math.max(1, exQty(extras[i]) + (+b.getAttribute('data-exq')));
+      var inp = $('extras').children[i].querySelector('[data-ex="q"]');
+      if(inp) inp.value = extras[i].q;
+      refreshExtraRow(i);
       render();
     });
   });
   each(qsa($('extras'),'[data-exdel]'), function(b){
     b.addEventListener('click', function(){ extras.splice(+b.getAttribute('data-exdel'),1); renderExtras(); render(); });
   });
+  $('sup-total').textContent = brl(extrasTotal(extras));
 }
 
 /* ============ cadastros: impressoras e filamentos ============ */
@@ -1355,6 +1508,7 @@ function renderPrinters(){
         pField('Manutenção','R$/ano','pm'+i,i,'maint',p.maint,true)+'</div>'+
         pField('Horas de uso por ano','','ph'+i,i,'hoursYear',p.hoursYear,true)+
         pField('Custo/hora manual','deixe vazio para calcular','po'+i,i,'override',p.override,true,'custohora')+
+        '<div class="hourbox">'+machineHourHtml(p)+'</div>'+
         '<button type="button" class="btn danger" data-del-p="'+i+'">Excluir impressora</button>'+
       '</div></div>';
   }).join('') || '<div class="empty">Nenhuma impressora cadastrada.</div>';
@@ -1419,7 +1573,11 @@ function wireList(el, arr, rerender, pfx){
       var item = inp.closest('.item'), head = item && item.querySelector('.head');
       if(!head) return;
       if(k==='name') head.querySelector('.nm').textContent = inp.value || 'Sem nome';
-      if(pfx==='p') head.querySelector('.meta').textContent = brl(machineHour(it))+'/h';
+      if(pfx==='p'){
+        head.querySelector('.meta').textContent = brl(machineHour(it))+'/h';
+        var hb = item.querySelector('.hourbox');
+        if(hb) hb.innerHTML = machineHourHtml(it);
+      }
       if(pfx==='f') head.querySelector('.meta').textContent = brl(num(it.spoolWeight)>0?num(it.spoolPrice)/num(it.spoolWeight):0)+'/g';
       if(k==='color') head.querySelector('.swatch').style.background = inp.value;
       if(k==='url'){
@@ -1597,7 +1755,7 @@ function renderParams(p){
     '<div class="kv"><span>'+(p.mode==='markup'?'Markup':'Margem')+'</span><span class="v">'+dec(num(p.margin),0)+'%</span></div>'+
     '<div class="kv"><span>Desperdício / falhas</span><span class="v">'+dec(num(p.waste),0)+'% / '+dec(num(p.fail),0)+'%</span></div>'+
     '<div class="kv"><span>Mão de obra</span><span class="v">'+dec(num(p.prep),0)+' min lote + '+dec(num(p.finish),0)+' min peça</span></div>'+
-    ((p.extras||[]).length ? '<div class="kv"><span>Insumos</span><span class="v">'+brl((p.extras||[]).reduce(function(a,x){return a+num(x.v);},0))+'</span></div>' : '')+
+    ((p.extras||[]).length ? '<div class="kv"><span>Insumos</span><span class="v">'+brl(extrasTotal(p.extras))+'</span></div>' : '')+
     (src ? '<div class="kv"><span>Modelo</span><span class="v"><a class="srcpill" href="'+esc(safeUrl(p.stlUrl))+'" target="_blank" rel="noopener noreferrer">'+esc(src)+'</a></span></div>' : '')+
     '<p class="note">Para atualizar estes números, toque em <b>Abrir na calculadora</b>, ajuste e salve de novo.</p>';
 }
@@ -1629,7 +1787,7 @@ function loadProduct(p){
   $('f-qty').value = p.qty || 1;
   $('f-waste').value = p.waste; $('f-fail').value = p.fail;
   $('f-prep').value = p.prep; $('f-finish').value = p.finish;
-  extras = (p.extras||[]).slice();
+  extras = cloneExtras(p.extras);
   if(p.printer && S.printers.some(function(x){return x.id===p.printer;})) $('f-printer').value = p.printer;
   if(p.filament && S.filaments.some(function(x){return x.id===p.filament;})) $('f-filament').value = p.filament;
   setSeg('seg-scope', p.scope||'unit'); scope = p.scope||'unit';
@@ -1647,7 +1805,7 @@ function fillProductFromCalc(p){
   p.printer = $('f-printer').value; p.filament = $('f-filament').value;
   p.waste = num($('f-waste').value); p.fail = num($('f-fail').value);
   p.prep = num($('f-prep').value); p.finish = num($('f-finish').value);
-  p.extras = extras.slice();
+  p.extras = cloneExtras(extras);
   p.mode = mode; p.margin = margin;
   p.price = r.suggested; p.cost = r.cost;
   p.priceSet = r.usedChosen ? r.chosen : num(p.priceSet);
@@ -1781,7 +1939,7 @@ function restore(j){
   $('f-piece').value=j.piece||''; $('f-grams').value=j.grams; $('f-h').value=Math.floor(num(j.hours));
   $('f-m').value=Math.round((num(j.hours)-Math.floor(num(j.hours)))*60); $('f-qty').value=j.qty;
   $('f-waste').value=j.waste; $('f-fail').value=j.fail; $('f-prep').value=j.prep; $('f-finish').value=j.finish;
-  extras = (j.extras||[]).slice();
+  extras = cloneExtras(j.extras);
   if(j.printer && S.printers.some(function(x){return x.id===j.printer;})) $('f-printer').value=j.printer;
   if(j.filament && S.filaments.some(function(x){return x.id===j.filament;})) $('f-filament').value=j.filament;
   setSeg('seg-scope', j.scope||'unit'); scope=j.scope||'unit';
@@ -2263,7 +2421,7 @@ function bindCalc(){
       $('cad-filaments').hidden = (v !== 'filaments');
     });
   });
-  $('btn-extra').addEventListener('click', function(){ extras.push({n:'',v:''}); renderExtras(); });
+  $('btn-extra').addEventListener('click', function(){ extras.push({n:'',v:'',q:1}); renderExtras(); render(); });
 
   $('btn-save').addEventListener('click', function(){
     var r = compute();
@@ -2274,7 +2432,7 @@ function bindCalc(){
       grams:num($('f-grams').value), hours:num($('f-h').value)+num($('f-m').value)/60,
       qty:r.qty, waste:num($('f-waste').value), fail:num($('f-fail').value),
       prep:num($('f-prep').value), finish:num($('f-finish').value),
-      extras:extras.slice(), printer:$('f-printer').value, filament:$('f-filament').value,
+      extras:cloneExtras(extras), printer:$('f-printer').value, filament:$('f-filament').value,
       scope:scope, mode:mode, margin:margin, price:r.price, cost:r.cost,
       priceSet:r.usedChosen ? r.chosen : 0, suggested:r.suggested,
       productId:activeProductId || ''
@@ -2560,7 +2718,7 @@ function boot(reload){
   $('f-waste').value = S.settings.waste;
   $('f-fail').value  = S.settings.fail;
   $('f-margin').value = margin;
-  renderPrinters(); renderFilaments(); renderExtras();
+  renderPrinters(); renderFilaments(); renderSupplyPresets(); renderExtras();
   renderCats(); renderCatFilter(); renderProducts();
   renderBuyFilter(); renderBuys();
   syncMarginLabel();

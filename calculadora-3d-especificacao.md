@@ -42,6 +42,8 @@ A pesquisa em fontes brasileiras e internacionais converge em **7 blocos**. Nenh
 - Embalagem, caixa, etiqueta, sacola.
 - Cola, tinta, primer, lixa.
 - Ferragens: ímã, argola de chaveiro, parafuso, fita, LED, pilha.
+- Cada item tem **preço unitário e quantidade por peça** — 4 parafusos de R$ 0,30 entram como R$ 1,20 na peça, não R$ 0,30.
+- O app traz um **catálogo rápido** dos insumos mais comuns (argola, saquinho, cartão de brinde, tag, ímã, parafuso, rolamento, LED, feltro, cola, tinta) com preço de partida editável. Tocar duas vezes no mesmo item soma quantidade em vez de duplicar a linha.
 
 ### 2.6 Reserva para falhas
 - Peça que soltou da mesa às 3 da manhã, rolo embolado, arquivo com problema.
@@ -72,7 +74,7 @@ custo_máquina     = custo_hora_máquina × horas_de_impressão
 custo_mão_de_obra = (minutos_de_preparo ÷ 60 × valor_hora)      ← por lote
                     + (minutos_de_acabamento ÷ 60 × valor_hora)  ← por peça
 
-custo_insumos     = soma dos itens extras
+custo_insumos     = soma de (preço_unitário × quantidade) de cada insumo
 
 subtotal          = material + energia + máquina + mão_de_obra + insumos
 
@@ -165,8 +167,10 @@ Tudo o mais (desperdício, mão de obra, insumos, falhas) fica em blocos recolh�
 
 **Resultado:** card fixo com o preço sugerido em destaque, a decomposição do custo, o painel de conferência e o comparativo entre canais lado a lado.
 
+**"Como esse custo foi montado":** bloco recolhível que mostra a fórmula de cada camada com os números do momento — `82,0 g + 8% desperdício × R$ 0,11/g`, `(150 W ÷ 1000) × 2,50 h × R$ 0,75/kWh`, `R$ 0,63/h × 2,50 h`, `R$ 13,99 ÷ 0,92`. Serve para conferir de onde veio cada centavo e para explicar o preço ao cliente sem decorar conta.
+
 ### Aba 2 — Impressoras
-Cadastro: apelido, potência (W), valor de compra, vida útil em horas, manutenção anual estimada. O app calcula e mostra o **custo/hora** automaticamente — e permite sobrescrever manualmente.
+Cadastro: apelido, potência (W), valor de compra, vida útil em horas, manutenção anual estimada. O app calcula e mostra o **custo/hora** automaticamente — aberto em **depreciação + manutenção**, para a conta não virar um número mágico — e permite sobrescrever manualmente.
 
 ### Aba 3 — Filamentos
 Cadastro: apelido, material (PLA/PETG/ABS/TPU/outro), cor, preço do rolo, peso do rolo. Mostra o **preço por grama** calculado.
