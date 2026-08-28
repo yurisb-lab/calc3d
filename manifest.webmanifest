@@ -1,0 +1,19 @@
+{
+  "name": "Calculadora 3D — Preço de Venda",
+  "short_name": "Calculadora 3D",
+  "description": "Preço de venda para impressão 3D: filamento, energia, máquina, mão de obra, insumos, falhas e taxa.",
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#F4F1EC",
+  "theme_color": "#151A21",
+  "categories": ["business", "productivity", "utilities"],
+  "icons": [
+    { "src": "icone-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icone-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icone-512-mask.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
