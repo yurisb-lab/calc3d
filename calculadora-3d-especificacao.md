@@ -291,8 +291,11 @@ não adianta cadastrar produto no celular e não achar no computador.
 - **Firebase Auth (e‑mail/senha)** + **Firestore**, carregados por CDN só
   quando você configura. Sem configuração, o app não faz nenhuma requisição e
   segue 100% local, como antes.
-- Todos os aparelhos entram com o **mesmo e‑mail e senha** — é o login que
-  amarra os dados.
+- A configuração do projeto vem **embutida no `index.html`**: em cada aparelho
+  novo basta **entrar com o mesmo e‑mail e senha**. É o login que amarra os
+  dados, e não há nada para colar.
+- Dá para sair da nuvem a qualquer momento (e voltar) sem perder nada, e para
+  apontar o app para outro projeto do Firebase.
 - Sincronização em tempo real por `onSnapshot`, um documento por item. Duas
   pessoas editando coisas diferentes não se atropelam.
 - Cache offline do Firestore ligado: sem internet o app continua funcionando e

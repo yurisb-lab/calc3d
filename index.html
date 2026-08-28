@@ -1808,6 +1808,23 @@ function syncMarginLabel(){
 }
 
 /* ============ sincronização com Firebase ============ */
+
+/* Projeto do Firebase deste app. Esta configuração NÃO é segredo — ela vai no
+   código de qualquer app web, é assim que o Firebase funciona. Quem protege os
+   dados são as regras do Firestore (veja FIREBASE.md) e a sua senha.
+   Com ela aqui, os outros aparelhos só precisam fazer login.
+   Deixe {} para o app começar em modo local. */
+var BUILTIN_CFG = {
+  apiKey: "AIzaSyBOuA0TGXVxVJR60VtsssFcQkjQHlElwmY",
+  authDomain: "lyke3dcalc.firebaseapp.com",
+  projectId: "lyke3dcalc",
+  storageBucket: "lyke3dcalc.firebasestorage.app",
+  messagingSenderId: "845068382694",
+  appId: "1:845068382694:web:1dda326867d47725dda627"
+};
+var LOCAL_OPTOUT = '__local__';
+function hasBuiltin(){ return !!(BUILTIN_CFG && BUILTIN_CFG.apiKey); }
+
 var FB_VERSIONS = ['11.6.1','10.14.1'];
 var dynImport = null;
 try { dynImport = new Function('u', 'return import(u);'); } catch(e){ dynImport = null; }
@@ -1926,8 +1943,15 @@ function pushAllPhotos(){
 }
 
 /* configuração */
-function cfgLoad(){ try { return JSON.parse(load('calc3d_fb') || 'null'); } catch(e){ return null; } }
-function cfgSave(c){ save('calc3d_fb', c ? JSON.stringify(c) : ''); }
+function cfgLoad(){
+  var raw = load('calc3d_fb'), v = null;
+  if(raw){ try { v = JSON.parse(raw); } catch(e){ v = null; } }
+  if(v === LOCAL_OPTOUT) return null;          /* o usuário pediu modo local */
+  if(v && v.apiKey) return v;                  /* configuração colada à mão */
+  return hasBuiltin() ? BUILTIN_CFG : null;    /* a que já vem no app */
+}
+function cfgSave(c){ save('calc3d_fb', JSON.stringify(c || LOCAL_OPTOUT)); }
+function cfgUseBuiltin(){ save('calc3d_fb', ''); }
 function parseCfg(txt){
   var s = String(txt||'').trim();
   var i = s.indexOf('{'), j = s.lastIndexOf('}');
@@ -1963,7 +1987,13 @@ function startSync(){
       else { SYNC.uid = null; SYNC.email = ''; setSync('signedout',''); }
     });
   }).catch(function(e){
-    setSync('error', 'Não deu para carregar o Firebase: ' + ((e && e.message) || e) + '. Verifique a conexão.');
+    if(navigator.onLine === false){ setSync('nonet',''); }
+    else { setSync('error', 'Não deu para carregar o Firebase: ' + ((e && e.message) || e) + '. Verifique a conexão.'); }
+    /* tenta de novo assim que a internet voltar */
+    window.addEventListener('online', function once(){
+      window.removeEventListener('online', once);
+      if(SYNC.status === 'nonet' || SYNC.status === 'error') startSync();
+    });
   });
 }
 function loadFB(){
@@ -2059,6 +2089,7 @@ function updateSyncUI(){
   if(!dot) return;
   var cls = '', txt = '', btxt = '';
   if(SYNC.status === 'local'){ txt = 'Modo local — os dados ficam só neste aparelho.'; }
+  else if(SYNC.status === 'nonet'){ cls = 'off'; txt = 'Sem conexão agora. O app segue funcionando e sincroniza quando a internet voltar.'; btxt = 'Offline'; }
   else if(SYNC.status === 'connecting'){ cls = 'off'; txt = 'Conectando ao Firebase…'; btxt = 'Conectando'; }
   else if(SYNC.status === 'signedout'){ cls = 'off'; txt = 'Firebase configurado. Falta entrar na sua conta.'; btxt = 'Entrar'; }
   else if(SYNC.status === 'online'){
@@ -2079,8 +2110,13 @@ function updateSyncUI(){
 }
 function syncBody(){
   if(SYNC.status === 'connecting') return '<p class="note"><span class="spin"></span> Carregando o Firebase…</p>';
-  if(SYNC.status === 'local' || SYNC.status === 'error'){
-    return '<div class="field"><label for="sy-cfg">Configuração do Firebase</label>'+
+  if(SYNC.status === 'local' || SYNC.status === 'error' || SYNC.status === 'nonet'){
+    return (SYNC.status === 'local' && hasBuiltin()
+        ? '<p class="note" style="margin-top:0">Este aparelho está fora da nuvem por escolha sua.</p>'+
+          '<div class="btnrow" style="margin-top:10px"><button type="button" class="btn primary" id="sy-builtin">Voltar a usar a nuvem</button></div>'+
+          '<details class="fold" style="margin-top:12px"><summary>Usar outro projeto do Firebase</summary><div class="body">'
+        : '')+
+      '<div class="field"><label for="sy-cfg">Configuração do Firebase</label>'+
       '<textarea id="sy-cfg" placeholder=\'{ "apiKey": "...", "authDomain": "...", "projectId": "...", "appId": "..." }\'>'+
       esc(SYNC.cfg ? JSON.stringify(SYNC.cfg, null, 2) : '')+'</textarea></div>'+
       '<div class="btnrow"><button type="button" class="btn primary" id="sy-connect">Conectar</button>'+
@@ -2096,7 +2132,8 @@ function syncBody(){
       '<li>Repita este passo 5 nos outros aparelhos, entrando com o <b>mesmo e-mail e senha</b>.</li>'+
       '</ol>'+
       '<p class="note">Essa configuração não é segredo — ela vai no código de qualquer app web. Quem protege os dados são as regras do Firestore e a sua senha.</p>'+
-      '</div></details>';
+      '</div></details>'+
+      (SYNC.status === 'local' && hasBuiltin() ? '</div></details>' : '');
   }
   if(SYNC.status === 'signedout'){
     return '<div class="field"><label for="sy-mail">E-mail</label><input id="sy-mail" type="email" inputmode="email" autocomplete="username" placeholder="voce@exemplo.com"></div>'+
@@ -2105,8 +2142,8 @@ function syncBody(){
       '<button type="button" class="btn" id="sy-up">Criar conta</button></div>'+
       '<div class="btnrow"><button type="button" class="btn ghost" id="sy-reset">Esqueci a senha</button></div>'+
       '<div id="sy-msg"></div>'+
-      '<p class="note">Use o <b>mesmo e-mail e senha</b> nos 2 ou 3 aparelhos. É isso que faz os dados aparecerem em todos.</p>'+
-      '<div class="btnrow" style="margin-top:10px"><button type="button" class="btn danger" id="sy-forget">Remover configuração</button></div>';
+      '<p class="note">Use o <b>mesmo e-mail e senha</b> nos 2 ou 3 aparelhos. É isso que faz os dados aparecerem em todos — não precisa configurar mais nada.</p>'+
+      '<div class="btnrow" style="margin-top:10px"><button type="button" class="btn ghost" id="sy-forget">Usar só neste aparelho, sem nuvem</button></div>';
   }
   if(SYNC.status === 'online'){
     return '<p class="note" style="margin-top:0">Tudo o que você mudar aqui aparece nos outros aparelhos em segundos. Sem internet o app continua funcionando e envia quando voltar.</p>'+
@@ -2137,8 +2174,12 @@ function wireSyncBody(){
       detach(); startSync();
     } catch(e){ alert(e.message || 'Configuração inválida.'); }
   });
+  if((el = $('sy-builtin'))) el.addEventListener('click', function(){
+    cfgUseBuiltin();
+    detach(); startSync();
+  });
   if((el = $('sy-forget'))) el.addEventListener('click', function(){
-    if(!confirm('Remover a configuração do Firebase deste aparelho? Os dados continuam salvos aqui e na nuvem.')) return;
+    if(!confirm('Deixar este aparelho fora da nuvem? Os dados continuam salvos aqui e na nuvem, e você pode voltar quando quiser.')) return;
     detach();
     if(SYNC.auth && SYNC.U){ try { SYNC.U.signOut(SYNC.auth); } catch(e){} }
     cfgSave(null); SYNC.cfg = null; SYNC.uid = null; SYNC.email = '';

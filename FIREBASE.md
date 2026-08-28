@@ -1,63 +1,38 @@
 # Sincronizar entre 2 ou 3 aparelhos (Firebase)
 
-O app funciona sozinho, sem nuvem — os dados ficam no próprio aparelho. Este
-guia liga a **sincronização**: você cadastra tudo no celular e aparece no
-computador, e vice‑versa, em segundos.
+A configuração do Firebase **já vem dentro do app** (no topo do bloco de
+sincronização, em `index.html`). Em cada aparelho novo você só precisa
+**fazer login com o mesmo e‑mail e a mesma senha**. Nada de colar código.
 
-Use o **plano gratuito (Spark)**. Não precisa cartão. As fotos são guardadas
-dentro do próprio Firestore (não usamos o Firebase Storage, que hoje exige
-plano pago).
+Projeto usado: **`lyke3dcalc`**.
+
+O app funciona sem nuvem também — se a internet cair, ele continua calculando e
+salvando, e envia sozinho quando a conexão voltar.
 
 ---
 
-## 1. Criar o projeto
+## O que já está pronto
 
-1. Abra <https://console.firebase.google.com> e clique em **Criar um projeto**.
-2. Dê um nome (ex.: `calculadora-3d`). Pode desativar o Google Analytics.
+- Firebase Auth (e‑mail/senha) + Firestore, carregados por CDN.
+- Fotos guardadas dentro do próprio Firestore (não usamos o Firebase Storage,
+  que hoje exige plano pago) e em cache no aparelho.
+- Plano **gratuito (Spark)** dá conta com folga.
 
-## 2. Criar o banco
+## O que falta fazer no console, uma vez só
 
-1. No menu, **Criação › Firestore Database › Criar banco de dados**.
-2. Escolha a região **`southamerica-east1` (São Paulo)** — é a mais perto.
-3. Pode começar em modo de teste; no passo 5 você troca pelas regras certas.
+Abra <https://console.firebase.google.com> no projeto `lyke3dcalc`.
 
-## 3. Ligar o login por e‑mail
+### 1. Ligar o login por e‑mail
+**Criação › Authentication › Sign-in method** → ative **E‑mail/senha** e salve.
 
-1. **Criação › Authentication › Primeiros passos**.
-2. Na aba **Sign-in method**, ative **E‑mail/senha** e salve.
+### 2. Criar o banco
+**Criação › Firestore Database › Criar banco de dados**, região
+**`southamerica-east1` (São Paulo)**.
 
-> É o login que amarra os aparelhos. Todos entram com **o mesmo e‑mail e a
-> mesma senha** e enxergam os mesmos dados.
+### 3. Publicar as regras de segurança — **obrigatório**
 
-## 4. Pegar a configuração
-
-1. Engrenagem **Configurações do projeto › Seus apps**.
-2. Clique no ícone **`</>`** (Web), dê um apelido e registre.
-3. Copie o bloco `firebaseConfig` que aparece — ele se parece com isto:
-
-   ```js
-   const firebaseConfig = {
-     apiKey: "AIza...",
-     authDomain: "calculadora-3d.firebaseapp.com",
-     projectId: "calculadora-3d",
-     storageBucket: "calculadora-3d.appspot.com",
-     messagingSenderId: "123456789",
-     appId: "1:123456789:web:abc123"
-   };
-   ```
-
-4. No app, vá em **Ajustes › Sincronização entre aparelhos**, cole esse bloco
-   inteiro no campo e toque em **Conectar**.
-5. Toque em **Criar conta**, com o e‑mail e a senha que você vai usar em todos
-   os aparelhos.
-
-Essa configuração **não é segredo** — ela vai no código de qualquer app web.
-Quem protege os dados são as regras do passo 5 e a sua senha.
-
-## 5. Publicar as regras de segurança (obrigatório)
-
-Em **Firestore Database › Regras**, apague o que estiver lá, cole isto e
-clique em **Publicar**:
+Em **Firestore Database › Regras**, apague o que estiver lá, cole isto e clique
+em **Publicar**:
 
 ```
 rules_version = '2';
@@ -71,22 +46,50 @@ service cloud.firestore {
 }
 ```
 
-Sem isso, ou o Firestore bloqueia tudo (o app mostra "o Firestore recusou o
+Sem isso, ou o Firestore bloqueia tudo (o app avisa "o Firestore recusou o
 acesso"), ou o banco fica aberto para qualquer pessoa da internet.
 
-## 6. Liberar o endereço onde o app está publicado
-
-Se você abre o app pelo GitHub Pages, vá em **Authentication › Settings ›
-Domínios autorizados** e adicione o domínio, por exemplo
-`seuusuario.github.io`. `localhost` já vem liberado.
+### 4. Liberar o endereço do app
+**Authentication › Settings › Domínios autorizados** → adicione o domínio onde
+o app está publicado, por exemplo `yurisb-lab.github.io`. O `localhost` já vem
+liberado.
 
 Sem esse passo o login falha com `auth/unauthorized-domain`.
 
-## 7. Repetir nos outros aparelhos
+### 5. Fechar o cadastro depois de criar suas contas — recomendado
 
-Em cada celular ou computador: abra o app, **Ajustes › Sincronização**, cole a
-**mesma** configuração, toque em **Conectar** e depois em **Entrar** com o
-mesmo e‑mail e senha. Pronto.
+A chave do Firebase é pública por natureza (vai no código de qualquer app web),
+e o repositório é aberto. As regras do passo 3 garantem que **ninguém enxerga os
+seus dados** — cada conta só acessa a própria pasta. Mas, enquanto o cadastro
+estiver aberto, um estranho poderia criar uma conta no projeto e consumir a sua
+cota à toa.
+
+Depois de criar a sua conta e entrar em todos os aparelhos, vá em
+**Authentication › Settings › User actions** e **desmarque "Enable create
+(sign-up)"**. Você continua entrando normalmente; só param os cadastros novos.
+Se precisar de mais um aparelho depois, é só marcar de novo por um minuto.
+
+Extra, se quiser apertar mais: no Google Cloud Console, em **APIs e serviços ›
+Credenciais**, restrinja a chave por **referenciador HTTP** aos seus domínios.
+
+---
+
+## Usar em cada aparelho
+
+1. Abra o app.
+2. **Ajustes › Sincronização entre aparelhos**.
+3. **Criar conta** no primeiro aparelho; **Entrar** nos outros, com o mesmo
+   e‑mail e senha.
+
+Pronto. O que você mudar num aparelho aparece nos outros em segundos.
+
+### Sair da nuvem
+No mesmo painel, **"Usar só neste aparelho, sem nuvem"**. Nada é apagado, e o
+botão **Voltar a usar a nuvem** desfaz.
+
+### Usar outro projeto do Firebase
+No modo local, abra **"Usar outro projeto do Firebase"** e cole o
+`firebaseConfig` do outro projeto.
 
 ---
 
@@ -104,23 +107,20 @@ users/{seu-id}/
   photos/{id}            fotos: miniatura + imagem, em JPEG comprimido
 ```
 
-Cada foto é um documento separado, comprimido para caber com folga no limite
-de 1 MB por documento do Firestore, e fica em cache no aparelho (IndexedDB)
-para abrir rápido e funcionar sem internet.
+Cada foto é um documento separado, comprimido para caber com folga no limite de
+1 MB por documento do Firestore, e fica em cache no aparelho (IndexedDB) para
+abrir rápido e funcionar sem internet.
 
 ## Perguntas rápidas
 
-**Vai passar do plano gratuito?** É muito difícil. O plano Spark dá 50 mil
-leituras e 20 mil escritas por dia e 1 GiB de armazenamento. Um catálogo de
-algumas centenas de produtos com fotos usa uma fração disso.
-
-**Funciona sem internet?** Sim. O app continua calculando e salvando; quando a
-conexão volta, o Firestore envia o que ficou pendente sozinho.
+**Vai passar do plano gratuito?** É muito difícil. O Spark dá 50 mil leituras e
+20 mil escritas por dia e 1 GiB de armazenamento. Um catálogo de algumas
+centenas de produtos com fotos usa uma fração disso.
 
 **E se eu já tinha dados no aparelho antes de conectar?** Se a nuvem estiver
-vazia, o app sobe tudo automaticamente. Se a nuvem já tiver dados, ela manda —
-e os dados locais ficam guardados; use **Enviar dados deste aparelho** em
-Ajustes › Sincronização para juntá‑los.
+vazia, o app sobe tudo automaticamente. Se a nuvem já tiver dados, ela manda — e
+os dados locais ficam guardados; use **Enviar dados deste aparelho** em Ajustes
+› Sincronização para juntá‑los.
 
-**Quero parar de usar a nuvem.** Em Ajustes › Sincronização, toque em
-**Remover configuração**. O app volta ao modo local e nada é apagado.
+**Como troco o projeto do Firebase de vez?** Edite `BUILTIN_CFG` no topo do
+bloco de sincronização, dentro do `index.html`.
