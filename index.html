@@ -799,6 +799,57 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
 .rollrow .go svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .rollrow .go[aria-disabled="true"]{opacity:.35;pointer-events:none}
 
+/* ---------- importar do fatiador ---------- */
+.drop{
+  display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center;
+  border:1.5px dashed var(--line2);border-radius:var(--r-sm);background:var(--surface2);
+  padding:15px 12px;margin-bottom:14px;cursor:pointer;color:var(--ink2);
+  transition:border-color .15s,background .15s,color .15s;
+}
+.drop:hover{border-color:var(--hot);color:var(--ink)}
+.drop.over{border-color:var(--hot);background:var(--hot-soft);color:var(--hot)}
+.drop.busy{pointer-events:none;opacity:.65}
+.drop svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;color:var(--ink3)}
+.drop.over svg{color:var(--hot)}
+.drop .t{font-size:13.5px;font-weight:600}
+.drop .s{font-size:11.5px;color:var(--ink3);line-height:1.5}
+.gcok{background:var(--surface2);border:1px solid var(--line);border-radius:var(--r-sm);padding:11px 13px;font-size:13px;color:var(--ink2);margin-bottom:14px;box-shadow:var(--sh-in)}
+.gcok b{color:var(--ink)}
+.gcok .src{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);margin-bottom:4px}
+.gcok ul{margin:6px 0 0;padding-left:18px}
+.gcok li{margin-bottom:2px}
+
+/* ---------- multicolor / AMS ---------- */
+#mat-box{margin-top:14px}
+.matrow{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.matrow .sw{width:14px;height:14px;border-radius:50%;flex:none;border:1px solid rgba(0,0,0,.15);box-shadow:0 1px 2px rgba(0,0,0,.18)}
+.matrow .pick{flex:1;min-width:0}
+.matrow .pick select{min-height:46px}
+.matrow .g{flex:none;width:96px;position:relative}
+.matrow .g input{text-align:right;padding-right:26px;min-height:46px}
+.matrow .g .u{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--ink3);pointer-events:none}
+.matrow .kill{flex:none;width:44px;min-height:46px;border:1px solid var(--line);background:var(--surface);border-radius:var(--r-sm);color:var(--red);font-size:19px;line-height:1;cursor:pointer}
+.matrow .kill:hover{background:var(--err-bg);border-color:var(--err-line)}
+.mattot{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px;font-size:13px;color:var(--ink2);border-top:1px solid var(--line);margin-top:12px;padding-top:10px}
+.mattot>span:first-child{flex:1;min-width:0}
+.mattot>span:last-child{flex:none;white-space:nowrap}
+.mattot b{font-family:'IBM Plex Mono',monospace;color:var(--ink)}
+.matnote{font-size:12px;color:var(--ink3);margin:0 0 10px;line-height:1.5}
+
+/* ---------- faixas de quantidade ---------- */
+.tierrow{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px dashed var(--line)}
+.tierrow:last-child{border-bottom:0}
+.tierrow .qt{flex:none;min-width:44px;font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:13px;color:var(--ink2)}
+.tierrow .mid{flex:1;min-width:0}
+.tierrow .un{display:block;font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:15px}
+.tierrow .sb{display:block;font-size:11.5px;color:var(--ink3);font-family:'IBM Plex Mono',monospace;line-height:1.5}
+.tierrow .off{flex:none;font-size:11.5px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:var(--teal);background:rgba(14,145,132,.12);border-radius:20px;padding:3px 8px}
+.tierrow.base .off{color:var(--ink3);background:var(--surface3)}
+.tierfoot{display:flex;gap:8px;align-items:flex-end;margin-top:14px}
+.tierfoot .field{flex:1;min-width:0;margin-bottom:0}
+.tierfoot .field input{min-height:44px}
+.tierfoot .btn{width:auto;flex:none;padding:11px 14px;white-space:nowrap}
+
 /* ---------- desktop ---------- */
 @media (min-width:1024px){
   body{padding-bottom:24px}
@@ -884,17 +935,32 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
             <label for="f-printer">Impressora</label>
             <select id="f-printer"></select>
           </div>
-          <div class="field" style="margin-bottom:0">
+          <div class="field" id="fld-filament" style="margin-bottom:0">
             <label for="f-filament">Filamento</label>
             <select id="f-filament"></select>
+          </div>
+        </div>
+        <div class="field" style="margin:14px 0 0">
+          <label>Cores da peça<button type="button" class="help" data-h="multicolor" aria-label="O que é isso?">?</button></label>
+          <div class="seg" id="seg-multi">
+            <button type="button" data-v="one" aria-pressed="true">1 filamento</button>
+            <button type="button" data-v="multi" aria-pressed="false">Multicolor / AMS</button>
           </div>
         </div>
       </div>
 
       <h2 class="section">Do fatiador</h2>
       <div class="card">
+        <div class="drop" id="gc-drop" role="button" tabindex="0">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4"/><path d="M8 8l4-4 4 4"/><path d="M4 15v3a2 2 0 002 2h12a2 2 0 002-2v-3"/></svg>
+          <span class="t">Arraste aqui o arquivo fatiado</span>
+          <span class="s">.gcode, .gcode.gz ou .3mf do Prusa, Orca, Bambu ou Cura — o app lê gramas e tempo sozinho</span>
+        </div>
+        <p class="suphint" style="margin:-4px 0 12px">Ou toque na área acima para escolher o arquivo.<button type="button" class="help" data-h="importar" aria-label="O que é isso?">?</button></p>
+        <input type="file" id="gc-file" accept=".gcode,.gco,.g,.gz,.3mf,.gcode.gz" hidden>
+        <div id="gc-msg"></div>
         <div class="row">
-          <div class="field">
+          <div class="field" id="fld-grams">
             <label for="f-grams">Gramas<button type="button" class="help" data-h="gramas" aria-label="O que é isso?">?</button></label>
             <input id="f-grams" type="text" inputmode="decimal" placeholder="82">
           </div>
@@ -906,6 +972,16 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
             <label for="f-m">Minutos</label>
             <input id="f-m" type="text" inputmode="decimal" placeholder="0">
           </div>
+        </div>
+        <div id="mat-box" hidden>
+          <p class="matnote">Uma linha por cor, com as gramas que cada filamento gasta na peça. A troca de cor gasta filamento que não vira peça — some a purga abaixo, em gramas.</p>
+          <div id="mat-rows"></div>
+          <button type="button" class="btn ghost" id="btn-mat-add">+ Adicionar cor</button>
+          <div class="field" style="margin:12px 0 0">
+            <label for="f-purge">Torre de purga e troca de cor <span class="hint">g</span><button type="button" class="help" data-h="purga" aria-label="O que é isso?">?</button></label>
+            <input id="f-purge" type="text" inputmode="decimal" placeholder="0">
+          </div>
+          <div class="mattot" id="mat-tot"></div>
         </div>
         <div class="field">
           <label for="f-qty">Quantidade de peças</label>
@@ -1383,6 +1459,18 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
       <h2 class="section">Conferência<button type="button" class="help" data-h="conferencia" aria-label="O que é isso?">?</button></h2>
       <div class="check" id="check"></div>
     </div>
+    <h2 class="section">Preço por faixa de quantidade<button type="button" class="help" data-h="faixas" aria-label="O que é isso?">?</button></h2>
+    <div class="card">
+      <div id="tiers"></div>
+      <div class="tierfoot">
+        <div class="field">
+          <label for="s-tiers">Faixas <span class="hint">— quantidades</span></label>
+          <input id="s-tiers" type="text" inputmode="numeric" placeholder="1, 10, 50">
+        </div>
+        <button type="button" class="btn" id="btn-tier-copy">Copiar</button>
+      </div>
+      <p class="note" id="tier-note"></p>
+    </div>
   </div>
 </main>
 
@@ -1474,7 +1562,7 @@ var DEFAULTS = {
   buys:[],
   /* fixed/fixedHours nascem em 0: quem nunca abriu Ajustes continua com o preço
      de antes, e o rateio só entra depois que o usuário informa os dois números */
-  settings:{kwh:0.75,hour:25,waste:8,fail:8,fee:0,fixed:0,fixedHours:0,biz:'',contact:'',valid:7},
+  settings:{kwh:0.75,hour:25,waste:8,fail:8,fee:0,fixed:0,fixedHours:0,biz:'',contact:'',valid:7,tiers:'1, 10, 50'},
   jobs:[],
   /* orçamento em montagem: fica só neste aparelho (não entra em COLLS, não sincroniza).
      Um rascunho meio pronto pulando de celular para celular no meio de uma venda
@@ -1530,6 +1618,12 @@ function migrate(seed){
 
 
 var extras = [];
+/* multicolor / AMS: uma peça pode gastar vários filamentos. mats guarda as
+   gramas de cada cor e purge as gramas absolutas da torre de purga — em troca
+   de cor o desperdício não é uma porcentagem, é um peso que a peça não tem. */
+var multi = false;
+var mats = [];
+var purgeStr = '';
 var scope = 'unit';
 var mode = 'margem';
 var margin = 40;
@@ -1766,6 +1860,10 @@ var HELP = {
   lucrohora:{t:'Lucro por hora de máquina', d:'Seu recurso escasso não é dinheiro, é hora de impressora. Duas peças com o mesmo lucro não valem o mesmo se uma leva 2 h e a outra 20 h. Ordene o catálogo por este número para saber o que compensa colocar na mesa.', e:'Lucro R$ 24,00 ÷ 9 h = R$ 2,67/h\nLucro R$ 8,00 ÷ 1,5 h = R$ 5,33/h'},
   custohora:{t:'Custo/hora da máquina', d:'Depreciação (valor da impressora ÷ vida útil em horas) mais manutenção anual diluída. Não copie o número de outra pessoa — depende da SUA máquina e do SEU uso.', e:'R$ 2.500 ÷ 4.000 h = R$ 0,625/h'},
   vidautil:{t:'Vida útil', d:'Quantas horas de impressão a máquina deve durar antes da troca. Referência: 3.000 a 10.000 h. Conservador e comum: 4.000 a 5.000 h.', e:''},
+  multicolor:{t:'Multicolor / AMS', d:'Peça de uma cor só: deixe em "1 filamento". Com AMS, CFS ou MMU, marque "Multicolor" e informe as gramas de CADA cor. A troca de cor gasta filamento fora da peça — a torre de purga entra em gramas, não em porcentagem, porque em peça pequena ela pesa mais que a própria peça.', e:'Corpo branco 18 g\nDetalhe vermelho 4 g\nPurga 26 g → 48 g no rolo'},
+  purga:{t:'Torre de purga e troca de cor', d:'O filamento que o fatiador joga fora a cada troca: torre de purga, prime tower e o que sai no lixo do AMS. Pegue o número do próprio fatiador — no Bambu e no Orca ele aparece como "flush" ou na estimativa de peso da mesa. Já entra no custo e dá baixa no estoque.', e:'4 trocas × 6,5 g = 26 g de purga'},
+  importar:{t:'Importar do fatiador', d:'Arraste o arquivo que o fatiador gerou. Prusa, Orca, Bambu e Cura escrevem gramas, tempo e cores em texto no cabeçalho do G-code — o app lê e preenche os campos. Some o erro de digitação. Como o arquivo já conta purga, brim e suporte, o desperdício é zerado para não cobrar duas vezes.', e:'; filament used [g] = 18.4, 4.1\n; estimated printing time = 2h 30m'},
+  faixas:{t:'Preço por faixa de quantidade', d:'O preparo é por lote: fatiar, limpar a mesa e ligar custa igual para 1 ou para 50 peças. Diluído, o preço unitário cai com o volume. Esta tabela sai pronta do seu próprio cálculo — é argumento de venda para o cliente subir o pedido, e a margem continua a mesma.', e:'1 un — R$ 49,90 cada\n10 un — R$ 45,10 cada (−10%)\n50 un — R$ 43,20 cada (−13%)'},
   potencia:{t:'Potência média', d:'Consumo médio em watts durante a impressão. FDM de mesa: 100 W a 250 W. Fechada ou com câmara aquecida: 200 W a 400 W.', e:''}
 };
 var tipEl = null, tipFor = null;
@@ -1899,24 +1997,89 @@ function fixedHour(){
   var f = num(S.settings.fixed), h = num(S.settings.fixedHours);
   return (f > 0 && h > 0) ? f/h : 0;
 }
+/* ============ multicolor / AMS ============ */
+/* Uma linha por cor, com as gramas que cada filamento gasta na peça. A torre de
+   purga entra em gramas absolutas, não em porcentagem: o que se perde numa
+   troca de cor é o volume da troca, não uma fatia do tamanho da peça — em peça
+   pequena a purga chega a pesar mais que a própria peça. */
+function matFil(m){
+  var id = m && m.f;
+  return S.filaments.filter(function(x){ return x.id === id; })[0] || null;
+}
+function matRows(){ return mats.filter(function(m){ return matFil(m); }); }
+function matGramsTotal(){
+  return matRows().reduce(function(a,m){ return a + Math.max(0, num(m.g)); }, 0);
+}
+function purgeGrams(){ return Math.max(0, num(purgeStr)); }
+function defaultMatId(){
+  var el = $('f-filament');
+  return (el && el.value) || (S.filaments[0] ? S.filaments[0].id : '');
+}
+function matAdd(id, g){ mats.push({f: id || defaultMatId(), g: (g == null ? '' : String(g))}); }
+/* entrar no modo multicolor sem perder o que já está na tela: a primeira linha
+   nasce com o filamento e as gramas que o usuário já tinha digitado */
+function matSeed(){
+  if(matRows().length) return;
+  mats = [];
+  matAdd(defaultMatId(), $('f-grams').value || '');
+}
+function multiOn(){ return multi && matRows().length > 0; }
+
 function compute(){
   var p = curPrinter(), f = curFilament(), st = S.settings;
   var qty = Math.max(1, Math.round(num($('f-qty').value) || 1));
-  var gAll = num($('f-grams').value);
+  var rows = multi ? matRows() : [];
+  var useMulti = rows.length > 0;
+  var purge = useMulti ? purgeGrams() : 0;
+  var gAll = useMulti ? matGramsTotal() + purge : num($('f-grams').value);
   var hAll = num($('f-h').value) + num($('f-m').value)/60;
-  var g = scope === 'plate' ? gAll/qty : gAll;
-  var h = scope === 'plate' ? hAll/qty : hAll;
+  var div = scope === 'plate' ? qty : 1;
+  var g = gAll/div;
+  var h = hAll/div;
 
-  var perGram = num(f.spoolWeight) > 0 ? num(f.spoolPrice)/num(f.spoolWeight) : 0;
   var waste = num($('f-waste').value)/100;
-  var material = g * (1 + waste) * perGram;
+  var perGram = num(f.spoolWeight) > 0 ? num(f.spoolPrice)/num(f.spoolWeight) : 0;
+  /* use = o que cada rolo entrega nesta peça, já com desperdício e purga.
+     É a mesma lista que dá baixa no estoque e que aparece na memória de cálculo. */
+  var material = 0, use = [];
+  if(useMulti){
+    var modeled = matGramsTotal();
+    rows.forEach(function(m){
+      var fl = matFil(m), mg = Math.max(0, num(m.g));
+      /* a purga é filamento de todas as cores misturado: cada rolo entra nela
+         na mesma proporção em que entra na peça */
+      var share = modeled > 0 ? mg/modeled : 1/rows.length;
+      var pg = num(fl.spoolWeight) > 0 ? num(fl.spoolPrice)/num(fl.spoolWeight) : 0;
+      /* o desperdício em % continua valendo para brim, suporte e skirt; a torre
+         de purga já veio em gramas e não leva a porcentagem por cima */
+      var grams = (mg*(1 + waste) + purge*share)/div;
+      var cost = grams * pg, hit = null;
+      material += cost;
+      for(var i = 0; i < use.length; i++){ if(use[i].id === fl.id) hit = use[i]; }
+      if(hit){ hit.g += grams; hit.net += mg/div; hit.cost += cost; }
+      else use.push({id:fl.id, name:fl.name || 'filamento', color:safeColor(fl.color,'#5A6672'),
+                     g:grams, net:mg/div, cost:cost, perGram:pg});
+    });
+    var gCharged = use.reduce(function(a,u){ return a + u.g; }, 0);
+    perGram = gCharged > 0 ? material/gCharged : 0;
+  } else {
+    material = g * (1 + waste) * perGram;
+    if(f && f.id) use.push({id:f.id, name:f.name || 'filamento', color:safeColor(f.color,'#5A6672'),
+                            g:g*(1 + waste), net:g, cost:material, perGram:perGram});
+  }
+
   var energy   = (num(p.watts)/1000) * h * num(st.kwh);
   var machine  = machineHour(p) * h;
   var overhead = fixedHour() * h;
-  var labor    = (num($('f-prep').value)/60 * num(st.hour))/qty + (num($('f-finish').value)/60 * num(st.hour));
+  /* preparo é por lote e acabamento é por peça: separar os dois é o que permite
+     montar a tabela por faixa de quantidade sem recalcular a tela inteira */
+  var prepTotal = num($('f-prep').value)/60 * num(st.hour);
+  var finishCost = num($('f-finish').value)/60 * num(st.hour);
+  var labor    = prepTotal/qty + finishCost;
   var supplies = extrasTotal(extras);
 
-  var subtotal = material + energy + machine + overhead + labor + supplies;
+  var batch = material + energy + machine + overhead + finishCost + supplies;
+  var subtotal = batch + prepTotal/qty;
   var notes = [];
   var failIn = num($('f-fail').value)/100;
   var failR = Math.min(0.95, Math.max(0, failIn));
@@ -1961,7 +2124,12 @@ function compute(){
     profitHour: h > 0 ? profit/h : 0,
     machineHour:machineHour(p), fixedHour:fixedHour(),
     waste:waste, failR:failR, watts:num(p.watts), kwh:num(st.kwh), hourRate:num(st.hour),
-    prep:num($('f-prep').value), finish:num($('f-finish').value)
+    prep:num($('f-prep').value), finish:num($('f-finish').value),
+    /* multicolor: o que cada rolo entrega nesta peça */
+    multi:useMulti, use:use, purge:purge/div, mR:mR,
+    /* base da tabela por faixa: tudo que não depende do lote, e o preparo do
+       lote inteiro para ser dividido por outra quantidade */
+    batch:batch, prepTotal:prepTotal
   };
 }
 
@@ -1982,7 +2150,17 @@ function fxRow(n,f,v){
 }
 function fxHtml(r){
   var out = '';
-  out += fxRow('Filamento', dec(r.g,1)+' g'+(r.waste > 0 ? ' + '+dec(r.waste*100,0)+'% desperdício' : '')+' × '+brl(r.perGram)+'/g', r.material);
+  if(r.multi){
+    r.use.forEach(function(u){
+      out += fxRow('Filamento — '+esc(u.name), dec(u.g,1)+' g × '+brl(u.perGram)+'/g', u.cost);
+    });
+    if(r.purge > 0){
+      out += '<div class="r"><span class="nm">Torre de purga<span class="f">'+dec(r.purge,1)+
+        ' g rateados entre as cores acima ('+dec(r.g > 0 ? r.purge/r.g*100 : 0,0)+'% do peso)</span></span><span class="vl">—</span></div>';
+    }
+  } else {
+    out += fxRow('Filamento', dec(r.g,1)+' g'+(r.waste > 0 ? ' + '+dec(r.waste*100,0)+'% desperdício' : '')+' × '+brl(r.perGram)+'/g', r.material);
+  }
   out += fxRow('Energia', '('+dec(r.watts,0)+' W ÷ 1000) × '+dec(r.h,2)+' h × '+brl(r.kwh)+'/kWh', r.energy);
   out += fxRow('Máquina', brl(r.machineHour)+'/h × '+dec(r.h,2)+' h  (depreciação + manutenção)', r.machine);
   if(r.overhead > 0) out += fxRow('Custo fixo', brl(r.fixedHour)+'/h × '+dec(r.h,2)+' h  ('+brl(num(S.settings.fixed))+'/mês ÷ '+dec(num(S.settings.fixedHours),0)+' h)', r.overhead);
@@ -2083,8 +2261,91 @@ function render(){
     $('final-note').textContent = '';
   }
 
+  paintMulti(r);
+  renderTiers(r);
   renderActiveBanner();
   renderOrder();
+}
+
+/* ============ faixas de quantidade ============ */
+/* O preparo é por lote: fatiar, limpar a mesa, trocar o filamento e ligar custa
+   igual para 1 ou para 50 peças. Diluído, o preço unitário cai com o volume —
+   e a tabela sai do próprio cálculo, sem inventar desconto. */
+function tierList(){
+  var out = [];
+  String(S.settings.tiers == null ? '' : S.settings.tiers).split(/[^\d]+/).forEach(function(t){
+    var n = Math.round(num(t));
+    if(n > 0 && n <= 100000 && out.indexOf(n) < 0) out.push(n);
+  });
+  if(!out.length) out = [1,10,50];
+  out.sort(function(a,b){ return a-b; });
+  return out.slice(0,6);
+}
+function tierAt(r, n){
+  var subtotal = r.batch + r.prepTotal/n;
+  var cost = subtotal/(1 - r.failR);
+  var price;
+  if(r.usedChosen){
+    /* preço escolhido na mão: a faixa mantém o multiplicador que o usuário
+       decidiu sobre o custo, não a margem teórica que ele não quis */
+    price = r.cost > 0 ? cost * (r.price/r.cost) : r.price;
+  } else if(mode === 'margem'){
+    price = (r.mR + r.feeR >= 0.95) ? 0 : cost/(1 - r.mR - r.feeR);
+  } else {
+    price = (cost * (1 + r.mR))/(1 - r.feeR);
+  }
+  var profit = price - price*r.feeR - cost;
+  return {n:n, unit:price, cost:cost, total:price*n, profit:profit*n,
+          profitHour: r.h > 0 ? profit/r.h : 0};
+}
+function tierRows(r){
+  return tierList().map(function(n){ return tierAt(r, n); });
+}
+function renderTiers(r){
+  var el = $('tiers');
+  if(!el) return;
+  if(!(r.price > 0)){
+    el.innerHTML = '<div class="oempty">Preencha gramas e tempo para ver a tabela.</div>';
+    $('tier-note').textContent = '';
+    return;
+  }
+  var list = tierRows(r), base = list[0];
+  el.innerHTML = list.map(function(t, i){
+    var off = base.unit > 0 ? 1 - t.unit/base.unit : 0;
+    return '<div class="tierrow'+(i === 0 ? ' base' : '')+'">'+
+      '<span class="qt">'+t.n+' un</span>'+
+      '<span class="mid"><span class="un">'+brl(t.unit)+'</span>'+
+        '<span class="sb">total '+brl(t.total)+' · lucro '+brl(t.profit)+'</span></span>'+
+      '<span class="off">'+(off > 0.0005 ? '−'+dec(off*100,0)+'%' : 'base')+'</span></div>';
+  }).join('');
+  var note;
+  if(!(r.prepTotal > 0)){
+    note = 'Todas as faixas dão o mesmo preço porque o <b>preparo</b> está em 0 min. Preencha os minutos de fatiar, limpar a mesa e ligar no <b>Ajuste fino</b> — é ele que se dilui no lote.';
+  } else {
+    note = 'O preço cai porque o preparo de <b>'+dec(r.prep,0)+' min</b> por lote se divide por mais peças. '+
+      (r.usedChosen ? 'As faixas mantêm o mesmo multiplicador do preço que você escolheu.'
+                    : 'A margem é a mesma em todas as faixas — o desconto vem do custo, não do seu lucro.');
+  }
+  $('tier-note').innerHTML = note;
+}
+function tierText(){
+  var r = compute();
+  var list = tierRows(r), base = list[0], st = S.settings;
+  var out = [];
+  out.push('*' + ($('f-piece').value || 'Impressão 3D') + '*');
+  if(st.biz) out.push(st.biz);
+  out.push('');
+  list.forEach(function(t){
+    var off = base.unit > 0 ? 1 - t.unit/base.unit : 0;
+    out.push('• ' + t.n + ' un — ' + brl(t.unit) + ' cada' +
+      (t.n > 1 ? ' (total ' + brl(t.total) + ')' : '') +
+      (off > 0.0005 ? ' · ' + dec(off*100,0) + '% de desconto' : ''));
+  });
+  out.push('');
+  out.push('Quanto maior o lote, menor o preço por peça: o preparo da impressão é o mesmo para 1 ou para ' + list[list.length-1].n + '.');
+  if(num(st.valid) > 0) out.push('Valores válidos por ' + dec(num(st.valid),0) + ' dias.');
+  if(st.contact){ out.push(''); out.push(st.contact); }
+  return out.join('\n');
 }
 
 function renderActiveBanner(){
@@ -2113,9 +2374,28 @@ function calcPayload(){
     prep:num($('f-prep').value), finish:num($('f-finish').value),
     extras:cloneExtras(extras), printer:$('f-printer').value, filament:$('f-filament').value,
     scope:scope, mode:mode, margin:margin,
+    /* multicolor: as cores como o usuário digitou e, já resolvido, quanto sai
+       de cada rolo por peça — é o que dá baixa no estoque depois */
+    multi:multi, mats:cloneMats(mats), purge:purgeGrams(),
+    use:r.use.map(function(u){ return {id:u.id, g:u.g}; }),
     priceSet:r.usedChosen ? r.chosen : 0, suggested:r.suggested,
     productId:activeProductId || ''
   };
+}
+function cloneMats(list){
+  return (list||[]).map(function(m){
+    return {f:m.f || '', g:(typeof m.g === 'number' ? dec(m.g,1) : (m.g == null ? '' : String(m.g)))};
+  });
+}
+/* materiais que aparecem no orçamento e no PDF: com AMS a peça é de mais de um */
+function itemMaterial(r){
+  var out = [];
+  (r.use || []).forEach(function(u){
+    var f = S.filaments.filter(function(x){ return x.id === u.id; })[0];
+    var m = f && f.material ? String(f.material).trim() : '';
+    if(m && out.indexOf(m) < 0) out.push(m);
+  });
+  return out.join(' + ');
 }
 /* item do orcamento: numeros JA por unidade, para nao depender do escopo depois */
 function makeItem(){
@@ -2123,7 +2403,7 @@ function makeItem(){
   return {
     id:uid(), name:c.piece || 'Peça em impressão 3D',
     qty:r.qty, unit:r.price, cost:r.cost, profit:r.profit,
-    grams:r.g, hours:r.h, material:curFilament().material || '',
+    grams:r.g, hours:r.h, material:itemMaterial(r) || curFilament().material || '',
     productId:c.productId, calc:c
   };
 }
@@ -2158,6 +2438,12 @@ function restoreCalc(c){
   if(!c) return;
   $('f-piece').value = c.piece || '';
   $('f-grams').value = c.grams;
+  multi = !!c.multi;
+  mats = cloneMats(c.mats);
+  purgeStr = num(c.purge) > 0 ? String(num(c.purge)).replace('.', ',') : '';
+  $('f-purge').value = purgeStr;
+  setSeg('seg-multi', multi ? 'multi' : 'one');
+  renderMats();
   $('f-h').value = Math.floor(num(c.hours));
   $('f-m').value = Math.round((num(c.hours) - Math.floor(num(c.hours)))*60);
   $('f-qty').value = c.qty;
@@ -2484,6 +2770,404 @@ function renderExtras(){
   $('sup-total').textContent = brl(extrasTotal(extras));
 }
 
+/* ============ multicolor: a lista de cores na tela ============ */
+function paintMulti(r){
+  var box = $('mat-box');
+  if(!box) return;
+  box.hidden = !multi;
+  $('fld-grams').hidden = multi;
+  $('fld-filament').hidden = multi;
+  if(!multi) return;
+  var modeled = matGramsTotal(), pg = purgeGrams(), tot = modeled + pg;
+  var mult = scope === 'plate' ? r.qty : 1;
+  $('mat-tot').innerHTML =
+    '<span>'+(scope === 'plate' ? 'Total da mesa' : 'Total por peça')+': <b>'+dec(tot,1)+' g</b>'+
+      (pg > 0 ? ' <span style="color:var(--ink3)">('+dec(modeled,1)+' g de peça + '+dec(pg,1)+
+                ' g de purga = '+dec(tot > 0 ? pg/tot*100 : 0,0)+'% do peso)</span>' : '')+'</span>'+
+    '<span>Filamento <b>'+brl(r.material*mult)+'</b></span>';
+}
+function renderMats(){
+  var el = $('mat-rows');
+  if(!el) return;
+  el.innerHTML = mats.map(function(m,i){
+    var fl = matFil(m);
+    return '<div class="matrow">'+
+      '<span class="sw" style="background:'+esc(fl ? safeColor(fl.color,'#5A6672') : '#5A6672')+'"></span>'+
+      '<div class="pick"><select data-mat="f" data-i="'+i+'" aria-label="Filamento da cor '+(i+1)+'">'+
+        S.filaments.map(function(x){
+          return '<option value="'+esc(x.id)+'"'+(x.id === m.f ? ' selected' : '')+'>'+esc(x.name)+'</option>';
+        }).join('')+
+      '</select></div>'+
+      '<div class="g"><input type="text" inputmode="decimal" placeholder="0" value="'+esc(m.g == null ? '' : m.g)+
+        '" data-mat="g" data-i="'+i+'" aria-label="Gramas da cor '+(i+1)+'"><span class="u">g</span></div>'+
+      '<button type="button" class="kill" data-matdel="'+i+'" aria-label="Remover cor">×</button>'+
+    '</div>';
+  }).join('') || '<div class="oempty">Nenhuma cor na lista.</div>';
+
+  each(qsa(el,'[data-mat]'), function(inp){
+    var ev = inp.tagName === 'SELECT' ? 'change' : 'input';
+    inp.addEventListener(ev, function(){
+      var i = +inp.getAttribute('data-i');
+      if(!mats[i]) return;
+      mats[i][inp.getAttribute('data-mat')] = inp.value;
+      if(inp.tagName === 'SELECT'){
+        var fl = matFil(mats[i]), sw = inp.closest('.matrow').querySelector('.sw');
+        if(sw) sw.style.background = fl ? safeColor(fl.color,'#5A6672') : '#5A6672';
+      }
+      render();
+    });
+  });
+  each(qsa(el,'[data-matdel]'), function(b){
+    b.addEventListener('click', function(){
+      mats.splice(+b.getAttribute('data-matdel'),1);
+      renderMats(); render();
+    });
+  });
+}
+function setMulti(on, seed){
+  multi = !!on;
+  setSeg('seg-multi', multi ? 'multi' : 'one');
+  if(multi && seed !== false) matSeed();
+  renderMats();
+  render();
+}
+
+/* ============ importar do fatiador (.gcode / .3mf) ============ */
+/* Prusa, Orca, Bambu e Cura escrevem gramas, tempo e cores em texto puro no
+   cabeçalho (ou no rodapé) do G-code. Ler isso aqui tira o maior atrito do app:
+   ninguém precisa mais copiar número do fatiador para o celular na mão. Nada de
+   biblioteca: o .3mf é um ZIP e o navegador já sabe inflar com DecompressionStream. */
+var DENSITY = {PLA:1.24, PETG:1.27, PET:1.27, ABS:1.04, ASA:1.07, TPU:1.21, TPE:1.21,
+               NYLON:1.14, PA:1.14, PC:1.20, HIPS:1.04, PVA:1.23, PP:0.90, PLAP:1.24};
+
+function gcBytesText(bytes){
+  try { return new TextDecoder('utf-8', {fatal:false}).decode(bytes); }
+  catch(e){
+    var out = '';
+    for(var i = 0; i < bytes.length; i++) out += String.fromCharCode(bytes[i]);
+    return out;
+  }
+}
+function fileBuf(file){
+  if(file.arrayBuffer) return file.arrayBuffer();
+  return new Promise(function(res, rej){
+    var fr = new FileReader();
+    fr.onload = function(){ res(fr.result); };
+    fr.onerror = function(){ rej(new Error('Não consegui ler o arquivo.')); };
+    fr.readAsArrayBuffer(file);
+  });
+}
+function blobText(blob){
+  if(blob.text) return blob.text();
+  return new Promise(function(res, rej){
+    var fr = new FileReader();
+    fr.onload = function(){ res(String(fr.result || '')); };
+    fr.onerror = function(){ rej(new Error('Não consegui ler o arquivo.')); };
+    fr.readAsText(blob);
+  });
+}
+/* G-code de peça grande passa de 100 MB e o que interessa está nas pontas:
+   Cura escreve no começo, Prusa e Orca no fim. Lê só os dois pedaços. */
+function readHeadTail(file){
+  var cap = 400 * 1024;
+  var head = file.slice(0, Math.min(file.size, cap));
+  var tail = file.size > cap ? file.slice(Math.max(0, file.size - cap)) : null;
+  return blobText(head).then(function(a){
+    return tail ? blobText(tail).then(function(b){ return a + '\n' + b; }) : a;
+  });
+}
+function gcInflate(bytes, fmt){
+  if(typeof DecompressionStream === 'undefined')
+    return Promise.reject(new Error('Este navegador não descompacta o arquivo. Exporte o .gcode sem compactar.'));
+  var ds = new DecompressionStream(fmt);
+  return new Response(new Blob([bytes]).stream().pipeThrough(ds)).arrayBuffer()
+    .then(function(ab){ return new Uint8Array(ab); });
+}
+
+/* ---- ZIP mínimo, só para achar um arquivo dentro do 3MF ---- */
+function zipList(buf){
+  var dv = new DataView(buf), u8 = new Uint8Array(buf), n = buf.byteLength;
+  var eocd = -1, lim = Math.max(0, n - 66000);
+  for(var i = n - 22; i >= lim; i--){ if(dv.getUint32(i, true) === 0x06054b50){ eocd = i; break; } }
+  if(eocd < 0) return null;
+  var count = dv.getUint16(eocd + 10, true), off = dv.getUint32(eocd + 16, true);
+  if(off === 0xFFFFFFFF || count === 0xFFFF) return null;   /* zip64: fora do escopo */
+  var out = [], p = off;
+  for(var k = 0; k < count && p + 46 <= n; k++){
+    if(dv.getUint32(p, true) !== 0x02014b50) break;
+    var nlen = dv.getUint16(p + 28, true), elen = dv.getUint16(p + 30, true), clen = dv.getUint16(p + 32, true);
+    out.push({
+      name: gcBytesText(u8.subarray(p + 46, p + 46 + nlen)),
+      method: dv.getUint16(p + 10, true),
+      csize: dv.getUint32(p + 20, true),
+      usize: dv.getUint32(p + 24, true),
+      lho: dv.getUint32(p + 42, true)
+    });
+    p += 46 + nlen + elen + clen;
+  }
+  return out.length ? out : null;
+}
+function zipData(buf, e){
+  var dv = new DataView(buf), u8 = new Uint8Array(buf);
+  if(e.lho + 30 > buf.byteLength || dv.getUint32(e.lho, true) !== 0x04034b50)
+    return Promise.reject(new Error('Arquivo 3MF corrompido.'));
+  var nlen = dv.getUint16(e.lho + 26, true), elen = dv.getUint16(e.lho + 28, true);
+  var start = e.lho + 30 + nlen + elen;
+  var raw = u8.subarray(start, start + e.csize);
+  if(e.method === 0) return Promise.resolve(raw);
+  if(e.method !== 8) return Promise.reject(new Error('Compactação do 3MF fora do padrão.'));
+  return gcInflate(raw, 'deflate-raw');
+}
+
+/* ---- leitura dos números ---- */
+function gcNums(str){
+  return String(str == null ? '' : str).split(/[,;]/).map(function(x){
+    var m = /-?\d+(\.\d+)?/.exec(x);
+    return m ? parseFloat(m[0]) : 0;
+  });
+}
+/* "2h 30m 15s", "1d 4h" ou segundos puros (Cura) */
+function gcTime(str){
+  var t = String(str == null ? '' : str).trim();
+  if(!t) return 0;
+  if(/[dhms]/i.test(t)){
+    var d = /(\d+)\s*d/i.exec(t), h = /(\d+)\s*h/i.exec(t);
+    var mi = /(\d+)\s*m(?!s)/i.exec(t), se = /(\d+)\s*s/i.exec(t);
+    return (d ? +d[1]*86400 : 0) + (h ? +h[1]*3600 : 0) + (mi ? +mi[1]*60 : 0) + (se ? +se[1] : 0);
+  }
+  var n = parseFloat(t.replace(',', '.'));
+  return isFinite(n) ? n : 0;
+}
+function gcHex(c){
+  var m = /#([0-9a-f]{6})/i.exec(String(c || ''));
+  return m ? '#' + m[1].toUpperCase() : '';
+}
+function gcDensity(type){
+  var t = String(type || '').toUpperCase().replace(/[^A-Z]/g,'');
+  var keys = Object.keys(DENSITY);
+  for(var i = 0; i < keys.length; i++){ if(t.indexOf(keys[i]) === 0) return DENSITY[keys[i]]; }
+  return 1.24;
+}
+function parseGcodeText(txt){
+  var res = {source:'', name:'', seconds:0, items:[], purge:0, notes:[]};
+  var find = function(re){ var m = re.exec(txt); return m ? String(m[1]).trim() : ''; };
+
+  if(/SuperSlicer/i.test(txt)) res.source = 'SuperSlicer';
+  else if(/OrcaSlicer/i.test(txt)) res.source = 'Orca Slicer';
+  else if(/BambuStudio|Bambu Studio/i.test(txt)) res.source = 'Bambu Studio';
+  else if(/PrusaSlicer/i.test(txt)) res.source = 'PrusaSlicer';
+  else if(/Cura_SteamEngine|generated with Cura|;FLAVOR:/i.test(txt)) res.source = 'Cura';
+  else res.source = 'fatiador';
+
+  res.seconds = gcTime(
+    find(/;\s*estimated printing time \(normal mode\)\s*[:=]\s*([^\r\n]*)/i) ||
+    find(/;\s*total estimated time\s*[:=]\s*([^\r\n]*)/i) ||
+    find(/;\s*model printing time\s*[:=]\s*([^\r\n]*)/i) ||
+    find(/;\s*estimated printing time\s*[:=]\s*([^\r\n]*)/i) ||
+    find(/;\s*TIME\s*[:=]\s*([0-9.]+)/i) ||
+    find(/;\s*print time\s*[:=]\s*([^\r\n]*)/i)
+  );
+  res.name = find(/;\s*model name\s*[:=]\s*([^\r\n]*)/i) || find(/;\s*name\s*[:=]\s*([^\r\n]*)/i);
+
+  var types  = find(/;\s*filament_type\s*[:=]\s*([^\r\n]*)/i).split(/[;,]/);
+  var colors = find(/;\s*(?:filament_colour|filament_color|extruder_colour)\s*[:=]\s*([^\r\n]*)/i).split(/[;,]/);
+  var dens   = gcNums(find(/;\s*filament_density\s*[:=]\s*([^\r\n]*)/i));
+  var diam   = gcNums(find(/;\s*filament_diameter\s*[:=]\s*([^\r\n]*)/i));
+
+  var grams = [], mm = [];
+  var gTxt = find(/;\s*filament used\s*\[g\]\s*[:=]\s*([^\r\n]*)/i) ||
+             find(/;\s*total filament weight\s*\[g\]\s*[:=]\s*([^\r\n]*)/i) ||
+             find(/;\s*filament weight total\s*[:=]\s*([^\r\n]*)/i);
+  if(gTxt) grams = gcNums(gTxt);
+
+  var mTxt = find(/;\s*filament used\s*\[mm\]\s*[:=]\s*([^\r\n]*)/i);
+  if(mTxt) mm = gcNums(mTxt);
+  else {
+    /* Cura escreve em metros e nunca em gramas */
+    var cura = find(/;\s*Filament used\s*[:=]\s*([^\r\n]*)/i);
+    if(cura) mm = gcNums(cura).map(function(v){ return v * 1000; });
+  }
+
+  var n = Math.max(grams.length, mm.length);
+  for(var i = 0; i < n; i++){
+    var type = (types[i] || types[0] || '').trim();
+    var g = grams[i] || 0;
+    var derived = false;
+    if(!(g > 0) && mm[i] > 0){
+      /* sem gramas no arquivo: volume × densidade. Cura só dá o comprimento. */
+      var d = diam[i] || diam[0] || 1.75;
+      var dn = dens[i] || dens[0] || gcDensity(type);
+      g = mm[i] * (Math.PI * d * d / 4) / 1000 * dn;
+      derived = true;
+    }
+    if(!(g > 0)) continue;
+    res.items.push({g:g, mm:mm[i] || 0, type:type, color:gcHex(colors[i]), derived:derived, slot:i + 1});
+  }
+
+  /* total maior que a soma das cores = purga que o fatiador contou à parte */
+  var tot = parseFloat(find(/;\s*total filament used\s*\[g\]\s*[:=]\s*([0-9.]+)/i) ||
+                       find(/;\s*total filament weight\s*\[g\]\s*[:=]\s*([0-9.]+)/i) || '0');
+  var sum = res.items.reduce(function(a,x){ return a + x.g; }, 0);
+  if(isFinite(tot) && tot > sum + 0.05 && sum > 0) res.purge = tot - sum;
+  return res;
+}
+/* Bambu e Orca guardam o resultado do fatiamento em XML dentro do 3MF —
+   uma linha por filamento, com gramas e cor, e o tempo previsto da mesa */
+function parseSliceInfo(xml){
+  var res = {source:'Bambu / Orca (3MF)', name:'', seconds:0, items:[], purge:0, notes:[]};
+  var plates = String(xml).split(/<plate[\s>]/i).slice(1), best = null;
+  plates.forEach(function(pl){
+    var items = [], re = /<filament\b([^>]*)>/gi, m;
+    while((m = re.exec(pl))){
+      var at = m[1];
+      var val = function(k){ var v = new RegExp(k + '\\s*=\\s*"([^"]*)"', 'i').exec(at); return v ? v[1] : ''; };
+      var g = parseFloat(val('used_g')) || 0;
+      if(g > 0) items.push({g:g, mm:(parseFloat(val('used_m')) || 0)*1000, type:val('type'),
+                            color:gcHex(val('color')), derived:false, slot:parseInt(val('id'),10) || items.length+1});
+    }
+    if(!items.length || best) return;
+    var meta = function(k){ var v = new RegExp('key\\s*=\\s*"' + k + '"\\s+value\\s*=\\s*"([^"]*)"', 'i').exec(pl); return v ? v[1] : ''; };
+    best = {items:items, seconds:gcTime(meta('prediction')), weight:parseFloat(meta('weight')) || 0};
+  });
+  if(!best) return null;
+  res.items = best.items;
+  res.seconds = best.seconds;
+  var sum = best.items.reduce(function(a,x){ return a + x.g; }, 0);
+  if(best.weight > sum + 0.05) res.purge = best.weight - sum;
+  if(plates.length > 1) res.notes.push('O arquivo tem ' + plates.length + ' mesas; li a primeira com peças.');
+  return res;
+}
+function parse3mf(buf){
+  var list = zipList(buf);
+  if(!list) return Promise.reject(new Error('Não consegui abrir este 3MF.'));
+  var info = null, gc = null;
+  list.forEach(function(e){
+    var n = e.name.toLowerCase();
+    if(/slice_info\.config$/.test(n)) info = e;
+    else if(/\.gcode$/.test(n) && (!gc || e.usize > gc.usize)) gc = e;
+  });
+  var fromGcode = function(){
+    if(!gc) return null;
+    return zipData(buf, gc).then(function(b){ return parseGcodeText(gcBytesText(b)); });
+  };
+  var missing = new Error('Este 3MF é um projeto do fatiador, não uma fatia: ele não traz gramas nem tempo. Fatie e exporte o G-code (ou o 3MF já fatiado do Bambu/Orca).');
+  if(info){
+    return zipData(buf, info).then(function(b){
+      var r = parseSliceInfo(gcBytesText(b));
+      if(r && r.items.length) return r;
+      return fromGcode() || Promise.reject(missing);
+    });
+  }
+  return fromGcode() || Promise.reject(missing);
+}
+
+/* ---- casar o que veio do fatiador com o que está cadastrado ---- */
+function matchFilament(it){
+  var col = gcHex(it.color), ty = String(it.type || '').toUpperCase().replace(/[^A-Z0-9]/g,'');
+  var both = null, byColor = null, byType = null;
+  S.filaments.forEach(function(f){
+    var fc = gcHex(safeColor(f.color,'')), ft = String(f.material || '').toUpperCase().replace(/[^A-Z0-9]/g,'');
+    var okC = col && fc === col, okT = ty && ft === ty;
+    if(okC && okT) both = both || f;
+    else if(okC) byColor = byColor || f;
+    else if(okT) byType = byType || f;
+  });
+  return both || byColor || byType || null;
+}
+function gcMsgHtml(html){ $('gc-msg').innerHTML = html; }
+function gcErr(t){ gcMsgHtml('<div class="alert bad">' + esc(t) + '</div>'); }
+
+function applySliced(res, fileName){
+  if(!res || (!res.items.length && !(res.seconds > 0))){
+    gcErr('Não achei gramas nem tempo neste arquivo. Ele foi mesmo gerado pelo fatiador?');
+    return;
+  }
+  var items = res.items.slice(0, 16);
+  var lost = [], derived = false;
+
+  if(res.seconds > 0){
+    var mins = Math.round(res.seconds/60);
+    $('f-h').value = Math.floor(mins/60);
+    $('f-m').value = mins % 60;
+  }
+  /* o arquivo é sempre da mesa inteira */
+  scope = 'plate'; setSeg('seg-scope', scope);
+
+  if(items.length > 1){
+    multi = true;
+    mats = items.map(function(it){
+      var f = matchFilament(it);
+      if(!f){ lost.push(it); f = S.filaments.filter(function(x){ return x.id === defaultMatId(); })[0] || S.filaments[0]; }
+      if(it.derived) derived = true;
+      return {f: f ? f.id : '', g: dec(it.g,1)};
+    });
+    purgeStr = res.purge > 0 ? dec(res.purge,1) : '';
+    $('f-purge').value = purgeStr;
+    setSeg('seg-multi', 'multi');
+    renderMats();
+  } else if(items.length === 1){
+    multi = false;
+    setSeg('seg-multi', 'one');
+    if(items[0].derived) derived = true;
+    $('f-grams').value = dec(items[0].g + (res.purge || 0), 1);
+    var f1 = matchFilament(items[0]);
+    if(f1) $('f-filament').value = f1.id;
+    else if(items[0].color || items[0].type) lost.push(items[0]);
+  }
+
+  /* o fatiador já contou brim, suporte e purga nas gramas: manter a
+     porcentagem de desperdício aqui cobraria o mesmo material duas vezes */
+  var hadWaste = num($('f-waste').value) > 0;
+  if(items.length) $('f-waste').value = 0;
+  /* o resumo tem que bater com o que foi escrito nos campos, não com o número
+     cheio do arquivo: os campos são arredondados em 0,1 g */
+  var totalG = multi ? matGramsTotal() + purgeGrams() : num($('f-grams').value);
+
+  if(!$('f-piece').value){
+    var nm = res.name || String(fileName || '').replace(/\.(gcode|gco|g|gz|3mf)$/gi,'').replace(/\.gcode$/i,'')
+      .replace(/[_-]?plate[_ -]?\d+$/i,'').replace(/[_]+/g,' ').trim();
+    if(nm) $('f-piece').value = nm;
+  }
+
+  var li = [];
+  if(items.length > 1) li.push('Multicolor ligado com <b>' + items.length + ' cores</b>' +
+      (res.purge > 0 ? ' e <b>' + dec(res.purge,1) + ' g</b> de purga (' + dec(totalG > 0 ? res.purge/totalG*100 : 0,0) + '% do peso)' : '') + '.');
+  if(res.purge > 0 && items.length === 1) li.push('A purga de ' + dec(res.purge,1) + ' g entrou nas gramas.');
+  if(hadWaste) li.push('Desperdício zerado: o arquivo já conta brim, suporte e purga.');
+  if(derived) li.push('O arquivo só trazia o comprimento — o peso foi calculado pela densidade do material.');
+  if(lost.length) li.push('Não achei filamento cadastrado com a cor/material de ' + lost.length +
+      (lost.length === 1 ? ' item' : ' itens') + ': confira a seleção.');
+  if(!(res.seconds > 0)) li.push('O arquivo não trazia o tempo — preencha horas e minutos na mão.');
+  (res.notes || []).forEach(function(t){ li.push(esc(t)); });
+  li.push('Os valores são da <b>mesa toda</b>: confira a quantidade de peças.');
+
+  gcMsgHtml('<div class="gcok"><span class="src">Lido do ' + esc(res.source || 'fatiador') + '</span>' +
+    '<b>' + dec(totalG,1) + ' g</b>' +
+    (res.seconds > 0 ? ' · <b>' + dec(Math.floor(res.seconds/3600),0) + ' h ' + dec(Math.round(res.seconds/60)%60,0) + ' min</b>' : '') +
+    '<ul><li>' + li.join('</li><li>') + '</li></ul></div>');
+
+  render();
+}
+function importSliced(file){
+  var drop = $('gc-drop'), low = String(file.name || '').toLowerCase();
+  if(file.size > 600*1024*1024){ gcErr('Arquivo grande demais.'); return; }
+  drop.classList.add('busy');
+  gcMsgHtml('<div class="gcok"><span class="spin"></span> Lendo ' + esc(file.name || 'arquivo') + '…</div>');
+  var work;
+  if(/\.3mf$/.test(low)) work = fileBuf(file).then(parse3mf);
+  else if(/\.gz$/.test(low)) work = fileBuf(file)
+    .then(function(b){ return gcInflate(new Uint8Array(b), 'gzip'); })
+    .then(function(u){ return parseGcodeText(gcBytesText(u)); });
+  else work = readHeadTail(file).then(parseGcodeText);
+  work.then(function(res){
+    drop.classList.remove('busy');
+    applySliced(res, file.name);
+  }, function(e){
+    drop.classList.remove('busy');
+    gcErr(e && e.message ? e.message : 'Não consegui ler este arquivo.');
+  });
+}
+
 /* ============ estoque do rolo ============ */
 /* Campo vazio = não controlo este rolo. Zero = rolo acabado. São coisas
    diferentes, então stockG é texto (como o custo/hora manual da impressora). */
@@ -2503,20 +3187,34 @@ function setStock(f, grams){
 function lowFilaments(){
   return S.filaments.filter(function(f){ var st = stockState(f); return st === 'low' || st === 'out'; });
 }
-/* o que um item do orçamento tira do rolo de verdade: o líquido mais o
-   desperdício que o próprio item já assumiu no cálculo */
-function itemGrams(it){
+/* o que um item do orçamento tira de cada rolo de verdade: o líquido mais o
+   desperdício e a purga que o próprio item já assumiu no cálculo. Com AMS a
+   mesma peça sai de vários rolos, então isto é uma lista. */
+function itemUse(it){
+  var q = itemQty(it);
+  var u = it && it.calc && it.calc.use;
+  if(u && u.length){
+    return u.filter(function(x){ return x && x.id; })
+            .map(function(x){ return {id:x.id, g:Math.max(0, num(x.g))*q}; });
+  }
+  /* itens salvos antes do multicolor: um filamento só, gramas líquidas */
   var w = (it && it.calc) ? Math.max(0, num(it.calc.waste)/100) : 0;
-  return num(it.grams) * (1 + w) * itemQty(it);
+  var id = it && it.calc ? it.calc.filament : '';
+  return id ? [{id:id, g:num(it.grams)*(1 + w)*q}] : [];
+}
+function itemGrams(it){
+  var t = itemUse(it).reduce(function(a,x){ return a + x.g; }, 0);
+  return t > 0 ? t : num(it.grams)*itemQty(it);
 }
 function stockApply(lines){
   var hit = [];
   lines.forEach(function(it){
-    var id = it.calc && it.calc.filament;
-    var f = id ? S.filaments.filter(function(x){ return x.id === id; })[0] : null;
-    if(!f || !stockOn(f)) return;
-    setStock(f, stockG(f) - itemGrams(it));
-    if(hit.indexOf(f) < 0) hit.push(f);
+    itemUse(it).forEach(function(x){
+      var f = S.filaments.filter(function(y){ return y.id === x.id; })[0];
+      if(!f || !stockOn(f)) return;
+      setStock(f, stockG(f) - x.g);
+      if(hit.indexOf(f) < 0) hit.push(f);
+    });
   });
   return hit;
 }
@@ -2540,18 +3238,22 @@ function buyLink(f, label){
   return u ? ' <a href="'+esc(u)+'" target="_blank" rel="noopener noreferrer">'+label+' &rarr;</a>' : '';
 }
 function stockAlertHtml(r){
-  var f = curFilament();
-  if(!stockOn(f)) return '';
-  var have = stockG(f), st = stockState(f), nm = esc(f.name || 'filamento');
-  var need = r.g * (1 + r.waste) * r.qty;
-  if(st === 'out')
-    return '<div class="alert bad">O rolo <b>'+nm+'</b> está zerado no seu estoque.'+buyLink(f,'Comprar de novo')+'</div>';
-  if(need > have)
-    return '<div class="alert bad">Este pedido precisa de <b>'+dec(need,0)+' g</b> e o rolo <b>'+nm+
-           '</b> tem <b>'+dec(have,0)+' g</b> — faltam '+dec(need-have,0)+' g.'+buyLink(f,'Comprar mais')+'</div>';
-  if(st === 'low')
-    return '<div class="alert">O rolo <b>'+nm+'</b> está acabando: <b>'+dec(have,0)+' g</b> restantes.'+buyLink(f,'Comprar de novo')+'</div>';
-  return '';
+  var out = [], seen = {};
+  (r.use || []).forEach(function(u){
+    var f = S.filaments.filter(function(x){ return x.id === u.id; })[0];
+    if(!f || !stockOn(f) || seen[f.id]) return;
+    seen[f.id] = 1;
+    var have = stockG(f), st = stockState(f), nm = esc(f.name || 'filamento');
+    var need = u.g * r.qty;
+    if(st === 'out')
+      out.push('<div class="alert bad">O rolo <b>'+nm+'</b> está zerado no seu estoque.'+buyLink(f,'Comprar de novo')+'</div>');
+    else if(need > have)
+      out.push('<div class="alert bad">Este pedido precisa de <b>'+dec(need,0)+' g</b> do rolo <b>'+nm+
+               '</b>, que tem <b>'+dec(have,0)+' g</b> — faltam '+dec(need-have,0)+' g.'+buyLink(f,'Comprar mais')+'</div>');
+    else if(st === 'low')
+      out.push('<div class="alert">O rolo <b>'+nm+'</b> está acabando: <b>'+dec(have,0)+' g</b> restantes.'+buyLink(f,'Comprar de novo')+'</div>');
+  });
+  return out.join('');
 }
 
 /* ============ cadastros: impressoras e filamentos ============ */
@@ -2903,7 +3605,14 @@ function renderParams(p){
     '<div class="kv"><span>Material</span><span class="v">'+dec(num(p.grams),0)+' g</span></div>'+
     '<div class="kv"><span>Tempo de impressão</span><span class="v">'+dec(num(p.hours),2)+' h</span></div>'+
     '<div class="kv"><span>Impressora</span><span class="v">'+esc(pr ? pr.name : '—')+'</span></div>'+
-    '<div class="kv"><span>Filamento</span><span class="v">'+esc(fl ? fl.name : '—')+'</span></div>'+
+    (p.multi && (p.mats||[]).length
+      ? '<div class="kv"><span>Filamentos</span><span class="v">'+
+          esc(p.mats.map(function(m){
+            var x = S.filaments.filter(function(y){ return y.id === m.f; })[0];
+            return (x ? x.name : 'filamento') + ' ' + dec(num(m.g),0) + ' g';
+          }).join(' · '))+
+          (num(p.purge) > 0 ? ' · purga '+dec(num(p.purge),0)+' g' : '')+'</span></div>'
+      : '<div class="kv"><span>Filamento</span><span class="v">'+esc(fl ? fl.name : '—')+'</span></div>')+
     '<div class="kv"><span>'+(p.mode==='markup'?'Markup':'Margem')+'</span><span class="v">'+dec(num(p.margin),0)+'%</span></div>'+
     '<div class="kv"><span>Desperdício / falhas</span><span class="v">'+dec(num(p.waste),0)+'% / '+dec(num(p.fail),0)+'%</span></div>'+
     '<div class="kv"><span>Mão de obra</span><span class="v">'+dec(num(p.prep),0)+' min lote + '+dec(num(p.finish),0)+' min peça</span></div>'+
@@ -2934,6 +3643,12 @@ function renderGallery(elId, target, after){
 function loadProduct(p){
   $('f-piece').value = p.name || '';
   $('f-grams').value = p.grams || '';
+  multi = !!p.multi;
+  mats = cloneMats(p.mats);
+  purgeStr = num(p.purge) > 0 ? String(num(p.purge)).replace('.', ',') : '';
+  $('f-purge').value = purgeStr;
+  setSeg('seg-multi', multi ? 'multi' : 'one');
+  renderMats();
   $('f-h').value = Math.floor(num(p.hours)) || '';
   $('f-m').value = Math.round((num(p.hours) - Math.floor(num(p.hours)))*60) || 0;
   $('f-qty').value = p.qty || 1;
@@ -2951,10 +3666,12 @@ function loadProduct(p){
 }
 function fillProductFromCalc(p){
   var r = compute();
-  p.grams = num($('f-grams').value);
+  /* gramas no mesmo escopo da tela: no multicolor, a soma das cores mais a purga */
+  p.grams = r.multi ? matGramsTotal() + purgeGrams() : num($('f-grams').value);
   p.hours = num($('f-h').value) + num($('f-m').value)/60;
   p.qty = r.qty; p.scope = scope;
   p.printer = $('f-printer').value; p.filament = $('f-filament').value;
+  p.multi = multi; p.mats = cloneMats(mats); p.purge = purgeGrams();
   p.waste = num($('f-waste').value); p.fail = num($('f-fail').value);
   p.prep = num($('f-prep').value); p.finish = num($('f-finish').value);
   p.extras = cloneExtras(extras);
@@ -4075,6 +4792,15 @@ function bindCalc(){
   each(qsa($('seg-scope'),'button'), function(b){
     b.addEventListener('click', function(){ scope = b.getAttribute('data-v'); setSeg('seg-scope',scope); render(); });
   });
+  each(qsa($('seg-multi'),'button'), function(b){
+    b.addEventListener('click', function(){ setMulti(b.getAttribute('data-v') === 'multi'); });
+  });
+  $('btn-mat-add').addEventListener('click', function(){ matAdd(); renderMats(); render(); });
+  $('f-purge').addEventListener('input', function(){ purgeStr = this.value; render(); });
+  $('btn-tier-copy').addEventListener('click', function(){
+    if(!(compute().price > 0)){ alert('Preencha gramas e tempo antes de copiar a tabela.'); return; }
+    copyText(tierText(), this);
+  });
   each(qsa($('seg-mode'),'button'), function(b){
     b.addEventListener('click', function(){ mode = b.getAttribute('data-v'); setSeg('seg-mode',mode); syncMarginLabel(); render(); });
   });
@@ -4145,10 +4871,12 @@ function bindCalc(){
 
   $('btn-clear').addEventListener('click', function(){
     if(!confirm('Limpar os campos da calculadora? Os itens já adicionados ao orçamento continuam lá.')) return;
-    ['f-piece','f-grams','f-h','f-m','f-prep','f-finish','f-final'].forEach(function(id){ $(id).value=''; });
+    ['f-piece','f-grams','f-h','f-m','f-prep','f-finish','f-final','f-purge'].forEach(function(id){ $(id).value=''; });
     $('f-qty').value = 1; extras = []; activeProductId = null; editingItemId = null;
-    $('save-msg').innerHTML = '';
-    renderExtras(); render();
+    multi = false; mats = []; purgeStr = '';
+    setSeg('seg-multi', 'one');
+    $('save-msg').innerHTML = ''; $('gc-msg').innerHTML = '';
+    renderMats(); renderExtras(); render();
   });
 
   $('btn-add-printer').addEventListener('click', function(){
@@ -4158,6 +4886,44 @@ function bindCalc(){
   $('btn-add-filament').addEventListener('click', function(){
     S.filaments.push({id:uid(),name:'Novo filamento',material:'PLA',color:'#3D7BD9',spoolPrice:110,spoolWeight:1000,brand:'',url:'',createdAt:Date.now()});
     persist(); renderFilaments(); fillSelects();
+  });
+}
+
+/* arrastar e soltar: o arquivo pode cair em qualquer lugar da tela de calcular,
+   não só dentro do retângulo tracejado */
+function bindImport(){
+  var drop = $('gc-drop'), inp = $('gc-file');
+  if(!drop || !inp) return;
+  drop.addEventListener('click', function(){ inp.click(); });
+  drop.addEventListener('keydown', function(e){
+    if(e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar'){ e.preventDefault(); inp.click(); }
+  });
+  inp.addEventListener('change', function(){
+    if(inp.files && inp.files[0]) importSliced(inp.files[0]);
+    inp.value = '';
+  });
+  var hasFile = function(e){
+    var t = e.dataTransfer && e.dataTransfer.types;
+    if(!t) return false;
+    return Array.prototype.indexOf.call(t, 'Files') > -1;
+  };
+  ['dragenter','dragover'].forEach(function(ev){
+    document.addEventListener(ev, function(e){
+      if(!hasFile(e)) return;
+      e.preventDefault();
+      if(current === 'calc') drop.classList.add('over');
+    });
+  });
+  document.addEventListener('dragleave', function(e){ if(!e.relatedTarget) drop.classList.remove('over'); });
+  document.addEventListener('drop', function(e){
+    if(!hasFile(e)) return;
+    e.preventDefault();
+    drop.classList.remove('over');
+    var f = e.dataTransfer.files && e.dataTransfer.files[0];
+    if(!f) return;
+    /* soltar o arquivo é um pedido de calcular: a tela vai junto */
+    if(current !== 'calc') go('calc');
+    importSliced(f);
   });
 }
 
@@ -4327,8 +5093,9 @@ function downloadBlob(text, type, name){
 }
 
 var SMAP = {'s-kwh':'kwh','s-hour':'hour','s-waste':'waste','s-fail':'fail','s-fee':'fee',
-  's-fixed':'fixed','s-fixedhours':'fixedHours','s-biz':'biz','s-contact':'contact','s-valid':'valid'};
-var STXT = {biz:1, contact:1};
+  's-fixed':'fixed','s-fixedhours':'fixedHours','s-biz':'biz','s-contact':'contact','s-valid':'valid',
+  's-tiers':'tiers'};
+var STXT = {biz:1, contact:1, tiers:1};
 /* 0.75 aparecia com ponto num app que pede vírgula em todo o resto */
 function settingStr(k){
   var v = S.settings[k];
@@ -4540,7 +5307,7 @@ function boot(reload){
   $('f-waste').value = S.settings.waste;
   $('f-fail').value  = S.settings.fail;
   $('f-margin').value = margin;
-  renderPrinters(); renderFilaments(); renderSupplyPresets(); renderExtras();
+  renderPrinters(); renderFilaments(); renderSupplyPresets(); renderExtras(); renderMats();
   renderCats(); renderCatFilter(); renderProducts();
   renderBuyFilter(); renderBuys();
   syncMarginLabel();
@@ -4574,6 +5341,7 @@ buildNav();
 placeStrip();
 bindHelp();
 bindCalc();
+bindImport();
 bindOrder();
 bindProducts();
 bindBuys();
