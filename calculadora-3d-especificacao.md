@@ -448,3 +448,101 @@ fixo mensal rateado, frete por CEP e comparador de marketplaces — mais:
 anexar o PDF no `navigator.share` (exigiria uma biblioteca de PDF embarcada, e
 o app gera o orçamento pela impressão do próprio navegador) e cadastro de
 clientes com histórico próprio.
+
+---
+
+# Adendo — v4 (agosto/2026)
+
+A v3 fechou a venda. A v4 fecha o **dinheiro**: o app já guardava receita
+(pedidos) e despesa (compras) e nunca cruzava as duas, já sabia o lucro de cada
+peça e nunca dizia qual valia a pena imprimir, já sabia o peso do rolo e nunca
+o quanto ainda sobrava dentro dele. Nenhuma das quatro entregas abaixo pede um
+dado novo do usuário que ele não tivesse motivo para dar.
+
+## 18. O que entrou
+
+### 18.1 Painel do mês
+Aba nova, entre *Salvos* e *Cadastros*, com um seletor de mês (a faixa vai do
+mês mais antigo com movimento até o corrente). São **duas bases de apuração**,
+cada uma dita na tela para ninguém somar laranja com banana:
+
+- **Dinheiro** — pedidos marcados como *Pago*, pelo mês do pagamento.
+- **Produção** — pedidos que passaram de *orçado*, pelo mês em que foram
+  criados. É o que aproxima as horas que a máquina de fato rodou.
+
+Os blocos:
+
+- **Resultado do mês**: recebido → frete repassado → venda das peças → taxas de
+  recebimento → custo de produção → **lucro** e margem, com uma barra de
+  composição. A taxa de recebimento, que fica escondida dentro do lucro de cada
+  item, é aberta aqui.
+- **Caixa do mês**: entrou (pedidos pagos) − saiu (compras registradas) =
+  saldo. É de propósito diferente do lucro, e a tela explica por quê: um rolo
+  de R$ 110 sai do caixa hoje e vira custo aos poucos, a cada peça impressa.
+- **Produção do mês**: horas impressas, filamento em kg, peças, pedidos, lucro
+  por hora de máquina e ticket médio. Com o rateio ligado, mostra também como
+  as horas do mês se comparam com as horas configuradas em *Ajustes* — é o
+  sinal para calibrar o palpite.
+- **O que deu mais lucro**: os itens dos pedidos pagos agrupados por produto (ou
+  por nome), ordenados por lucro, com o lucro por hora ao lado.
+- **Em aberto agora**: o que ainda não entrou, por status. Vale para todos os
+  meses, não só o selecionado.
+- **Rolos acabando**: ligado ao link de recompra do cadastro (§11.5).
+
+### 18.2 Lucro por hora de máquina
+O recurso escasso não é dinheiro, é hora de impressora: duas peças com o mesmo
+lucro não valem o mesmo se uma leva 2 h e a outra 20 h.
+
+- Indicador **Lucro / hora** na Conferência, ao lado de preço por grama e por
+  hora (os quatro viraram uma grade 2×2).
+- No **catálogo de produtos**, cada card mostra o lucro por hora de máquina, e
+  a lista pode ser ordenada por *A–Z*, *Lucro / h* ou *Lucro*. Produto salvo com
+  os números da mesa cheia tem as horas divididas pela quantidade antes da
+  conta.
+- Na ficha do produto, mais uma linha em *Preço*.
+
+### 18.3 Estoque do rolo
+O cadastro de filamento já tinha o peso do rolo; faltava saber quanto ainda tem
+dentro dele.
+
+- Campos **Estoque** (g restantes) e **Avisar em** (g), com barra de nível e
+  botão **Rolo novo**, que repõe o peso cadastrado.
+- Campo vazio quer dizer *não controlo este rolo*, que é diferente de 0 g, que
+  quer dizer *rolo acabado*. Por isso o estoque é texto, como o custo/hora
+  manual da impressora.
+- **Baixa automática ao salvar o orçamento**, já contando o desperdício que o
+  próprio item assumiu no cálculo. O pedido guarda que a baixa foi aplicada, e
+  duplicar não desconta de novo.
+- **Avisos ligados ao link de recompra** (§11.5): na calculadora, quando o rolo
+  selecionado está acabando, acabado ou não dá para o pedido; abaixo do botão
+  de salvar, com o que saiu de cada rolo; e no Painel do mês.
+
+### 18.4 Custo fixo mensal rateado
+Estava em "fora do escopo" desde a v1 (§9, §14, §17) e era o maior erro de
+precisão que sobrou: aluguel, internet, assinatura do fatiador, energia da
+máquina parada, contador.
+
+- Dois campos em *Ajustes*: **custo fixo (R$/mês)** e **horas impressas por
+  mês**. O rateio vira R$/h e cada peça paga a fatia do tempo que ocupou a mesa.
+- Entra como camada própria (*Custo fixo*) na pilha do preço e na memória de
+  cálculo, ao lado de filamento, energia, máquina, mão de obra e insumos.
+- Ambos nascem em **0**: quem nunca abrir *Ajustes* continua com o preço de
+  antes, e o rateio só passa a valer quando o usuário informa os dois números.
+- A caixa de apoio mostra o R$/h resultante, quanto uma peça de 9 h paga e a
+  **média real de horas por mês** dos pedidos do próprio usuário — o número com
+  que ele calibra o palpite em vez de chutar.
+
+## 19. Compatibilidade
+
+- Filamentos antigos sobem sem estoque (campo vazio) e com aviso em 150 g.
+- Pedidos salvos antes da v4 são marcados como *baixa já aplicada*, para que um
+  "duplicar" antigo não desconte o rolo retroativamente.
+- Ajustes antigos ganham `fixed:0` e `fixedHours:0` — nenhum preço muda sozinho.
+- Os campos novos sincronizam junto com os documentos que já iam para a nuvem;
+  nada mudou no formato do backup `.json` além dos campos a mais.
+
+## 20. Continua fora do escopo
+
+Leitura de `.gcode`, resina/SLA, torre de purga calculada, frete por CEP,
+comparador de marketplaces, anexar o PDF no `navigator.share` e cadastro de
+clientes com histórico próprio. O rateio do custo fixo **saiu** desta lista.
