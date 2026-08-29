@@ -580,6 +580,37 @@ h2.section .amt{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size
 .jhead .nm{display:block;font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .jhead .sb{display:block;font-size:11.5px;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .jhead .amt{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:14.5px;white-space:nowrap;flex:none}
+/* ---------- clientes ---------- */
+.chead{display:flex;align-items:center;gap:11px;padding:12px var(--pad);cursor:pointer;min-height:62px;transition:background .15s}
+.chead:hover{background:var(--surface2)}
+.chead .av{
+  width:38px;height:38px;border-radius:50%;flex:none;background:var(--surface3);color:var(--ink3);
+  display:flex;align-items:center;justify-content:center;box-shadow:var(--sh-in);
+}
+.chead .av svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.chead .mid{flex:1;min-width:0}
+.chead .nm{display:block;font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chead .sb{display:block;font-size:11.5px;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chead .amt{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:13.5px;white-space:nowrap;flex:none;color:var(--ink2)}
+.chead .amt.open{color:var(--hot)}
+/* "abrir" dentro do histórico: é um botão, mas precisa ler como link */
+.linkbtn{
+  background:none;border:0;padding:0;font:inherit;font-size:11px;color:var(--hot);
+  cursor:pointer;text-decoration:underline;text-underline-offset:2px;
+}
+.linkbtn:hover{opacity:.75}
+/* chip do filtro por cliente em Salvos */
+.clientchip{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.clientchip .tag{
+  display:inline-flex;align-items:center;gap:7px;padding:6px 8px 6px 12px;border-radius:999px;
+  background:var(--btn-pri-bg);border:1px solid var(--btn-pri-line);color:var(--btn-pri-fg);
+  font-size:12.5px;font-weight:600;box-shadow:var(--sh-2);
+}
+.clientchip .tag button{
+  background:none;border:0;color:inherit;font-size:16px;line-height:1;cursor:pointer;
+  padding:0 4px;opacity:.7;
+}
+.clientchip .tag button:hover{opacity:1}
 .stgrid{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
 .stgrid button{
   flex:none;border:1px solid var(--line);background:var(--surface);border-radius:20px;
@@ -814,6 +845,13 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
    quebra de linha: sem isso o número desce para uma segunda linha */
 .subnav button{white-space:nowrap;font-size:12.5px;padding-left:4px;padding-right:4px}
 @media (max-width:400px){.subnav button{font-size:11.5px}}
+/* Cadastros tem QUATRO abas e as quatro não cabem numa linha de celular sem
+   deixar a fonte ilegível. Em vez de esconder a última numa rolagem lateral —
+   aba que ninguém encontra é aba que não existe — elas quebram em 2x2. */
+@media (max-width:560px){
+  #seg-cad{flex-wrap:wrap}
+  #seg-cad button{flex:1 1 calc(50% - 3px)}
+}
 .subnav button .n{
   display:inline-block;margin-left:4px;min-width:16px;padding:0 4px;
   border-radius:20px;background:var(--surface3);color:var(--ink3);
@@ -1281,13 +1319,18 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
         <div class="btnrow" id="ord-addrow" style="margin-top:10px"></div>
 
         <div class="field" style="margin-top:16px">
-          <label for="o-client">Cliente <span class="hint">— opcional</span></label>
+          <label for="o-client-pick">Cliente <span class="hint">— opcional</span><button type="button" class="help" data-h="cliente" aria-label="O que é isso?">?</button></label>
+          <select id="o-client-pick"></select>
+        </div>
+        <div class="field">
+          <label for="o-client">Nome no orçamento</label>
           <input id="o-client" type="text" placeholder="Ex.: Maria da papelaria">
         </div>
         <div class="field">
           <label for="o-contact">WhatsApp do cliente <span class="hint">— DDD + número</span></label>
           <input id="o-contact" type="tel" inputmode="tel" placeholder="(11) 91234-5678">
         </div>
+        <p class="note" id="o-client-msg" style="margin:-6px 0 14px"></p>
         <div class="discrow" style="margin-bottom:14px">
           <div class="field">
             <label for="o-discount">Desconto</label>
@@ -1504,6 +1547,7 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
       <div class="toolbar">
         <input id="j-search" type="search" placeholder="Buscar por peça, cliente ou observação...">
       </div>
+      <div class="clientchip" id="job-client-chip" hidden></div>
       <div class="filterbar" id="job-filter"></div>
       <div id="saved-list"></div>
     </section>
@@ -1523,11 +1567,12 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
     <!-- ============ CADASTROS ============ -->
     <section class="view" id="v-cadastros" hidden>
       <h2 class="section">Cadastros</h2>
-      <p class="viewintro">É daqui que a calculadora tira os seus números. Cadastre uma vez e todo cálculo já sai certo.</p>
+      <p class="viewintro">É daqui que a calculadora tira os seus números — e é aqui que fica a sua agenda de clientes. Cadastre uma vez e todo cálculo já sai certo.</p>
       <div class="seg subnav" id="seg-cad">
         <button type="button" data-v="printers" aria-pressed="true">Impressoras <span class="n" id="cad-n-p">0</span></button>
         <button type="button" data-v="filaments" aria-pressed="false">Filamentos <span class="n" id="cad-n-f">0</span></button>
         <button type="button" data-v="cats" aria-pressed="false">Categorias <span class="n" id="cad-n-c">0</span></button>
+        <button type="button" data-v="clients" aria-pressed="false">Clientes <span class="n" id="cad-n-cl">0</span></button>
       </div>
 
       <div id="cad-printers">
@@ -1557,6 +1602,70 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
         <div class="card" id="cad-cats-card">
           <div id="cat-list"></div>
         </div>
+      </div>
+
+      <div id="cad-clients" hidden>
+        <div class="toolbar">
+          <input id="cad-cl-search" type="search" placeholder="Buscar cliente, WhatsApp ou documento...">
+          <button type="button" class="btn primary" id="btn-add-client">+ Novo</button>
+        </div>
+        <p class="cadhint">Cada ficha junta os dados de contato e <b>todo o histórico de pedidos</b> da pessoa: quanto já pagou, o que está em aberto e o ticket médio. Ao salvar um orçamento com o nome preenchido, o cliente entra aqui sozinho.</p>
+        <div class="sumbar" id="cad-cl-sum" hidden>
+          <div><span class="k">Clientes</span><span class="v" id="cl-v1">0</span></div>
+          <div><span class="k">A receber</span><span class="v" id="cl-v2">R$ 0,00</span></div>
+        </div>
+        <div id="client-list"></div>
+      </div>
+    </section>
+
+    <!-- ============ FICHA DO CLIENTE ============ -->
+    <section class="view" id="v-clientdetail" hidden>
+      <div class="detailhead">
+        <button type="button" class="btn ghost back" id="btn-back-clients">‹ Voltar</button>
+        <span class="t" id="cd-title">Cliente</span>
+      </div>
+
+      <div class="sumbar" id="cd-sum"></div>
+
+      <div class="card">
+        <div class="field">
+          <label for="cd-name">Nome <span class="hint">— ou apelido, como você chama</span></label>
+          <input id="cd-name" type="text" placeholder="Ex.: Maria da papelaria">
+        </div>
+        <div class="field">
+          <label for="cd-contact">WhatsApp <span class="hint">— DDD + número</span></label>
+          <input id="cd-contact" type="tel" inputmode="tel" placeholder="(11) 91234-5678">
+        </div>
+        <div class="field">
+          <label for="cd-email">E-mail <span class="hint">— opcional</span></label>
+          <input id="cd-email" type="email" inputmode="email" placeholder="maria@email.com">
+        </div>
+        <div class="field">
+          <label for="cd-doc">CPF ou CNPJ <span class="hint">— opcional, para nota</span></label>
+          <input id="cd-doc" type="text" inputmode="numeric" placeholder="000.000.000-00">
+        </div>
+        <div class="field">
+          <label for="cd-address">Endereço de entrega <span class="hint">— opcional</span></label>
+          <input id="cd-address" type="text" placeholder="Rua, número, bairro, cidade">
+        </div>
+        <div class="field" style="margin-bottom:0">
+          <label for="cd-note">Observações <span class="hint">— o que lembrar desta pessoa</span></label>
+          <textarea id="cd-note" placeholder="Ex.: sempre pede em preto. Paga no Pix, à vista."></textarea>
+        </div>
+      </div>
+
+      <h2 class="section">Resumo</h2>
+      <div class="card" id="cd-stats"></div>
+
+      <h2 class="section">Histórico de pedidos</h2>
+      <div class="card" id="cd-jobs"></div>
+
+      <div class="btnrow" style="margin-top:16px">
+        <button type="button" class="btn primary" id="btn-cd-order">Novo orçamento para este cliente</button>
+      </div>
+      <div class="btnrow">
+        <button type="button" class="btn" id="btn-cd-wa">WhatsApp</button>
+        <button type="button" class="btn danger" id="btn-cd-del">Excluir cliente</button>
       </div>
     </section>
 
@@ -1820,7 +1929,7 @@ var STATUS = {
 };
 var STATUS_ORDER = ['orcado','aprovado','imprimindo','entregue','pago'];
 
-var COLLS = ['printers','filaments','categories','products','buys','jobs'];
+var COLLS = ['printers','filaments','categories','products','buys','jobs','clients'];
 var DEFAULTS = {
   /* ids fixos: dois aparelhos que semeiam o mesmo padrão geram o MESMO documento
      na nuvem em vez de duas cópias. Igual ao que já era feito nas categorias. */
@@ -1834,6 +1943,9 @@ var DEFAULTS = {
   ],
   products:[],
   buys:[],
+  /* clientes: a agenda do negócio. Nasce vazia — quem só calcula preço nunca
+     precisa abrir esta tela, e quem vende passa a ter o histórico por pessoa. */
+  clients:[],
   /* fixed/fixedHours nascem em 0: quem nunca abriu Ajustes continua com o preço
      de antes, e o rateio só entra depois que o usuário informa os dois números */
   settings:{kwh:0.75,hour:25,waste:8,fail:8,fee:0,fixed:0,fixedHours:0,biz:'',contact:'',valid:7,tiers:'1, 10, 50'},
@@ -1841,7 +1953,7 @@ var DEFAULTS = {
   /* orçamento em montagem: fica só neste aparelho (não entra em COLLS, não sincroniza).
      Um rascunho meio pronto pulando de celular para celular no meio de uma venda
      confundiria mais do que ajudaria. */
-  order:{client:'',contact:'',note:'',items:[],discount:0,discountType:'brl',shipping:0}
+  order:{client:'',contact:'',clientId:'',note:'',items:[],discount:0,discountType:'brl',shipping:0}
 };
 var S;
 try { S = JSON.parse(load('calc3d')) || null; } catch(e){ S = null; }
@@ -1872,7 +1984,8 @@ function migrate(seed){
 
   if(!S.order || typeof S.order !== 'object') S.order = JSON.parse(JSON.stringify(DEFAULTS.order));
   if(!Array.isArray(S.order.items)) S.order.items = [];
-  ['client','contact','note'].forEach(function(k){ if(typeof S.order[k] !== 'string') S.order[k] = ''; });
+  ['client','contact','clientId','note'].forEach(function(k){ if(typeof S.order[k] !== 'string') S.order[k] = ''; });
+  if(S.order.clientId && !clientById(S.order.clientId)) S.order.clientId = '';
   if(S.order.discountType !== 'pct') S.order.discountType = 'brl';
   S.order.items.forEach(function(it){ if(!it.id) it.id = uid(); });
 
@@ -1887,7 +2000,45 @@ function migrate(seed){
     /* pedidos gravados antes do estoque nunca deram baixa; marcar como aplicado
        evita que um "duplicar" antigo desconte o rolo duas vezes */
     if(typeof j.stockApplied !== 'boolean') j.stockApplied = true;
+    if(typeof j.clientId !== 'string') j.clientId = '';
   });
+
+  /* campos de texto do cliente: vazio é o padrão, nunca undefined — assim o
+     input nunca mostra "undefined" e o clean() da nuvem não derruba a chave */
+  S.clients.forEach(function(c){
+    ['name','contact','email','doc','address','note'].forEach(function(k){
+      if(typeof c[k] !== 'string') c[k] = '';
+    });
+  });
+
+  migrateJobClients();
+}
+
+/* Pedidos antigos guardavam só o NOME do cliente digitado à mão. Aqui cada nome
+   vira uma ficha de verdade e o pedido passa a apontar para ela — sem isso a
+   agenda nasceria vazia e o histórico de quem já vende ficaria para trás.
+   Roda uma vez por nome: quem já tem clientId é deixado em paz. */
+function migrateJobClients(){
+  var touched = 0;
+  var order = S.jobs.slice().sort(function(a,b){ return num(a.createdAt) - num(b.createdAt); });
+  order.forEach(function(j){
+    if(j.clientId && clientById(j.clientId)) return;
+    var nm = String(j.client || '').trim();
+    if(!nm){ j.clientId = ''; return; }
+    var c = clientByName(nm);
+    if(!c){
+      c = newClient(nm, j.contact || '');
+      c.createdAt = num(j.createdAt) || Date.now();
+      S.clients.push(c);
+    } else if(!c.contact && j.contact){
+      c.contact = j.contact;
+    }
+    j.clientId = c.id;
+    touched++;
+  });
+  /* grava já: sem isso a migração rodaria de novo a cada abertura, gerando
+     um id novo para a mesma pessoa toda vez — e a nuvem encheria de duplicatas */
+  if(touched) persist();
 }
 
 
@@ -2118,6 +2269,7 @@ var HELP = {
   falhas:{t:'Reserva de falhas', d:'Peça que soltou da mesa, rolo embolado, arquivo com defeito. Referência: 5% a 15%. O app DIVIDE (custo ÷ 0,92), não soma — é assim que a peça boa paga a peça perdida.', e:'R$ 26,71 ÷ 0,92 = R$ 29,03'},
   preparo:{t:'Preparo (por lote)', d:'Minutos para fatiar, limpar a mesa, trocar filamento e ligar. É gasto uma vez por lote, então o app divide pela quantidade de peças.', e:''},
   acabamento:{t:'Acabamento (por peça)', d:'Minutos com a mão em CADA peça: tirar suporte, lixar, pintar, montar, embalar. Em peça pequena costuma ser o maior custo de todos.', e:''},
+  cliente:{t:'Cliente do pedido', d:'Escolha uma ficha já cadastrada ou só digite o nome — ao salvar o orçamento, quem ainda não tem ficha ganha uma. O pedido passa a contar no histórico da pessoa: quanto já pagou, o que está em aberto e o ticket médio. A agenda inteira fica em Cadastros › Clientes.', e:'Maria da papelaria\n4 pedidos · R$ 640,00 pagos · R$ 120,00 em aberto'},
   orcamento:{t:'Orçamento do pedido', d:'Pedido de verdade quase nunca é uma peça só. Adicione cada peça calculada à lista, ponha o nome do cliente, o desconto e o frete — e mande tudo de uma vez pelo WhatsApp ou em PDF. Se você não adicionar nada, o orçamento sai com a peça que está na calculadora.', e:'3x Chaveiro — R$ 12,00 cada\n1x Vaso — R$ 80,00\nDesconto R$ 10,00 · Frete R$ 15,00\nTotal R$ 121,00'},
   insumos:{t:'Insumos e acessórios', d:'Tudo que vai junto com a peça: embalagem, etiqueta, sacola, ímã, argola, parafuso, LED, cola, tinta. O preço é unitário e a quantidade é por peça — 4 parafusos de R$ 0,30 viram R$ 1,20 na peça.', e:'Argola R$ 0,35 × 1\nSaquinho R$ 0,20 × 1\nCartão R$ 1,00 × 1\nTotal R$ 1,55 por peça'},
   kwh:{t:'Tarifa de energia', d:'O valor do kWh na SUA conta de luz, já com impostos e bandeira — não a tarifa "seca" da ANEEL. Divida o total da conta pelo consumo em kWh para achar.', e:''},
@@ -2205,7 +2357,7 @@ var TABS = [
   {id:'cadastros', label:'Cadastros', icon:'<path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="7" rx="2"/><path d="M7 16v5h10v-5"/>'},
   {id:'settings',  label:'Ajustes',   icon:'<line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="17" x2="20" y2="17"/><circle cx="9" cy="7" r="2.5"/><circle cx="15" cy="17" r="2.5"/>'}
 ];
-var NAVOF = {productdetail:'products', buydetail:'buys'};
+var NAVOF = {productdetail:'products', buydetail:'buys', clientdetail:'cadastros'};
 var current = 'calc';
 /* atalhos escritos no meio do texto: levam para a tela certa e, se for o caso,
    já param na aba de dentro */
@@ -2246,7 +2398,8 @@ function go(id){
   if(id === 'saved') renderSaved();
   if(id === 'products'){ renderCatFilter(); renderProducts(); renderCats(); }
   if(id === 'buys'){ renderBuyFilter(); renderBuys(); }
-  if(id === 'cadastros'){ showCad(cadTab); renderPrinters(); renderFilaments(); renderCats(); }
+  if(id === 'cadastros'){ showCad(cadTab); renderPrinters(); renderFilaments(); renderCats(); renderClients(); }
+  if(id === 'clientdetail') renderClientDetail();
   if(id === 'dash') renderDash();
   if(id === 'settings') showSet(setTab);
 }
@@ -2925,12 +3078,51 @@ function restoreCalc(c){
   renderExtras(); render();
 }
 
+/* prende o orçamento a uma ficha e copia os dados dela para os campos que vão
+   sair no PDF e no WhatsApp */
+function orderSetClient(c){
+  if(!c) return;
+  S.order.clientId = c.id;
+  S.order.client = c.name || '';
+  if(c.contact) S.order.contact = c.contact;
+}
+/* a ficha mudou de nome enquanto o orçamento apontava para ela */
+function syncOrderClientFields(){
+  var c = clientById(S.order.clientId);
+  if(!c) return;
+  S.order.client = c.name || '';
+  var el = $('o-client');
+  if(el && document.activeElement !== el) el.value = c.name || '';
+}
+/* a linha embaixo do campo: diz se o pedido vai entrar no histórico de alguém,
+   e quanto essa pessoa já comprou. Sem ficha, avisa que ela nasce ao salvar. */
+function renderOrderClientMsg(){
+  var el = $('o-client-msg');
+  if(!el) return;
+  var o = S.order, c = clientById(o.clientId);
+  if(c){
+    var st = clientStats(c.id);
+    el.innerHTML = 'Este pedido entra no histórico de <b>' + esc(clientName(c)) + '</b>' +
+      (st.n ? ' — ' + esc(clientSubtitle(st)) : ' (primeiro pedido dela)') +
+      '. <button type="button" class="linkbtn" id="o-client-open">Ver ficha</button>';
+    var b = $('o-client-open');
+    if(b) b.addEventListener('click', function(){ openClient(c.id); });
+  } else if(String(o.client||'').trim()){
+    el.innerHTML = 'Ao salvar o orçamento, <b>' + esc(String(o.client).trim()) +
+      '</b> vira uma ficha de cliente e o pedido entra no histórico dela.';
+  } else {
+    el.innerHTML = 'Sem cliente, o orçamento sai normalmente — só não entra em nenhum histórico.';
+  }
+}
+
 function refreshOrderInputs(){
   var o = S.order;
   var set = function(id, v){ var el = $(id); if(el && document.activeElement !== el) el.value = v; };
   set('o-client', o.client || '');
   set('o-contact', o.contact || '');
   set('o-note', o.note || '');
+  fillClientSelect();
+  renderOrderClientMsg();
   /* porcentagem nao pode ser arredondada na exibicao: 12,5% viraria 13% e o
      numero na tela deixaria de bater com o desconto que esta sendo aplicado */
   set('o-discount', num(o.discount) > 0
@@ -3067,6 +3259,22 @@ function quoteText(o, lines, when){
   if(st.contact){ out.push(''); out.push(st.contact); }
   return out.join('\n');
 }
+/* bloco do cliente no PDF. Com a ficha vinculada saem também documento e
+   endereço — é o que faz o orçamento servir de base para a nota e a entrega. */
+function clientPdfBlock(o){
+  var c = clientById(o.clientId);
+  var lines = [];
+  var nm = String(o.client || (c ? c.name : '')).trim();
+  if(nm) lines.push(esc(nm));
+  if(o.contact) lines.push(esc(o.contact));
+  else if(c && c.contact) lines.push(esc(c.contact));
+  if(c){
+    if(c.email) lines.push(esc(c.email));
+    if(c.doc) lines.push(esc(c.doc));
+    if(c.address) lines.push(esc(c.address));
+  }
+  return lines.length ? '<div class="pclient"><b>Cliente</b>'+lines.join('<br>')+'</div>' : '';
+}
 function orderText(){ return quoteText(S.order, orderLines(), new Date()); }
 
 /* numero brasileiro digitado de qualquer jeito vira o formato que o wa.me aceita */
@@ -3101,9 +3309,44 @@ function copyText(txt, btn){
 }
 
 function bindOrder(){
-  var OMAP = {'o-client':'client','o-contact':'contact','o-note':'note'};
-  Object.keys(OMAP).forEach(function(id){
-    $(id).addEventListener('input', function(){ S.order[OMAP[id]] = this.value; persist(); });
+  $('o-note').addEventListener('input', function(){ S.order.note = this.value; persist(); });
+
+  /* Escolher na lista preenche nome e WhatsApp e prende o orçamento à ficha.
+     "cliente avulso" limpa os dois campos: deixar o nome ali faria o vínculo
+     voltar sozinho no salvar (é o mesmo nome, é a mesma pessoa) e a escolha
+     do usuário não teria valido de nada. */
+  $('o-client-pick').addEventListener('change', function(){
+    var c = clientById(this.value);
+    if(c) orderSetClient(c);
+    else { S.order.clientId = ''; S.order.client = ''; S.order.contact = ''; }
+    persist(); refreshOrderInputs();
+  });
+
+  /* Digitar o nome à mão desfaz o vínculo assim que ele deixa de ser o mesmo
+     nome da ficha: senão o orçamento diria "João" e entraria no histórico da
+     Maria. Se o nome digitado bater com uma ficha existente, ele reata. */
+  $('o-client').addEventListener('input', function(){
+    S.order.client = this.value;
+    var linked = clientById(S.order.clientId);
+    if(!linked || normName(linked.name) !== normName(this.value)){
+      var hit = clientByName(this.value);
+      S.order.clientId = hit ? hit.id : '';
+      if(hit && !S.order.contact && hit.contact){
+        S.order.contact = hit.contact;
+        var ct = $('o-contact');
+        if(ct && document.activeElement !== ct) ct.value = hit.contact;
+      }
+      fillClientSelect();
+    }
+    persist(); renderOrderClientMsg();
+  });
+  $('o-contact').addEventListener('input', function(){
+    S.order.contact = this.value;
+    /* o telefone digitado no orçamento sobe para a ficha quando ela ainda não
+       tem nenhum — é o jeito de a agenda se completar sozinha */
+    var c = clientById(S.order.clientId);
+    if(c && !c.contact && this.value.trim()){ c.contact = this.value; c.updatedAt = Date.now(); }
+    persist(); renderOrderClientMsg();
   });
   ['o-discount','o-shipping'].forEach(function(id){
     var k = id === 'o-discount' ? 'discount' : 'shipping';
@@ -3740,7 +3983,8 @@ function hitsQuery(q, parts){
 var CHEV = '<span class="chev" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></span>';
 /* contadores da subnav: dizem de cara quanta coisa tem em cada aba */
 function paintCadCounts(){
-  var m = {'cad-n-p':S.printers.length, 'cad-n-f':S.filaments.length, 'cad-n-c':S.categories.length};
+  var m = {'cad-n-p':S.printers.length, 'cad-n-f':S.filaments.length, 'cad-n-c':S.categories.length,
+           'cad-n-cl':(S.clients||[]).length};
   Object.keys(m).forEach(function(id){ if($(id)) $(id).textContent = m[id]; });
 }
 function renderPrinters(){
@@ -4009,6 +4253,201 @@ function fillCatSelect(){
     return '<option value="'+esc(c.id)+'">'+esc(c.name)+'</option>';
   }).join('');
   if(v) sel.value = v;
+}
+
+/* ============ clientes ============ */
+/* A agenda do negócio. Um cliente é uma ficha só — nome, contato e observações —
+   e tudo que interessa de verdade (quanto já comprou, o que está em aberto, o
+   histórico) é DERIVADO dos pedidos, nunca copiado para dentro dele. Assim
+   marcar um pedido como Pago já atualiza a ficha, sem sincronizar dois lugares. */
+var clientQuery = '', cdId = null;
+var USERSVG = '<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M4.8 20.5a7.2 7.2 0 0114.4 0"/></svg>';
+
+function newClient(name, contact){
+  return {id:uid(), name:String(name||''), contact:String(contact||''),
+    email:'', doc:'', address:'', note:'',
+    createdAt:Date.now(), updatedAt:Date.now()};
+}
+function clientById(id){
+  if(!id) return null;
+  return (S.clients||[]).filter(function(c){ return c.id === id; })[0] || null;
+}
+/* "Maria da Papelaria" e "maria da papelaria " são a mesma pessoa. Sem isso o
+   vínculo automático criaria uma ficha nova a cada pedido. */
+function normName(s){
+  return String(s==null?'':s).trim().toLowerCase().replace(/\s+/g,' ');
+}
+function clientByName(name){
+  var k = normName(name);
+  if(!k) return null;
+  return (S.clients||[]).filter(function(c){ return normName(c.name) === k; })[0] || null;
+}
+/* acha a ficha pelo nome ou cria uma na hora. É o que faz salvar um orçamento
+   já deixar o cliente cadastrado, sem obrigar ninguém a preencher duas telas. */
+function clientEnsure(name, contact){
+  var nm = String(name||'').trim();
+  if(!nm) return null;
+  var c = clientByName(nm);
+  if(c){
+    if(!c.contact && contact){ c.contact = String(contact); c.updatedAt = Date.now(); }
+    return c;
+  }
+  c = newClient(nm, contact);
+  S.clients.push(c);
+  return c;
+}
+function clientName(c){ return (c && String(c.name).trim()) || 'Sem nome'; }
+/* pedidos da ficha, do mais novo para o mais antigo */
+function clientJobs(id){
+  if(!id) return [];
+  return S.jobs.filter(function(j){ return j.clientId === id; })
+    .sort(function(a,b){ return num(b.createdAt) - num(a.createdAt); });
+}
+/* o resumo que faz a ficha valer a pena: quanto essa pessoa já pagou, quanto
+   ainda deve e qual o tamanho médio do pedido dela */
+function clientStats(id){
+  var jobs = clientJobs(id);
+  var o = {n:jobs.length, paid:0, paidN:0, open:0, openN:0, hours:0, qty:0, last:0, ticket:0};
+  jobs.forEach(function(j){
+    var t = jobTotals(j);
+    o.hours += t.hours; o.qty += t.qty;
+    o.last = Math.max(o.last, num(j.createdAt));
+    if(jobStatus(j) === 'pago'){ o.paid += t.total; o.paidN++; }
+    else { o.open += t.total; o.openN++; }
+  });
+  o.ticket = o.paidN ? o.paid/o.paidN : 0;
+  return o;
+}
+function clientSubtitle(st){
+  var parts = [st.n + (st.n === 1 ? ' pedido' : ' pedidos')];
+  if(st.paid > 0) parts.push(brl(st.paid) + ' pagos');
+  if(st.open > 0) parts.push(brl(st.open) + ' em aberto');
+  return parts.join(' · ');
+}
+function sortedClients(){
+  /* quem tem dinheiro em aberto aparece primeiro: é o que precisa de ação hoje.
+     Depois vem quem mais comprou, e só então a ordem alfabética. */
+  return (S.clients||[]).slice().map(function(c){
+    return {c:c, s:clientStats(c.id)};
+  }).sort(function(a,b){
+    if((a.s.open > 0) !== (b.s.open > 0)) return a.s.open > 0 ? -1 : 1;
+    var d = b.s.paid - a.s.paid;
+    if(Math.abs(d) > 0.005) return d;
+    return String(a.c.name||'').localeCompare(String(b.c.name||''), 'pt-BR', {sensitivity:'base'});
+  });
+}
+function matchClient(c){
+  return hitsQuery(clientQuery, [c.name||'', c.contact||'', c.email||'', c.doc||'', c.note||'', c.address||'']);
+}
+
+function renderClients(){
+  var el = $('client-list');
+  if(!el) return;
+  paintCadCounts();
+  if(busyIn('#client-list')){ pendingRender.clients = true; return; }
+  var all = sortedClients();
+  var openTot = 0;
+  all.forEach(function(o){ openTot += o.s.open; });
+  var sum = $('cad-cl-sum');
+  if(sum){
+    sum.hidden = !all.length;
+    $('cl-v1').textContent = all.length;
+    $('cl-v2').textContent = brl(openTot);
+  }
+  var list = all.filter(function(o){ return matchClient(o.c); });
+  el.innerHTML = list.map(function(o){
+    var c = o.c, st = o.s;
+    return '<div class="item"><div class="chead" data-cd="'+esc(c.id)+'" role="button" tabindex="0">'+
+      '<span class="av">'+USERSVG+'</span>'+
+      '<span class="mid"><span class="nm">'+esc(clientName(c))+'</span>'+
+      '<span class="sb">'+esc(clientSubtitle(st))+'</span></span>'+
+      (st.open > 0 ? '<span class="amt open">'+brl(st.open)+'</span>' : '<span class="amt">'+brl(st.paid)+'</span>')+
+      CHEV+'</div></div>';
+  }).join('') || emptyCad(clientQuery, (S.clients||[]).length,
+      'Nenhum cliente ainda',
+      'Cadastre quem compra de você e cada orçamento salvo entra no histórico da pessoa: quanto já pagou, o que está em aberto e o ticket médio.',
+      'btn-add-client', 'Adicionar cliente', ' cliente');
+  each(qsa(el,'[data-cd]'), function(h){
+    var open = function(){ openClient(h.getAttribute('data-cd')); };
+    h.addEventListener('click', open);
+    h.addEventListener('keydown', function(e){
+      if(e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar'){ e.preventDefault(); open(); }
+    });
+  });
+}
+
+/* ---- ficha do cliente ---- */
+function openClient(id){
+  cdId = id;
+  if(!clientById(id)){ go('cadastros'); return; }
+  go('clientdetail');
+  renderClientDetail();
+}
+function fillClientSelect(){
+  var sel = $('o-client-pick');
+  if(!sel) return;
+  var cur = S.order.clientId || '';
+  sel.innerHTML = '<option value="">— cliente avulso —</option>' +
+    (S.clients||[]).slice().sort(function(a,b){
+      return String(a.name||'').localeCompare(String(b.name||''), 'pt-BR', {sensitivity:'base'});
+    }).map(function(c){
+      return '<option value="'+esc(c.id)+'">'+esc(clientName(c))+'</option>';
+    }).join('');
+  sel.value = (cur && clientById(cur)) ? cur : '';
+}
+function renderClientDetail(){
+  var c = clientById(cdId);
+  if(!c){ go('cadastros'); return; }
+  $('cd-title').textContent = clientName(c);
+  var set = function(id, v){ var el = $(id); if(el && document.activeElement !== el) el.value = v; };
+  set('cd-name', c.name || '');
+  set('cd-contact', c.contact || '');
+  set('cd-email', c.email || '');
+  set('cd-doc', c.doc || '');
+  set('cd-address', c.address || '');
+  set('cd-note', c.note || '');
+
+  var st = clientStats(c.id);
+  $('cd-sum').innerHTML =
+    '<div><span class="k">Já pagou</span><span class="v">'+brl(st.paid)+'</span></div>'+
+    '<div><span class="k">Em aberto</span><span class="v">'+brl(st.open)+'</span></div>';
+
+  $('cd-stats').innerHTML =
+    '<div class="mini" style="margin-top:0">'+
+      '<div><span class="k">Pedidos</span><span class="v">'+st.n+'</span></div>'+
+      '<div><span class="k">Ticket médio</span><span class="v">'+(st.paidN ? brl(st.ticket) : '—')+'</span></div>'+
+      '<div><span class="k">Peças</span><span class="v">'+dec(st.qty,0)+'</span></div>'+
+      '<div><span class="k">Horas de máquina</span><span class="v">'+dec(st.hours,1)+' h</span></div>'+
+    '</div>'+
+    '<p class="dashnote">O ticket médio conta só os pedidos <b>pagos</b>. Tudo aqui sai dos pedidos ligados a esta ficha — mudar o status de um pedido já atualiza estes números.</p>';
+
+  var jobs = clientJobs(c.id);
+  $('cd-jobs').innerHTML = jobs.length
+    ? jobs.map(function(j){
+        var t = jobTotals(j);
+        return '<div class="toprow"><span class="rk" style="width:auto;border-radius:999px;padding:0 7px">'+
+          STATUS[jobStatus(j)].n+'</span>'+
+          '<span class="mid"><span class="nm">'+esc(jobLabel(j) || 'Sem itens')+'</span>'+
+          '<span class="sb">'+esc(j.date || '')+(j.due ? ' · entrega '+brDate(j.due) : '')+'</span></span>'+
+          '<span class="vl"><b>'+brl(t.total)+'</b>'+
+          '<span><button type="button" class="linkbtn" data-cdj="'+esc(j.id)+'">abrir</button></span></span></div>';
+      }).join('')
+    : '<div class="empty"><span class="et">Nenhum pedido ainda</span><span class="es">Monte um orçamento em <b>Calcular</b> escolhendo este cliente e ele aparece aqui.</span></div>';
+
+  each(qsa($('cd-jobs'),'[data-cdj]'), function(b){
+    b.addEventListener('click', function(){
+      jobOpen[b.getAttribute('data-cdj')] = true;
+      jobClientFilter = c.id;
+      jobFilter = 'all';
+      go('saved');
+      var el = $('jb-'+b.getAttribute('data-cdj'));
+      if(el) el.scrollIntoView({block:'center'});
+    });
+  });
+
+  var wa = $('btn-cd-wa');
+  wa.disabled = !waPhone(c.contact);
+  wa.title = waPhone(c.contact) ? '' : 'Preencha o WhatsApp desta ficha.';
 }
 
 /* ============ produtos ============ */
@@ -4328,6 +4767,8 @@ function buysCSV(){
    Por isso a aba tem status, data de entrega, busca e duplicar — e nao so abrir
    e excluir. */
 var jobFilter = 'all', jobQuery = '', jobOpen = {};
+/* filtro vindo da ficha do cliente: mostra só os pedidos daquela pessoa */
+var jobClientFilter = '';
 
 /* pedidos antigos foram gravados como uma peca so: viram um item unico aqui,
    sem precisar reescrever nada no armazenamento */
@@ -4351,6 +4792,12 @@ function jobItems(j){
 }
 function jobTotals(j){ return orderTotals(jobItems(j), j); }
 function jobStatus(j){ return STATUS[j.status] ? j.status : 'orcado'; }
+/* o nome que aparece no pedido segue a ficha: renomear o cliente conserta a
+   grafia em todo o histórico, em vez de deixar "maria" e "Maria" convivendo */
+function jobClientName(j){
+  var c = clientById(j.clientId);
+  return c ? clientName(c) : String(j.client || '');
+}
 function jobLabel(j){
   return jobItems(j).map(function(it){ return itemQty(it)+'x '+(it.name || 'Sem nome'); }).join(' + ');
 }
@@ -4358,17 +4805,37 @@ function statusPill(st){
   return '<span class="stpill st-'+st+'"><span class="stdot"></span>'+STATUS[st].n+'</span>';
 }
 function jobMatch(j){
+  if(jobClientFilter && j.clientId !== jobClientFilter) return false;
   if(jobFilter !== 'all' && jobStatus(j) !== jobFilter) return false;
   if(!jobQuery) return true;
-  var hay = [j.client || '', j.note || '', jobLabel(j)].join(' ').toLowerCase();
+  var hay = [j.client || '', jobClientName(j), j.note || '', jobLabel(j)].join(' ').toLowerCase();
   return hay.indexOf(jobQuery) > -1;
 }
 function sortedJobs(){
   return S.jobs.slice().sort(function(a,b){ return num(b.createdAt) - num(a.createdAt); });
 }
+function renderJobClientChip(){
+  var el = $('job-client-chip');
+  if(!el) return;
+  var c = clientById(jobClientFilter);
+  if(!c){ jobClientFilter = ''; el.hidden = true; el.innerHTML = ''; return; }
+  el.hidden = false;
+  el.innerHTML = '<span class="tag">Cliente: ' + esc(clientName(c)) +
+    '<button type="button" id="job-client-clear" aria-label="Ver todos os pedidos">&times;</button></span>' +
+    '<button type="button" class="linkbtn" id="job-client-open">Ver ficha</button>';
+  $('job-client-clear').addEventListener('click', function(){
+    jobClientFilter = '';
+    renderSaved();
+  });
+  $('job-client-open').addEventListener('click', function(){ openClient(c.id); });
+}
 function renderJobFilter(){
-  var counts = {all:S.jobs.length};
-  S.jobs.forEach(function(j){ var k = jobStatus(j); counts[k] = (counts[k]||0)+1; });
+  /* com um cliente escolhido, os contadores por status contam só os dele */
+  var base = jobClientFilter
+    ? S.jobs.filter(function(j){ return j.clientId === jobClientFilter; })
+    : S.jobs;
+  var counts = {all:base.length};
+  base.forEach(function(j){ var k = jobStatus(j); counts[k] = (counts[k]||0)+1; });
   var html = '<button type="button" data-jf="all" aria-pressed="'+(jobFilter === 'all')+'">Todos <span class="n">'+counts.all+'</span></button>';
   html += STATUS_ORDER.map(function(k){
     if(!counts[k]) return '';
@@ -4380,6 +4847,7 @@ function renderJobFilter(){
   });
 }
 function renderSaved(){
+  renderJobClientChip();
   renderJobFilter();
 
   var ym = todayISO().slice(0,7);
@@ -4408,7 +4876,7 @@ function renderSaved(){
     var sub = [j.date || ''];
     if(t.n > 1) sub.push(t.n + ' itens');
     if(j.due) sub.push('entrega ' + brDate(j.due));
-    if(j.client) sub.push(jobLabel(j));
+    if(jobClientName(j)) sub.push(jobLabel(j));
 
     var lines = items.map(function(it){
       var q = itemQty(it);
@@ -4420,7 +4888,7 @@ function renderSaved(){
 
     return '<div class="item">'+
       '<div class="jhead" data-j="'+esc(j.id)+'">'+statusPill(st)+
-        '<span class="mid"><span class="nm">'+esc(j.client || jobLabel(j) || 'Sem nome')+'</span>'+
+        '<span class="mid"><span class="nm">'+esc(jobClientName(j) || jobLabel(j) || 'Sem nome')+'</span>'+
         '<span class="sb">'+esc(sub.join(' · '))+'</span></span>'+
         '<span class="amt">'+brl(t.total)+'</span></div>'+
       '<div class="body" id="jb-'+esc(j.id)+'"'+(jobOpen[j.id] ? '' : ' hidden')+'>'+
@@ -4523,7 +4991,9 @@ function restore(j){
 
   var items = jobItems(j).map(function(it){ var n = JSON.parse(JSON.stringify(it)); n.id = uid(); return n; });
   S.order = {
-    client:j.client || '', contact:j.contact || '', note:j.note || '',
+    client:j.client || '', contact:j.contact || '',
+    clientId:clientById(j.clientId) ? j.clientId : '',
+    note:j.note || '',
     items:items, discount:num(j.discount),
     discountType:j.discountType === 'pct' ? 'pct' : 'brl', shipping:num(j.shipping)
   };
@@ -4632,6 +5102,21 @@ function topItems(jobs){
     e.perHour = e.hours > 0 ? e.profit/e.hours : 0;
     return e;
   }).sort(function(a,b){ return b.profit - a.profit; });
+}
+/* quem sustentou o mês. Pedido sem ficha entra como "Sem cliente" para o total
+   fechar com o Resultado do mês — some-los sob outro nome esconderia dinheiro. */
+function topClients(jobs){
+  var by = {};
+  jobs.forEach(function(j){
+    var c = clientById(j.clientId);
+    var key = c ? c.id : '__none';
+    var e = by[key] || (by[key] = {id:c ? c.id : '', name:c ? clientName(c) : (j.client || 'Sem cliente'), n:0, total:0, profit:0});
+    var t = jobTotals(j), raw = 0;
+    jobItems(j).forEach(function(it){ raw += num(it.profit) * itemQty(it); });
+    e.n++; e.total += t.total; e.profit += raw - t.disc;
+  });
+  return Object.keys(by).map(function(k){ return by[k]; })
+    .sort(function(a,b){ return b.total - a.total; });
 }
 function deltaHtml(now, prev){
   if(!(Math.abs(prev) > 0.005)) return '';
@@ -4750,6 +5235,21 @@ function renderDash(){
   if(top.length) out += '<p class="dashnote">A coluna de baixo é o lucro por hora de máquina. É ela que diz o que vale a pena colocar de novo na mesa.</p>';
   out += '</div>';
 
+  /* ---- quem comprou ---- */
+  var tc = topClients(paidJobs(ym));
+  if(tc.length){
+    out += '<h2 class="section">Quem comprou este mês</h2><div class="card">';
+    out += tc.slice(0,6).map(function(e,i){
+      return '<div class="toprow"><span class="rk">'+(i+1)+'</span>'+
+        '<span class="mid"><span class="nm">'+esc(e.name)+'</span>'+
+        '<span class="sb">'+e.n+(e.n === 1 ? ' pedido' : ' pedidos')+' · ticket '+brl(e.total/e.n)+'</span></span>'+
+        '<span class="vl"><b>'+brl(e.total)+'</b>'+
+        (e.id ? '<span><button type="button" class="linkbtn" data-dcl="'+esc(e.id)+'">ver ficha</button></span>' : '')+
+        '</span></div>';
+    }).join('');
+    out += '<p class="dashnote">Base: pedidos pagos neste mês. Cliente que volta custa menos que cliente novo — é aqui que dá para ver quem vale um desconto na próxima.</p></div>';
+  }
+
   /* ---- em aberto ---- */
   var openJobs = S.jobs.filter(function(j){ return jobStatus(j) !== 'pago'; });
   var openM = moneyOf(openJobs);
@@ -4783,6 +5283,9 @@ function renderDash(){
   }
 
   $('dash-body').innerHTML = out;
+  each(qsa($('dash-body'),'[data-dcl]'), function(b){
+    b.addEventListener('click', function(){ openClient(b.getAttribute('data-dcl')); });
+  });
 }
 
 function bindDash(){
@@ -4808,12 +5311,14 @@ function setSeg(id,v){
    de outras telas e o tutorial abram exatamente a mesma coisa. */
 var cadTab = 'printers';
 function showCad(v){
-  cadTab = (v === 'filaments' || v === 'cats') ? v : 'printers';
+  cadTab = (v === 'filaments' || v === 'cats' || v === 'clients') ? v : 'printers';
   setSeg('seg-cad', cadTab);
   $('cad-printers').hidden  = (cadTab !== 'printers');
   $('cad-filaments').hidden = (cadTab !== 'filaments');
   $('cad-cats').hidden      = (cadTab !== 'cats');
+  $('cad-clients').hidden   = (cadTab !== 'clients');
   if(cadTab === 'cats') renderCats();
+  if(cadTab === 'clients') renderClients();
 }
 /* item recém-criado já nasce aberto e com o nome selecionado: sem isso o
    usuário só vê aparecer uma linha "Nova impressora" e não sabe o que fazer */
@@ -4892,6 +5397,8 @@ function flushPending(){
   if(pendingRender.printers){ pendingRender.printers = false; renderPrinters(); }
   if(pendingRender.filaments){ pendingRender.filaments = false; renderFilaments(); }
   if(pendingRender.categories){ pendingRender.categories = false; renderCats(); }
+  if(pendingRender.clients){ pendingRender.clients = false; renderClients(); }
+  if(pendingRender.clientdetail){ pendingRender.clientdetail = false; renderClientDetail(); }
 }
 
 /* persist() era chamado a cada tecla e serializava o banco inteiro toda vez.
@@ -5349,8 +5856,7 @@ function buildPrint(){
         '<div class="pmeta">'+esc(st.contact || '')+'</div>'+
       '</div><img class="plogo" src="lyke-logo.png" alt=""></div>'+
       '<div class="ptitle">Orçamento · '+dd+'</div>'+
-      (o.client || o.contact ? '<div class="pclient"><b>Cliente</b>'+esc(o.client || '')+
-        (o.contact ? (o.client ? '<br>' : '')+esc(o.contact) : '')+'</div>' : '')+
+      clientPdfBlock(o)+
       (ph ? '<img class="pimg" src="'+ph.full+'" alt="">' : '')+
       '<table><thead><tr><th>Item</th><th class="r">Qtd</th><th class="r">Unitário</th><th class="r">Total</th></tr></thead>'+
       '<tbody>'+rows+'</tbody></table>'+
@@ -5412,9 +5918,18 @@ function bindCalc(){
     var lines = orderLines();
     if(!lines.length){ alert('Preencha gramas e tempo antes de salvar.'); return; }
     var o = S.order, t = orderTotals(lines, o), first = lines[0];
+    /* salvar é o momento em que o cliente vira ficha. Quem escolheu na lista já
+       está vinculado; quem só digitou o nome ganha a ficha agora — é isso que
+       faz a agenda existir sem obrigar ninguém a cadastrar antes de vender. */
+    var cli = clientById(o.clientId) || clientEnsure(o.client, o.contact);
+    if(cli){
+      o.clientId = cli.id;
+      if(!cli.contact && o.contact){ cli.contact = o.contact; cli.updatedAt = Date.now(); }
+    }
     S.jobs.unshift({
       id:uid(), createdAt:Date.now(), date:new Date().toLocaleDateString('pt-BR'),
       status:'orcado', due:'', paidAt:'',
+      clientId:cli ? cli.id : '',
       client:o.client || '', contact:o.contact || '', note:o.note || '',
       discount:num(o.discount), discountType:o.discountType, shipping:num(o.shipping),
       items:JSON.parse(JSON.stringify(lines)),
@@ -5432,6 +5947,7 @@ function bindCalc(){
     job.stockApplied = true;
     persist();
     renderFilaments();
+    renderClients(); fillClientSelect(); renderOrderClientMsg();
     render();
     $('save-msg').innerHTML = stockSaveMsg(hit);
     flash(this, 'Salvo ✓');
@@ -5486,6 +6002,92 @@ function bindCalc(){
     clearCadSearch('cad-f-search', function(){ filamentQuery = ''; });
     renderFilaments(); fillSelects();
     openCadItem('f', S.filaments.length-1, 'fn');
+  });
+}
+
+/* ============ clientes: eventos ============ */
+function bindClients(){
+  bindSearch('cad-cl-search', function(v){ clientQuery = v; renderClients(); });
+
+  $('btn-add-client').addEventListener('click', function(){
+    var c = newClient('', '');
+    S.clients.push(c);
+    persist();
+    clearCadSearch('cad-cl-search', function(){ clientQuery = ''; });
+    renderClients();
+    openClient(c.id);
+    setTimeout(function(){ var i = $('cd-name'); if(i){ i.focus(); i.select(); } }, 60);
+  });
+
+  $('btn-back-clients').addEventListener('click', function(){
+    cadTab = 'clients';
+    go('cadastros');
+  });
+
+  /* os campos da ficha gravam enquanto se digita, como o resto do app.
+     O nome também é o rótulo do pedido, então a lista de Salvos é redesenhada. */
+  var upd = function(field, key){
+    $(field).addEventListener('input', function(){
+      var c = clientById(cdId);
+      if(!c) return;
+      c[key] = this.value;
+      c.updatedAt = Date.now();
+      persist();
+      if(key === 'name'){
+        $('cd-title').textContent = clientName(c);
+        syncOrderClientFields();
+        fillClientSelect();
+      }
+      if(key === 'name' || key === 'contact'){
+        var wa = $('btn-cd-wa');
+        wa.disabled = !waPhone(c.contact);
+      }
+    });
+  };
+  upd('cd-name','name'); upd('cd-contact','contact'); upd('cd-email','email');
+  upd('cd-doc','doc'); upd('cd-address','address'); upd('cd-note','note');
+
+  $('btn-cd-wa').addEventListener('click', function(){
+    var c = clientById(cdId);
+    if(!c) return;
+    if(!waPhone(c.contact)){ alert('Preencha o WhatsApp desta ficha para poder chamar a pessoa.'); return; }
+    waOpen('Olá, ' + clientName(c) + '!', c.contact);
+  });
+
+  /* atalho que fecha o ciclo: da ficha direto para a calculadora com o cliente
+     já escolhido, sem ter que digitar nome e telefone outra vez */
+  $('btn-cd-order').addEventListener('click', function(){
+    var c = clientById(cdId);
+    if(!c) return;
+    var o = S.order;
+    var dirty = o.items.length || o.client || o.contact || o.note || num(o.discount) || num(o.shipping);
+    if(dirty && !confirm('Começar um orçamento para ' + clientName(c) + ' limpa o orçamento que está em montagem. Continuar?')) return;
+    S.order = JSON.parse(JSON.stringify(DEFAULTS.order));
+    editingItemId = null;
+    orderSetClient(c);
+    $('save-msg').innerHTML = '';
+    persist();
+    refreshOrderInputs(); fillClientSelect(); renderOrder();
+    go('calc');
+  });
+
+  $('btn-cd-del').addEventListener('click', function(){
+    var c = clientById(cdId);
+    if(!c) return;
+    var n = clientJobs(c.id).length;
+    if(!confirm('Excluir o cliente "' + clientName(c) + '"?' +
+      (n ? '\n' + n + ' pedido(s) continuam salvos, mas ficam sem ficha.' : ''))) return;
+    /* os pedidos NÃO somem junto: eles são o histórico financeiro do negócio.
+       Perdem só o vínculo, e o nome digitado continua neles. */
+    S.jobs.forEach(function(j){ if(j.clientId === c.id) j.clientId = ''; });
+    if(S.order.clientId === c.id) S.order.clientId = '';
+    if(jobClientFilter === c.id) jobClientFilter = '';
+    S.clients = S.clients.filter(function(x){ return x.id !== c.id; });
+    cdId = null;
+    persist();
+    cadTab = 'clients';
+    renderClients(); renderSaved(); fillClientSelect();
+    go('cadastros');
   });
 }
 
@@ -6147,6 +6749,7 @@ function boot(reload){
   $('f-margin').value = margin;
   renderPrinters(); renderFilaments(); renderSupplyPresets(); renderExtras(); renderMats();
   renderCats(); renderCatFilter(); renderProducts();
+  renderClients(); fillClientSelect();
   renderBuyFilter(); renderBuys();
   syncMarginLabel();
   refreshOrderInputs();
@@ -6186,6 +6789,7 @@ bindQuick();
 bindImport();
 bindOrder();
 bindProducts();
+bindClients();
 bindBuys();
 bindSaved();
 bindDash();
