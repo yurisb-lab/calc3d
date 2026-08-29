@@ -20,6 +20,11 @@ de a topbar e a assinatura dos Ajustes usarem uma placa branca no app.
 O corte em três bandas (emblema, wordmark e assinatura) é feito pelas faixas de
 pixels transparentes que separam as partes; cada banda vai para um lugar
 diferente, porque a assinatura em corpo 8 não sobrevive a 192px.
+
+Nada é posicionado à mão: o lockup é empilhado em espaço unitário e o encaixe()
+acha a maior escala que ainda mantém os quatro cantos de cada peça dentro do
+círculo seguro. É esse círculo que o launcher usa quando recorta o ícone — sem
+ele o "L." e o selo "3D", que ficam nas pontas do wordmark, saem cortados.
 """
 
 import os
@@ -76,6 +81,64 @@ def bandas(im):
     return out
 
 
+# ------------------------------------------------------------ zona segura
+
+SEGURO_ANY = .44    # círculo de 88% — o quanto o launcher come, com respiro
+SEGURO_MASK = .40   # 80%, o que a spec maskable garante
+
+# lockup do ícone: largura de cada peça em espaço unitário (wordmark = 1) e o
+# respiro entre elas, em altura de wordmark
+LOCKUP = [('emblema', .60), ('word', 1.)]
+RESPIRO = .30
+
+
+def pilha(partes, lockup, respiro):
+    """empilha as peças centradas e devolve (larg, alt, desloc_y) de cada uma
+
+    tudo em espaço unitário, com a origem no centro do conjunto."""
+    caixas = []
+    for nome, larg in lockup:
+        arte = partes[nome]
+        caixas.append([nome, larg, larg * arte.height / arte.width])
+    gap = respiro * caixas[-1][2]
+    alt = sum(c[2] for c in caixas) + gap * (len(caixas) - 1)
+
+    saida, y = [], -alt / 2
+    for nome, w, h in caixas:
+        saida.append((nome, w, h, y + h / 2))
+        y += h + gap
+    return saida
+
+
+def encaixe(itens, raio, passos=400):
+    """maior escala (e centro vertical) que mantém a pilha dentro do círculo
+
+    o corte do launcher é redondo, então o que decide não é a largura da peça e
+    sim o canto dela: quanto mais longe do centro vertical, menos largura sobra."""
+    def cabe(s, dy):
+        for _, w, h, cy in itens:
+            a, b = w * s / 2, h * s / 2
+            if a * a + (abs(cy * s + dy) + b) ** 2 > raio * raio:
+                return False
+        return True
+
+    melhor = (0., 0.)
+    for i in range(-passos, passos + 1):
+        dy = raio * i / passos
+        lo, hi = 0., 4.
+        for _ in range(50):
+            s = (lo + hi) / 2
+            if cabe(s, dy):
+                lo = s
+            else:
+                hi = s
+        if lo > melhor[0]:
+            melhor = (lo, dy)
+    if not melhor[0]:
+        raise SystemExit('nada cabe no círculo de raio %.2f' % raio)
+    return melhor
+
+
 # ---------------------------------------------------------------- montagem
 
 def encaixa(base, arte, cx, cy, larg, alt):
@@ -97,11 +160,14 @@ def placa(tam, raio):
     return im
 
 
-def icone(partes, tam, raio, pecas):
-    """pecas: (banda, cx, cy, larg, alt) em fração do lado, para escalar junto"""
+def icone(partes, tam, raio, lockup, seguro, respiro=RESPIRO):
+    """desenha o lockup na maior escala que ainda cabe no círculo seguro"""
+    itens = pilha(partes, lockup, respiro)
+    s, dy = encaixe(itens, seguro)
     im = placa(tam, round(raio * tam))
-    for banda, cx, cy, w, h in pecas:
-        encaixa(im, partes[banda], cx * tam, cy * tam, w * tam, h * tam)
+    for nome, w, h, cy in itens:
+        encaixa(im, partes[nome], .5 * tam, (.5 + cy * s + dy) * tam,
+                w * s * tam, h * s * tam)
     return im
 
 
@@ -129,16 +195,14 @@ def main():
     salva(quad, 'lyke-marca.png')
 
     # ícone comum: emblema em cima, wordmark embaixo — ainda legível a 192px
-    comum = [('emblema', .5, .35, .46, .46), ('word', .5, .70, .74, .17)]
     for tam in (192, 512):
-        salva(icone(partes, tam, .22, comum), 'icone-%d.png' % tam)
+        salva(icone(partes, tam, .22, LOCKUP, SEGURO_ANY), 'icone-%d.png' % tam)
 
     # apple-touch-icon: sem cantos próprios, o iOS aplica a máscara dele
-    salva(icone(partes, 180, 0, [('emblema', .5, .37, .46, .46),
-                                 ('word', .5, .71, .70, .16)]), 'icone-180.png')
+    salva(icone(partes, 180, 0, LOCKUP, SEGURO_ANY), 'icone-180.png')
 
-    # maskable: tudo dentro do círculo seguro de 80%, só o emblema
-    salva(icone(partes, 512, 0, [('emblema', .5, .5, .56, .56)]), 'icone-512-mask.png')
+    # maskable: o Android corta até 80%, aí só o emblema sobrevive legível
+    salva(icone(partes, 512, 0, [('emblema', 1.)], SEGURO_MASK), 'icone-512-mask.png')
 
 
 if __name__ == '__main__':
