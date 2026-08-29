@@ -546,3 +546,91 @@ máquina parada, contador.
 Leitura de `.gcode`, resina/SLA, torre de purga calculada, frete por CEP,
 comparador de marketplaces, anexar o PDF no `navigator.share` e cadastro de
 clientes com histórico próprio. O rateio do custo fixo **saiu** desta lista.
+
+---
+
+# Adendo — v5 (agosto/2026)
+
+A v4 fechou o dinheiro. A v5 ataca as três coisas que ainda separavam o app do
+jeito como o negócio realmente funciona: o número era **digitado à mão** do
+fatiador para o celular, a peça só podia ter **uma cor**, e o preço era sempre
+de **uma unidade** — quando quase toda venda que vale a pena é por lote.
+
+## 21. O que entrou
+
+### 21.1 Importar G-code / 3MF
+Prusa, Orca, Bambu e Cura escrevem gramas, tempo, tipos e cores em **texto puro**
+no cabeçalho (Cura) ou no rodapé (os demais) do arquivo fatiado. Ler isso tira o
+maior atrito do app e o único erro que o cálculo não consegue perceber: o de
+digitação.
+
+- Zona de arrastar-e-soltar no topo de *Do fatiador*; o arquivo pode cair em
+  **qualquer lugar** da tela de calcular, e um toque abre o seletor de arquivos.
+- Formatos: `.gcode`, `.gco`, `.g`, `.gcode.gz` e `.3mf` já fatiado. O `.3mf` é
+  um ZIP: o diretório central é lido na mão e o conteúdo inflado pelo
+  `DecompressionStream` do próprio navegador — **sem biblioteca**.
+  - Bambu e Orca guardam o resultado em `Metadata/slice_info.config`, com uma
+    linha por filamento (gramas, cor, material) e o tempo previsto da mesa.
+  - 3MF que é só projeto (não foi fatiado) recebe um recado dizendo isso, em vez
+    de um erro genérico.
+- Arquivo de 100 MB não é lido inteiro: só os **400 KB de cada ponta**, que é
+  onde os cabeçalhos ficam.
+- Quando o arquivo traz apenas o comprimento (o caso do Cura), o peso sai de
+  `volume × densidade`, com a densidade do material — e a tela diz que foi
+  calculado, não lido.
+- **O desperdício é zerado na importação.** O arquivo já contou brim, suporte e
+  purga; manter a porcentagem por cima cobraria o mesmo material duas vezes.
+- Os valores são sempre da **mesa toda** — o escopo muda sozinho e o resumo pede
+  para conferir a quantidade de peças.
+- O nome da peça, quando está vazio, sai do nome do arquivo.
+
+### 21.2 Multicolor / AMS
+Com AMS, CFS ou MMU a torre de purga costuma **pesar mais que a peça**, e o
+desperdício deixa de ser uma porcentagem do tamanho: é o volume de cada troca.
+
+- Chave *1 filamento / Multicolor* logo abaixo da impressora. No modo
+  multicolor, uma **linha por cor**: filamento cadastrado + gramas.
+- **Torre de purga em gramas absolutas**, não em %. Ela é rateada entre as cores
+  na mesma proporção em que cada uma entra na peça, porque o que sai na purga é
+  filamento de todas elas misturado.
+- A memória de cálculo abre **uma linha por rolo** e mostra quanto a purga
+  representa do peso total.
+- O **estoque dá baixa em todos os rolos** usados, cada um com o que lhe cabe;
+  os avisos de rolo acabando passam a valer por rolo.
+- O orçamento e o PDF descrevem a peça como `PLA + PETG` quando ela mistura
+  materiais.
+- Produto salvo guarda as cores e a purga, e volta com elas ao abrir na
+  calculadora.
+
+### 21.3 Preço por faixa de quantidade
+O preparo é por lote: fatiar, limpar a mesa, trocar o filamento e ligar custa o
+mesmo para 1 ou para 50 peças. Diluído, o preço unitário cai com o volume — e
+essa queda é **matemática do próprio cálculo**, não um desconto inventado.
+
+- Tabela no painel de resultado, ao lado da conferência: preço unitário, total,
+  lucro e o quanto cai em relação à primeira faixa.
+- As faixas são editáveis (padrão `1, 10, 50`, até seis) e ficam nos *Ajustes*,
+  sincronizadas como o resto.
+- **Copiar** manda a tabela pronta para o WhatsApp, com a frase que explica por
+  que o preço cai.
+- Com preço escolhido na mão, as faixas mantêm o **multiplicador** que o usuário
+  decidiu sobre o custo, não a margem teórica que ele não quis.
+- Com preparo em 0 min todas as faixas dão o mesmo preço, e a tela diz por quê —
+  é o empurrão para preencher o campo que quase todo mundo deixa em branco.
+
+## 22. Compatibilidade
+
+- Pedidos e produtos salvos antes da v5 continuam com um filamento só: a baixa
+  de estoque cai no caminho antigo (gramas líquidas + desperdício) quando o item
+  não traz a lista por rolo.
+- Ajustes antigos ganham `tiers:'1, 10, 50'`; nenhum preço muda sozinho.
+- O modo multicolor nasce desligado e não altera nenhum cálculo de quem não usa.
+- Navegador sem `DecompressionStream` continua lendo `.gcode` normal; o `.3mf` e
+  o `.gz` avisam que não dá e pedem o G-code.
+
+## 23. Continua fora do escopo
+
+Resina/SLA, `.bgcode` binário do Prusa, ler a miniatura embutida no G-code para
+virar foto do produto, frete por CEP, comparador de marketplaces, anexar o PDF
+no `navigator.share` e cadastro de clientes com histórico próprio. A leitura de
+`.gcode` e a torre de purga **saíram** desta lista.
