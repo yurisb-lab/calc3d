@@ -10,10 +10,10 @@
    o Firebase (que usa fetch de longa duração e streaming) precisam ir direto
    para a rede, sem interferência. */
 
-var VERSION = 'calc3d-v2';
+var VERSION = 'calc3d-v3';
 var SHELL = ['./', './index.html', './manifest.webmanifest',
              './icone-192.png', './icone-512.png', './icone-512-mask.png', './icone-180.png',
-             './lyke-marca.svg', './lyke-logo.svg'];
+             './lyke-marca.png', './lyke-logo.png'];
 
 self.addEventListener('install', function(e){
   e.waitUntil(
