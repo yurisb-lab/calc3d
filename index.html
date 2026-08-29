@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#151A21">
+<meta name="theme-color" content="#0E1114">
 <meta name="description" content="Calculadora de preço de venda para impressão 3D: filamento, energia, máquina, mão de obra, insumos, falhas e taxa — com catálogo de produtos, controle de compras e orçamento em PDF.">
 <title>Calculadora 3D — Preço de Venda</title>
 <link rel="manifest" href="manifest.webmanifest">
@@ -26,22 +26,23 @@
 :root{
   color-scheme:light;
 
-  /* superfícies, do fundo para a frente */
-  --bg:#EAEEF3;          /* fundo da página */
-  --bg-grad:radial-gradient(1200px 600px at 50% -10%,#F7F9FC 0%,#EAEEF3 60%);
+  /* superfícies, do fundo para a frente — cinzas neutros, sem véu azul,
+     para acompanhar o preto e branco da marca */
+  --bg:#EDEDEA;          /* fundo da página */
+  --bg-grad:radial-gradient(1200px 600px at 50% -10%,#FAFAF9 0%,#EDEDEA 60%);
   --surface:#FFFFFF;     /* cartão */
-  --surface2:#F4F7FA;    /* painel dentro do cartão */
-  --surface3:#E6EBF1;    /* trilho / placeholder / recuo */
-  --field:#F8FAFC;       /* fundo de campo */
+  --surface2:#F6F6F4;    /* painel dentro do cartão */
+  --surface3:#E6E6E2;    /* trilho / placeholder / recuo */
+  --field:#FAFAF9;       /* fundo de campo */
 
-  /* tinta */
-  --ink:#141A22;
-  --ink2:#57646F;
-  --ink3:#8A95A2;
+  /* tinta — o preto vem do próprio logo */
+  --ink:#0E1114;
+  --ink2:#5B6066;
+  --ink3:#8C9198;
 
   /* traços */
-  --line:#DCE2EA;
-  --line2:#C6D0DB;
+  --line:#E0E0DB;
+  --line2:#C8C8C2;
 
   /* acentos */
   --hot:#F2591B;
@@ -52,27 +53,28 @@
   --blue:#3068CE;
   --violet:#7F4CCB;
 
-  /* cromo escuro: topbar, faixa de resultado, botão primário, tooltip */
-  --chrome:#141A22;
-  --chrome-2:#1E2632;
+  /* cromo escuro: topbar, faixa de resultado, botão primário, tooltip.
+     É o preto do logo — a topbar e o ícone do app usam o mesmo fundo. */
+  --chrome:#0E1114;
+  --chrome-2:#1A1F25;
   --on-chrome:#FFFFFF;
-  --on-chrome-2:#98A4B1;
-  --on-chrome-3:#C3CBD4;
+  --on-chrome-2:#979CA3;
+  --on-chrome-3:#C6C9CE;
   --chrome-line:rgba(255,255,255,.10);
-  --btn-pri-bg:#141A22;
-  --btn-pri-line:#141A22;
+  --btn-pri-bg:#0E1114;
+  --btn-pri-line:#0E1114;
   --btn-pri-fg:#FFFFFF;
   --tabbar:rgba(255,255,255,.88);
-  --tip:#1E2632;
+  --tip:#1A1F25;
   /* painel de destaque: faixa do preço e resumo de compras */
-  --panel-a:#1E2632;
-  --panel-b:#141A22;
+  --panel-a:#1A1F25;
+  --panel-b:#0E1114;
   --panel-line:rgba(255,255,255,.10);
   --on-panel:#FFFFFF;
-  --on-panel-2:#98A4B1;
-  --on-panel-3:#C3CBD4;
+  --on-panel-2:#979CA3;
+  --on-panel-3:#C6C9CE;
   /* trilho segmentado */
-  --seg-track:#E6EBF1;
+  --seg-track:#E6E6E2;
   --seg-on:#FFFFFF;
 
   /* estados coloridos */
@@ -81,11 +83,11 @@
   --acc-bg:#FFF0E8;    --acc-line:#FAD3BE;  --acc-ink:#8A3E12;
 
   /* elevação */
-  --sh-1:0 1px 2px rgba(16,24,40,.05), 0 0 0 1px rgba(16,24,40,.02);
-  --sh-2:0 2px 4px -2px rgba(16,24,40,.08), 0 6px 14px -4px rgba(16,24,40,.09);
-  --sh-3:0 4px 8px -3px rgba(16,24,40,.10), 0 14px 32px -8px rgba(16,24,40,.18);
-  --sh-4:0 10px 20px -6px rgba(16,24,40,.16), 0 24px 48px -12px rgba(16,24,40,.24);
-  --sh-in:inset 0 1px 2px rgba(16,24,40,.06);
+  --sh-1:0 1px 2px rgba(14,17,20,.05), 0 0 0 1px rgba(14,17,20,.02);
+  --sh-2:0 2px 4px -2px rgba(14,17,20,.08), 0 6px 14px -4px rgba(14,17,20,.09);
+  --sh-3:0 4px 8px -3px rgba(14,17,20,.10), 0 14px 32px -8px rgba(14,17,20,.18);
+  --sh-4:0 10px 20px -6px rgba(14,17,20,.16), 0 24px 48px -12px rgba(14,17,20,.24);
+  --sh-in:inset 0 1px 2px rgba(14,17,20,.06);
   --sh-lip:inset 0 1px 0 rgba(255,255,255,.7);
   --ring:0 0 0 3px rgba(242,89,27,.20);
 
@@ -99,19 +101,19 @@
 [data-theme="dark"]{
   color-scheme:dark;
 
-  --bg:#0C1014;
-  --bg-grad:radial-gradient(1200px 600px at 50% -10%,#161C24 0%,#0C1014 60%);
-  --surface:#161B22;
-  --surface2:#1C232B;
-  --surface3:#242C36;
-  --field:#10151A;
+  --bg:#0A0C0E;
+  --bg-grad:radial-gradient(1200px 600px at 50% -10%,#171A1E 0%,#0A0C0E 60%);
+  --surface:#15181C;
+  --surface2:#1B1F24;
+  --surface3:#242830;
+  --field:#0F1215;
 
-  --ink:#E8EDF3;
-  --ink2:#9FACBA;
-  --ink3:#6C7988;
+  --ink:#EDEEF0;
+  --ink2:#A2A7AE;
+  --ink3:#6F757C;
 
-  --line:#252D37;
-  --line2:#364150;
+  --line:#252930;
+  --line2:#363B44;
 
   --hot:#FF7A42;
   --hot-soft:rgba(255,122,66,.16);
@@ -121,25 +123,25 @@
   --blue:#5E9BF0;
   --violet:#A87CEB;
 
-  --chrome:#12171E;
-  --chrome-2:#1C232B;
-  --on-chrome:#E8EDF3;
-  --on-chrome-2:#78848F;
-  --on-chrome-3:#9FACBA;
+  --chrome:#0B0E11;
+  --chrome-2:#1B1F24;
+  --on-chrome:#EDEEF0;
+  --on-chrome-2:#7B8087;
+  --on-chrome-3:#A2A7AE;
   --chrome-line:rgba(255,255,255,.07);
-  --btn-pri-bg:#E8EDF3;
-  --btn-pri-line:#E8EDF3;
-  --btn-pri-fg:#11161C;
-  --tabbar:rgba(14,18,23,.88);
-  --tip:#252E39;
-  --panel-a:#28323E;
-  --panel-b:#1A222B;
+  --btn-pri-bg:#EDEEF0;
+  --btn-pri-line:#EDEEF0;
+  --btn-pri-fg:#0E1114;
+  --tabbar:rgba(11,14,17,.88);
+  --tip:#242930;
+  --panel-a:#282D34;
+  --panel-b:#181C21;
   --panel-line:rgba(255,255,255,.09);
-  --on-panel:#F2F6FA;
-  --on-panel-2:#8593A2;
-  --on-panel-3:#B2BECB;
-  --seg-track:#0E1319;
-  --seg-on:#2B3541;
+  --on-panel:#F4F5F6;
+  --on-panel-2:#888D94;
+  --on-panel-3:#B5B9BF;
+  --seg-track:#0D1013;
+  --seg-on:#2A2F36;
 
   --warn-bg:rgba(239,196,79,.11);  --warn-line:rgba(239,196,79,.26); --warn-ink:#EACB74;
   --err-bg:rgba(242,114,111,.11);  --err-line:rgba(242,114,111,.28); --err-ink:#F09A97;
@@ -182,9 +184,39 @@ body{
   transition:box-shadow .2s ease;
 }
 .topbar.scrolled{box-shadow:0 6px 20px -6px rgba(0,0,0,.45)}
-.brand{display:flex;align-items:baseline;gap:8px;min-width:0;flex:1}
+.brand{display:flex;align-items:center;gap:10px;min-width:0;flex:1}
+.brand-txt{display:flex;align-items:baseline;gap:8px;min-width:0}
 .brand b{font-size:16px;font-weight:700;letter-spacing:-.02em;white-space:nowrap}
-.brand span{font-size:11px;color:var(--on-chrome-2);letter-spacing:.08em;text-transform:uppercase}
+.brand .brand-sub{font-size:11px;color:var(--on-chrome-2);letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
+@media (max-width:400px){.brand .brand-sub{display:none}}
+
+/* ---------- marca L.Y.K.E 3D ----------
+   O logo é um traço preto, sem cor própria. Entra como máscara: só o alfa do
+   arquivo é usado e a cor vem do currentColor do lugar onde ele está — assim a
+   mesma arte serve na topbar preta, no tema claro e no escuro. */
+.lyke{
+  display:block;flex:none;
+  background-color:currentColor;
+  -webkit-mask:url("lyke-marca.svg") center/contain no-repeat;
+          mask:url("lyke-marca.svg") center/contain no-repeat;
+}
+.lyke.full{
+  -webkit-mask-image:url("lyke-logo.svg");
+          mask-image:url("lyke-logo.svg");
+}
+/* navegador sem mask-image: melhor não deixar um bloco chapado na tela */
+@supports not ((mask-image:url("lyke-marca.svg")) or (-webkit-mask-image:url("lyke-marca.svg"))){
+  .lyke{display:none}
+}
+.brand .lyke{width:30px;height:30px}
+
+/* assinatura no fim dos Ajustes */
+.brandcard{
+  display:flex;flex-direction:column;align-items:center;gap:10px;
+  padding:22px 16px 26px;margin:26px 0 4px;text-align:center;
+}
+.brandcard .lyke{width:132px;height:110px;color:var(--ink);opacity:.9}
+.brandcard .cap{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3)}
 .topnav{display:none;gap:2px}
 .topnav button{
   position:relative;background:none;border:0;color:var(--on-chrome-3);font:inherit;font-size:13px;font-weight:500;
@@ -467,8 +499,12 @@ h2.section .amt{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size
   body>*{display:none !important}
   #print{display:block !important;padding:0;color:#000;font-size:12pt}
   @page{margin:18mm}
+  /* cabeçalho do orçamento: nome do negócio à esquerda, marca à direita */
+  #print .phead{display:flex;align-items:flex-start;justify-content:space-between;gap:12mm;margin-bottom:22px}
+  #print .phead .pid{min-width:0}
+  #print .plogo{width:26mm;height:auto;flex:none;margin-top:1mm}
   #print h1{font-size:20pt;margin:0 0 2px}
-  #print .pmeta{color:#555;font-size:10pt;margin-bottom:22px}
+  #print .pmeta{color:#555;font-size:10pt}
   #print .ptitle{font-size:11pt;letter-spacing:.14em;text-transform:uppercase;color:#666;border-bottom:2px solid #000;padding-bottom:5px;margin-bottom:14px}
   #print table{width:100%;border-collapse:collapse;margin-bottom:16px}
   #print th{text-align:left;font-size:9.5pt;letter-spacing:.08em;text-transform:uppercase;color:#666;border-bottom:1px solid #999;padding:6px 0}
@@ -661,7 +697,7 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
 }
 #tip.show{opacity:1;visibility:visible;transform:translateY(0)}
 #tip b{color:#fff;display:block;margin-bottom:3px;font-size:13px}
-#tip .ex{display:block;margin-top:7px;color:#9AA6B2;font-family:'IBM Plex Mono',monospace;font-size:11.5px;line-height:1.5}
+#tip .ex{display:block;margin-top:7px;color:#A0A5AB;font-family:'IBM Plex Mono',monospace;font-size:11.5px;line-height:1.5}
 
 /* ---------- compras / notas ---------- */
 .sumbar{display:flex;gap:10px;margin-bottom:14px}
@@ -737,7 +773,7 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
     var t = (pref === 'dark' || pref === 'light') ? pref : (mq.matches ? 'dark' : 'light');
     document.documentElement.setAttribute('data-theme', t);
     var m = document.querySelector('meta[name="theme-color"]');
-    if(m) m.setAttribute('content', t === 'dark' ? '#12171E' : '#141A22');
+    if(m) m.setAttribute('content', t === 'dark' ? '#0B0E11' : '#0E1114');
     return t;
   }
   window.__theme = {
@@ -760,7 +796,10 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
 <body>
 
 <header class="topbar" id="topbar">
-  <div class="brand"><b>Calculadora 3D</b><span>preço de venda</span></div>
+  <div class="brand">
+    <span class="lyke" role="img" aria-label="L.Y.K.E 3D"></span>
+    <span class="brand-txt"><b>Calculadora 3D</b><span class="brand-sub">preço de venda</span></span>
+  </div>
   <nav class="topnav" id="topnav"></nav>
   <button type="button" class="syncbadge" id="sync-badge"></button>
   <button type="button" class="themebtn" id="theme-btn" aria-label="Alternar tema claro e escuro" title="Alternar tema">
@@ -1226,6 +1265,11 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
         <p class="note">Salva impressoras, filamentos, categorias, produtos (com fotos), compras, ajustes e orçamentos num arquivo <code>.json</code>.</p>
       </div>
       <div id="storage-warn"></div>
+
+      <div class="brandcard">
+        <span class="lyke full" role="img" aria-label="L.Y.K.E 3D — colecionáveis, design, personalizados"></span>
+        <span class="cap">Calculadora de preço de venda</span>
+      </div>
     </section>
   </div>
 
@@ -3451,8 +3495,10 @@ function buildPrint(){
     }
 
     $('print').innerHTML =
-      '<h1>'+esc(st.biz || 'Orçamento')+'</h1>'+
-      '<div class="pmeta">'+esc(st.contact || '')+'</div>'+
+      '<div class="phead"><div class="pid">'+
+        '<h1>'+esc(st.biz || 'Orçamento')+'</h1>'+
+        '<div class="pmeta">'+esc(st.contact || '')+'</div>'+
+      '</div><img class="plogo" src="lyke-logo.svg" alt=""></div>'+
       '<div class="ptitle">Orçamento · '+dd+'</div>'+
       (o.client || o.contact ? '<div class="pclient"><b>Cliente</b>'+esc(o.client || '')+
         (o.contact ? (o.client ? '<br>' : '')+esc(o.contact) : '')+'</div>' : '')+
@@ -3466,14 +3512,16 @@ function buildPrint(){
         (o.note ? '<br>'+esc(o.note) : '')+
         '<br>Valores sujeitos a alteração em caso de mudança no projeto.</div>';
 
-    /* sem esperar a decodificação, a foto podia sair em branco no PDF */
-    var im = $('print').querySelector('img');
-    if(!im) return null;
-    if(im.decode) return im.decode().catch(function(){});
-    return new Promise(function(res){
-      im.onload = im.onerror = res;
-      setTimeout(res, 1000);
-    });
+    /* sem esperar a decodificação, a foto e o logo podiam sair em branco no PDF */
+    var ims = qsa($('print'), 'img');
+    if(!ims.length) return null;
+    return Promise.all(Array.prototype.map.call(ims, function(im){
+      if(im.decode) return im.decode().catch(function(){});
+      return new Promise(function(res){
+        im.onload = im.onerror = res;
+        setTimeout(res, 1000);
+      });
+    }));
   });
 }
 
