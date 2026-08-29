@@ -159,6 +159,10 @@
 }
 
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+/* .btn e .btnrow declaram display e, sem o !important, venciam o [hidden] da
+   folha do navegador: era assim que "Instalar o app" e "Compartilhar"
+   apareciam em aparelho que não faz nem uma coisa nem outra. */
+[hidden]{display:none !important}
 html,body{margin:0;padding:0}
 html{background:var(--bg)}
 body{
@@ -248,6 +252,8 @@ h2.section::before{
   background:var(--hot);opacity:.75;
 }
 h2.section:first-child{margin-top:4px}
+.viewintro + .subnav + div > h2.section:first-child,
+.cadhint + h2.section{margin-top:6px}
 
 .card{
   background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
@@ -424,6 +430,10 @@ details.fold>summary span.tag{font-size:12px;font-weight:500;color:var(--ink3);m
 .item .body[hidden]{display:none}
 .swatch{width:12px;height:12px;border-radius:50%;border:1px solid rgba(0,0,0,.15);flex:none;box-shadow:0 1px 2px rgba(0,0,0,.18)}
 .empty{text-align:center;color:var(--ink3);padding:32px 16px;font-size:14px;border:1px dashed var(--line);border-radius:var(--r);background:var(--surface2)}
+.empty .et{display:block;color:var(--ink2);font-size:14.5px;font-weight:600;margin-bottom:5px}
+.empty .es{display:block;max-width:38ch;margin:0 auto;font-size:12.5px;line-height:1.6}
+.empty .es b{color:var(--ink2);font-weight:600}
+.empty .btn{width:auto;margin:16px auto 0;padding:11px 18px}
 
 .extra{display:flex;gap:8px;margin-bottom:8px;align-items:center}
 .extra input:first-child{flex:2}
@@ -689,6 +699,58 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
   transition:background .13s,color .13s,border-color .13s;
 }
 .help:hover,.help[aria-expanded="true"]{background:var(--hot);border-color:var(--hot);color:#fff}
+/* ---------- tutorial guiado ---------- */
+#tour[hidden]{display:none}
+.tour-block{
+  position:fixed;inset:0;z-index:200;
+  background:transparent;touch-action:none;
+}
+/* o furo é só uma moldura: o escurecido é a sombra gigante em volta dela, que
+   é o único jeito de recortar a tela inteira sem cobrir o alvo */
+.tour-hole{
+  position:fixed;z-index:201;border-radius:14px;pointer-events:none;
+  box-shadow:0 0 0 9999px rgba(8,12,17,.72), 0 0 0 2px var(--hot), 0 0 0 6px rgba(255,107,44,.24);
+  transition:top .22s ease,left .22s ease,width .22s ease,height .22s ease;
+}
+.tour-hole[hidden]{display:none}
+/* passo sem alvo: quem escurece é a própria camada de bloqueio */
+.tour-block.veil{background:rgba(8,12,17,.72)}
+.tour-card{
+  /* no celular a barra de abas ocupa o rodapé: o cartão para acima dela */
+  --tour-gap:calc(72px + env(safe-area-inset-bottom));
+  position:fixed;z-index:202;left:var(--pad);right:var(--pad);
+  max-width:440px;margin:0 auto;
+  background:var(--surface);border:1px solid var(--line2);border-radius:16px;
+  padding:16px 16px 14px;box-shadow:var(--sh-4);
+  transition:top .22s ease,bottom .22s ease;
+}
+.tour-card.center{top:50%;bottom:auto;transform:translateY(-50%)}
+.tour-top{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.tour-count{
+  flex:1;font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3);
+}
+.tour-x{
+  flex:none;background:none;border:0;padding:4px 2px;font:inherit;font-size:12px;font-weight:600;
+  color:var(--ink3);cursor:pointer;text-decoration:underline;text-underline-offset:2px;
+}
+.tour-x:hover{color:var(--ink)}
+.tour-title{display:block;font-size:17px;font-weight:700;letter-spacing:-.01em;line-height:1.3;margin-bottom:6px}
+.tour-text{margin:0;font-size:13.5px;line-height:1.6;color:var(--ink2)}
+.tour-text b{color:var(--ink);font-weight:600}
+.tour-dots{display:flex;flex-wrap:wrap;gap:5px;margin:14px 0 12px}
+.tour-dots i{
+  display:block;width:6px;height:6px;border-radius:50%;background:var(--line2);
+  transition:background .18s,transform .18s;
+}
+.tour-dots i.on{background:var(--hot);transform:scale(1.25)}
+.tour-dots i.done{background:var(--ink3)}
+.tour-actions{display:flex;gap:8px}
+.tour-actions .btn{flex:1}
+@media (min-width:1024px){
+  .tour-card{--tour-gap:20px;left:auto;right:24px;max-width:400px}
+  .tour-card.center{left:0;right:0;margin:0 auto}
+}
+
 #tip{
   position:absolute;z-index:120;max-width:290px;
   background:var(--tip);color:#EDF0F3;border-radius:12px;
@@ -745,6 +807,38 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
 
 /* segmented sub-nav */
 .subnav{margin-bottom:16px}
+/* três abas com contador não cabem em 360 px sem apertar a fonte e proibir a
+   quebra de linha: sem isso o número desce para uma segunda linha */
+.subnav button{white-space:nowrap;font-size:12.5px;padding-left:4px;padding-right:4px}
+@media (max-width:400px){.subnav button{font-size:11.5px}}
+.subnav button .n{
+  display:inline-block;margin-left:4px;min-width:16px;padding:0 4px;
+  border-radius:20px;background:var(--surface3);color:var(--ink3);
+  font-size:10px;font-weight:700;line-height:15px;text-align:center;
+  font-variant-numeric:tabular-nums;vertical-align:1px;
+}
+.subnav button[aria-pressed="true"] .n{background:var(--hot);color:#fff}
+
+/* ---------- texto que orienta a tela ---------- */
+.viewintro{margin:-4px 0 14px;font-size:13.5px;line-height:1.55;color:var(--ink2)}
+.cadhint{margin:2px 0 14px;font-size:12.5px;line-height:1.6;color:var(--ink3)}
+.cadhint b{color:var(--ink2);font-weight:600}
+.gohint{margin:14px 0 0;font-size:12.5px;line-height:1.6;color:var(--ink3)}
+.golink{
+  background:none;border:0;padding:0;font:inherit;font-weight:600;cursor:pointer;
+  color:var(--hot);text-decoration:underline;text-underline-offset:2px;
+}
+.golink:hover{opacity:.8}
+
+/* seta de abrir e fechar do cadastro: sem ela o cabeçalho não parece clicável */
+.item .head .chev{
+  flex:none;display:flex;align-items:center;justify-content:center;
+  width:22px;height:22px;color:var(--ink3);transition:transform .18s ease,color .15s;
+}
+.item .head .chev svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.item.open .head .chev{transform:rotate(90deg);color:var(--hot)}
+.item .head:focus-visible{outline:2px solid var(--hot);outline-offset:-2px}
+.card.bare{background:none;border:0;box-shadow:none;padding:0}
 
 /* ---------- painel do mes ---------- */
 .dashhead{display:flex;gap:8px;align-items:flex-end;margin-bottom:14px}
@@ -1058,7 +1152,7 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
       </div>
 
       <h2 class="section amtrow">Orçamento<button type="button" class="help" data-h="orcamento" aria-label="O que é isso?">?</button><span class="amt" id="ord-total">R$ 0,00</span></h2>
-      <div class="card">
+      <div class="card" id="ord-card">
         <div id="ord-items"></div>
         <div class="btnrow" id="ord-addrow" style="margin-top:10px"></div>
 
@@ -1123,13 +1217,7 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
       <div class="pgrid" id="product-grid"></div>
       <div id="product-empty"></div>
 
-      <details class="fold" id="fold-cats" style="margin-top:16px">
-        <summary>Categorias <span class="tag" id="cat-tag"></span></summary>
-        <div class="body">
-          <div id="cat-list"></div>
-          <button type="button" class="btn ghost" id="btn-add-cat" style="margin-top:8px">+ Adicionar categoria</button>
-        </div>
-      </details>
+      <p class="gohint">As categorias que aparecem aqui em cima são criadas em <button type="button" class="golink" data-go="cadastros" data-cad="cats">Cadastros › Categorias</button>.</p>
     </section>
 
     <!-- ============ PRODUTO (detalhe) ============ -->
@@ -1310,120 +1398,168 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
 
     <!-- ============ CADASTROS ============ -->
     <section class="view" id="v-cadastros" hidden>
+      <h2 class="section">Cadastros</h2>
+      <p class="viewintro">É daqui que a calculadora tira os seus números. Cadastre uma vez e todo cálculo já sai certo.</p>
       <div class="seg subnav" id="seg-cad">
-        <button type="button" data-v="printers" aria-pressed="true">Impressoras</button>
-        <button type="button" data-v="filaments" aria-pressed="false">Filamentos</button>
+        <button type="button" data-v="printers" aria-pressed="true">Impressoras <span class="n" id="cad-n-p">0</span></button>
+        <button type="button" data-v="filaments" aria-pressed="false">Filamentos <span class="n" id="cad-n-f">0</span></button>
+        <button type="button" data-v="cats" aria-pressed="false">Categorias <span class="n" id="cad-n-c">0</span></button>
       </div>
+
       <div id="cad-printers">
+        <div class="toolbar">
+          <input id="cad-p-search" type="search" placeholder="Buscar impressora...">
+          <button type="button" class="btn primary" id="btn-add-printer">+ Nova</button>
+        </div>
+        <p class="cadhint">Cada impressora guarda o próprio custo por hora — depreciação da máquina mais manutenção. É o que vira a camada <b>Máquina</b> do preço.</p>
         <div id="printer-list"></div>
-        <button type="button" class="btn" id="btn-add-printer">+ Adicionar impressora</button>
       </div>
+
       <div id="cad-filaments" hidden>
+        <div class="toolbar">
+          <input id="cad-f-search" type="search" placeholder="Buscar filamento, material ou marca...">
+          <button type="button" class="btn primary" id="btn-add-filament">+ Novo</button>
+        </div>
+        <p class="cadhint">Preço e peso do rolo viram o preço por grama. Preenchendo o estoque, o app dá baixa sozinho a cada orçamento salvo e avisa quando o rolo está acabando.</p>
         <div id="filament-list"></div>
-        <button type="button" class="btn" id="btn-add-filament">+ Adicionar filamento</button>
+      </div>
+
+      <div id="cad-cats" hidden>
+        <div class="toolbar">
+          <input id="cad-c-search" type="search" placeholder="Buscar categoria...">
+          <button type="button" class="btn primary" id="btn-add-cat">+ Nova</button>
+        </div>
+        <p class="cadhint">Servem para agrupar e filtrar o <b>Catálogo de produtos</b>. Cada produto entra em uma categoria.</p>
+        <div class="card" id="cad-cats-card">
+          <div id="cat-list"></div>
+        </div>
       </div>
     </section>
 
     <!-- ============ AJUSTES ============ -->
     <section class="view" id="v-settings" hidden>
-      <h2 class="section">Aparência</h2>
-      <div class="card">
-        <div class="field" style="margin-bottom:0">
-          <label>Tema <span class="hint">— preferência deste aparelho</span></label>
-          <div class="seg" id="seg-theme">
-            <button type="button" data-v="auto" aria-pressed="true">Automático</button>
-            <button type="button" data-v="light" aria-pressed="false">Claro</button>
-            <button type="button" data-v="dark" aria-pressed="false">Escuro</button>
+      <h2 class="section">Ajustes</h2>
+      <p class="viewintro">Os números do seu negócio, o jeito do app e os seus dados — cada coisa em uma aba.</p>
+      <div class="seg subnav" id="seg-set">
+        <button type="button" data-v="biz" aria-pressed="true">Meu negócio</button>
+        <button type="button" data-v="app" aria-pressed="false">Aplicativo</button>
+        <button type="button" data-v="data" aria-pressed="false">Meus dados</button>
+      </div>
+
+      <div id="set-biz">
+        <p class="cadhint">Estes valores entram em <b>todo</b> cálculo. Vale a pena preencher com calma uma vez só.</p>
+        <h2 class="section">Seus números</h2>
+        <div class="card">
+          <div class="field">
+            <label for="s-kwh">Tarifa de energia <span class="hint">R$ por kWh</span><button type="button" class="help" data-h="kwh" aria-label="O que é isso?">?</button></label>
+            <input id="s-kwh" type="text" inputmode="decimal">
           </div>
-          <p class="note" id="theme-note"></p>
+          <div class="field">
+            <label for="s-hour">Valor da sua hora <span class="hint">R$</span><button type="button" class="help" data-h="hora" aria-label="O que é isso?">?</button></label>
+            <input id="s-hour" type="text" inputmode="decimal">
+          </div>
+          <div class="row">
+            <div class="field" style="margin-bottom:0">
+              <label for="s-waste">Desperdício <span class="hint">padrão %</span><button type="button" class="help" data-h="desperdicio" aria-label="O que é isso?">?</button></label>
+              <input id="s-waste" type="text" inputmode="decimal">
+            </div>
+            <div class="field" style="margin-bottom:0">
+              <label for="s-fail">Falhas <span class="hint">padrão %</span><button type="button" class="help" data-h="falhas" aria-label="O que é isso?">?</button></label>
+              <input id="s-fail" type="text" inputmode="decimal">
+            </div>
+          </div>
         </div>
-      </div>
 
-      <h2 class="section">Instalar no aparelho</h2>
-      <div class="card tight">
-        <div class="btnrow" id="install-row" hidden>
-          <button type="button" class="btn primary" id="btn-install">Instalar o app</button>
+        <h2 class="section">Custo fixo mensal</h2>
+        <div class="card">
+          <div class="row">
+            <div class="field" style="margin-bottom:0">
+              <label for="s-fixed">Custo fixo <span class="hint">R$ / mês</span><button type="button" class="help" data-h="custofixo" aria-label="O que é isso?">?</button></label>
+              <input id="s-fixed" type="text" inputmode="decimal">
+            </div>
+            <div class="field" style="margin-bottom:0">
+              <label for="s-fixedhours">Horas impressas <span class="hint">por mês</span><button type="button" class="help" data-h="horasmes" aria-label="O que é isso?">?</button></label>
+              <input id="s-fixedhours" type="text" inputmode="decimal">
+            </div>
+          </div>
+          <div class="hourbox" id="fixed-box" style="margin:14px 0 0"></div>
         </div>
-        <p class="note" id="install-note"></p>
-      </div>
 
-      <h2 class="section">Seus números</h2>
-      <div class="card">
-        <div class="field">
-          <label for="s-kwh">Tarifa de energia <span class="hint">R$ por kWh</span><button type="button" class="help" data-h="kwh" aria-label="O que é isso?">?</button></label>
-          <input id="s-kwh" type="text" inputmode="decimal">
-        </div>
-        <div class="field">
-          <label for="s-hour">Valor da sua hora <span class="hint">R$</span><button type="button" class="help" data-h="hora" aria-label="O que é isso?">?</button></label>
-          <input id="s-hour" type="text" inputmode="decimal">
-        </div>
-        <div class="row">
+        <h2 class="section">Recebimento</h2>
+        <div class="card">
           <div class="field" style="margin-bottom:0">
-            <label for="s-waste">Desperdício <span class="hint">padrão %</span><button type="button" class="help" data-h="desperdicio" aria-label="O que é isso?">?</button></label>
-            <input id="s-waste" type="text" inputmode="decimal">
+            <label for="s-fee">Taxa sobre a venda <span class="hint">%</span><button type="button" class="help" data-h="taxa" aria-label="O que é isso?">?</button></label>
+            <input id="s-fee" type="text" inputmode="decimal">
+          </div>
+        </div>
+
+        <h2 class="section">Dados do orçamento</h2>
+        <div class="card">
+          <div class="field">
+            <label for="s-biz">Nome do negócio</label>
+            <input id="s-biz" type="text" placeholder="Seu nome ou da loja">
+          </div>
+          <div class="field">
+            <label for="s-contact">Contato <span class="hint">— aparece no PDF</span></label>
+            <input id="s-contact" type="text" placeholder="WhatsApp, e-mail, @instagram">
           </div>
           <div class="field" style="margin-bottom:0">
-            <label for="s-fail">Falhas <span class="hint">padrão %</span><button type="button" class="help" data-h="falhas" aria-label="O que é isso?">?</button></label>
-            <input id="s-fail" type="text" inputmode="decimal">
+            <label for="s-valid">Validade do orçamento <span class="hint">dias</span></label>
+            <input id="s-valid" type="text" inputmode="decimal">
           </div>
         </div>
       </div>
 
-      <h2 class="section">Custo fixo mensal</h2>
-      <div class="card">
-        <div class="row">
+      <div id="set-app" hidden>
+        <h2 class="section">Aparência</h2>
+        <div class="card">
           <div class="field" style="margin-bottom:0">
-            <label for="s-fixed">Custo fixo <span class="hint">R$ / mês</span><button type="button" class="help" data-h="custofixo" aria-label="O que é isso?">?</button></label>
-            <input id="s-fixed" type="text" inputmode="decimal">
+            <label>Tema <span class="hint">— preferência deste aparelho</span></label>
+            <div class="seg" id="seg-theme">
+              <button type="button" data-v="auto" aria-pressed="true">Automático</button>
+              <button type="button" data-v="light" aria-pressed="false">Claro</button>
+              <button type="button" data-v="dark" aria-pressed="false">Escuro</button>
+            </div>
+            <p class="note" id="theme-note"></p>
           </div>
-          <div class="field" style="margin-bottom:0">
-            <label for="s-fixedhours">Horas impressas <span class="hint">por mês</span><button type="button" class="help" data-h="horasmes" aria-label="O que é isso?">?</button></label>
-            <input id="s-fixedhours" type="text" inputmode="decimal">
+        </div>
+
+        <h2 class="section">Tutorial do app</h2>
+        <div class="card tight">
+          <p class="note" style="margin:0 0 12px">Um passeio guiado por todas as telas: onde cadastrar, como calcular o preço, como montar o orçamento e o que cada painel mostra. Dá para parar no meio a qualquer momento.</p>
+          <div class="btnrow">
+            <button type="button" class="btn primary" id="btn-tour">Ver o tutorial</button>
           </div>
         </div>
-        <div class="hourbox" id="fixed-box" style="margin:14px 0 0"></div>
-      </div>
 
-      <h2 class="section">Recebimento</h2>
-      <div class="card">
-        <div class="field" style="margin-bottom:0">
-          <label for="s-fee">Taxa sobre a venda <span class="hint">%</span><button type="button" class="help" data-h="taxa" aria-label="O que é isso?">?</button></label>
-          <input id="s-fee" type="text" inputmode="decimal">
-        </div>
-      </div>
-
-      <h2 class="section">Sincronização entre aparelhos</h2>
-      <div class="card">
-        <div class="syncrow"><span class="syncdot" id="sync-dot"></span><span class="st" id="sync-status">Modo local.</span></div>
-        <div id="sync-body"></div>
-      </div>
-
-      <h2 class="section">Dados do orçamento</h2>
-      <div class="card">
-        <div class="field">
-          <label for="s-biz">Nome do negócio</label>
-          <input id="s-biz" type="text" placeholder="Seu nome ou da loja">
-        </div>
-        <div class="field">
-          <label for="s-contact">Contato <span class="hint">— aparece no PDF</span></label>
-          <input id="s-contact" type="text" placeholder="WhatsApp, e-mail, @instagram">
-        </div>
-        <div class="field" style="margin-bottom:0">
-          <label for="s-valid">Validade do orçamento <span class="hint">dias</span></label>
-          <input id="s-valid" type="text" inputmode="decimal">
+        <h2 class="section">Instalar no aparelho</h2>
+        <div class="card tight">
+          <div class="btnrow" id="install-row" hidden>
+            <button type="button" class="btn primary" id="btn-install">Instalar o app</button>
+          </div>
+          <p class="note" id="install-note"></p>
         </div>
       </div>
 
-      <h2 class="section">Backup</h2>
-      <div class="card tight">
-        <div class="btnrow">
-          <button type="button" class="btn" id="btn-export">Exportar</button>
-          <button type="button" class="btn" id="btn-import">Importar</button>
+      <div id="set-data" hidden>
+        <p class="cadhint">Seus dados ficam neste aparelho. Sincronize para vê-los no celular e no computador, e exporte de vez em quando como cópia de segurança.</p>
+        <h2 class="section">Sincronização entre aparelhos</h2>
+        <div class="card">
+          <div class="syncrow"><span class="syncdot" id="sync-dot"></span><span class="st" id="sync-status">Modo local.</span></div>
+          <div id="sync-body"></div>
         </div>
-        <input type="file" id="file-import" accept="application/json,.json" hidden>
-        <p class="note">Salva impressoras, filamentos, categorias, produtos (com fotos), compras, ajustes e orçamentos num arquivo <code>.json</code>.</p>
+
+        <h2 class="section">Backup</h2>
+        <div class="card tight">
+          <div class="btnrow">
+            <button type="button" class="btn" id="btn-export">Exportar</button>
+            <button type="button" class="btn" id="btn-import">Importar</button>
+          </div>
+          <input type="file" id="file-import" accept="application/json,.json" hidden>
+          <p class="note">Salva impressoras, filamentos, categorias, produtos (com fotos), compras, ajustes e orçamentos num arquivo <code>.json</code>.</p>
+        </div>
+        <div id="storage-warn"></div>
       </div>
-      <div id="storage-warn"></div>
 
       <div class="brandcard">
         <span class="lykeplate"><img src="lyke-logo.png" width="416" height="346" alt="L.Y.K.E 3D — colecionáveis, design, personalizados"></span>
@@ -1473,6 +1609,25 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
 
 <div id="print"></div>
 <div id="tip" role="tooltip" aria-hidden="true"></div>
+
+<!-- ============ TUTORIAL ============ -->
+<div id="tour" hidden>
+  <div class="tour-block" id="tour-block"></div>
+  <div class="tour-hole" id="tour-hole" hidden></div>
+  <div class="tour-card" id="tour-card" role="dialog" aria-modal="true" aria-labelledby="tour-title">
+    <div class="tour-top">
+      <span class="tour-count" id="tour-count"></span>
+      <button type="button" class="tour-x" id="tour-x">Pular tutorial</button>
+    </div>
+    <b class="tour-title" id="tour-title"></b>
+    <p class="tour-text" id="tour-text"></p>
+    <div class="tour-dots" id="tour-dots" aria-hidden="true"></div>
+    <div class="tour-actions">
+      <button type="button" class="btn ghost" id="tour-prev">Voltar</button>
+      <button type="button" class="btn primary" id="tour-next">Próximo</button>
+    </div>
+  </div>
+</div>
 
 <script>
 (function(){
@@ -1925,6 +2080,17 @@ var TABS = [
 ];
 var NAVOF = {productdetail:'products', buydetail:'buys'};
 var current = 'calc';
+/* atalhos escritos no meio do texto: levam para a tela certa e, se for o caso,
+   já param na aba de dentro */
+function bindGoLinks(){
+  document.addEventListener('click', function(e){
+    var b = e.target.closest && e.target.closest('[data-go]');
+    if(!b) return;
+    var cad = b.getAttribute('data-cad');
+    if(cad) cadTab = cad;
+    go(b.getAttribute('data-go'));
+  });
+}
 function buildNav(){
   $('tabbar').innerHTML = TABS.map(function(t){
     return '<button type="button" data-t="'+t.id+'"><svg viewBox="0 0 24 24">'+t.icon+'</svg>'+t.label+'</button>';
@@ -1952,8 +2118,9 @@ function go(id){
   if(id === 'saved') renderSaved();
   if(id === 'products'){ renderCatFilter(); renderProducts(); renderCats(); }
   if(id === 'buys'){ renderBuyFilter(); renderBuys(); }
-  if(id === 'cadastros'){ renderPrinters(); renderFilaments(); }
+  if(id === 'cadastros'){ showCad(cadTab); renderPrinters(); renderFilaments(); renderCats(); }
   if(id === 'dash') renderDash();
+  if(id === 'settings') showSet(setTab);
 }
 
 /* ============ selects ============ */
@@ -3258,13 +3425,33 @@ function pField(lb,hint,id,i,key,val,imode,hkey){
   return '<div class="field"><label for="'+id+'">'+lb+(hint?' <span class="hint">'+hint+'</span>':'')+(hkey?helpBtn(hkey):'')+'</label>'+
     '<input id="'+id+'" type="text" '+(imode?'inputmode="decimal"':'')+' value="'+esc(val)+'" data-list="'+i+'" data-key="'+key+'"></div>';
 }
+/* Buscas dos cadastros. O índice original vai junto porque tudo que edita e
+   apaga um item trabalha com a posição dele no array de verdade, não na lista
+   filtrada. */
+var printerQuery = '', filamentQuery = '', catQuery = '';
+function withIndex(arr){ return arr.map(function(x,i){ return {x:x, i:i}; }); }
+function hitsQuery(q, parts){
+  if(!q) return true;
+  return parts.join(' ').toLowerCase().indexOf(q) > -1;
+}
+var CHEV = '<span class="chev" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></span>';
+/* contadores da subnav: dizem de cara quanta coisa tem em cada aba */
+function paintCadCounts(){
+  var m = {'cad-n-p':S.printers.length, 'cad-n-f':S.filaments.length, 'cad-n-c':S.categories.length};
+  Object.keys(m).forEach(function(id){ if($(id)) $(id).textContent = m[id]; });
+}
 function renderPrinters(){
   var el = $('printer-list');
+  paintCadCounts();
   if(busyIn('#printer-list')) { pendingRender.printers = true; return; }
-  el.innerHTML = S.printers.map(function(p,i){
-    return '<div class="item"><div class="head" data-open="p'+i+'">'+
+  var list = withIndex(S.printers).filter(function(o){
+    return hitsQuery(printerQuery, [o.x.name||'']);
+  });
+  el.innerHTML = list.map(function(o){
+    var p = o.x, i = o.i;
+    return '<div class="item"><div class="head" data-open="p'+i+'" role="button" tabindex="0" aria-expanded="false">'+
       '<span class="nm">'+esc(p.name||'Sem nome')+'</span>'+
-      '<span class="meta">'+brl(machineHour(p))+'/h</span></div>'+
+      '<span class="meta">'+brl(machineHour(p))+'/h</span>'+CHEV+'</div>'+
       '<div class="body" id="body-p'+i+'" hidden>'+
         pField('Apelido','','pn'+i,i,'name',p.name,false)+
         '<div class="row">'+pField('Potência','W','pw'+i,i,'watts',p.watts,true,'potencia')+
@@ -3276,8 +3463,39 @@ function renderPrinters(){
         '<div class="hourbox">'+machineHourHtml(p)+'</div>'+
         '<button type="button" class="btn danger" data-del-p="'+i+'">Excluir impressora</button>'+
       '</div></div>';
-  }).join('') || '<div class="empty">Nenhuma impressora cadastrada.</div>';
+  }).join('') || emptyCad(printerQuery, S.printers.length,
+      'Nenhuma impressora cadastrada',
+      'Cadastre a sua impressora para o app saber o custo de cada hora de máquina.',
+      'btn-add-printer', 'Adicionar impressora', 'a impressora');
   wireList(el, S.printers, renderPrinters, 'p');
+}
+/* Tela vazia é onde o usuário mais se perde. Todas seguem o mesmo desenho:
+   o que está faltando, por que isso importa e o botão que resolve. Vazio por
+   causa de filtro é o contrário — avisa que nada sumiu, é só a busca.
+   `sub` aceita <b> nosso; nada aqui vem do usuário. */
+function emptyBox(title, sub, btnId, btnLabel){
+  return '<div class="empty"><span class="et">'+esc(title)+'</span><span class="es">'+sub+'</span>'+
+    (btnId ? '<button type="button" class="btn primary" data-empty-go="'+btnId+'">'+esc(btnLabel)+'</button>' : '')+'</div>';
+}
+function emptyFind(q, what){
+  return emptyBox('Nada encontrado', 'Nenhum'+what+' com “'+esc(q)+'”. Limpe a busca para ver tudo de novo.');
+}
+function emptyFilter(what){
+  return emptyBox('Nada com esse filtro', 'Escolha outro filtro acima para ver '+what+'.');
+}
+function emptyCad(q, total, title, sub, btnId, btnLabel, what){
+  if(q && total) return emptyFind(q, what);
+  return emptyBox(title, sub, btnId, '+ ' + btnLabel);
+}
+/* o botão do estado vazio é sempre um atalho para um botão que já existe na
+   tela: assim não há dois caminhos diferentes para a mesma ação */
+function bindEmptyActions(){
+  document.addEventListener('click', function(e){
+    var b = e.target.closest && e.target.closest('[data-empty-go]');
+    if(!b) return;
+    var t = $(b.getAttribute('data-empty-go'));
+    if(t) t.click();
+  });
 }
 /* rótulo da direita no cabeçalho: preço por grama e, quando o rolo é
    controlado, quanto ainda tem dentro dele */
@@ -3312,13 +3530,18 @@ function stockBoxHtml(f, i){
 }
 function renderFilaments(){
   var el = $('filament-list');
+  paintCadCounts();
   if(busyIn('#filament-list')) { pendingRender.filaments = true; return; }
-  el.innerHTML = S.filaments.map(function(f,i){
+  var list = withIndex(S.filaments).filter(function(o){
+    return hitsQuery(filamentQuery, [o.x.name||'', o.x.material||'', o.x.brand||'']);
+  });
+  el.innerHTML = list.map(function(o){
+    var f = o.x, i = o.i;
     var u = safeUrl(f.url);
-    return '<div class="item"><div class="head" data-open="f'+i+'">'+
+    return '<div class="item"><div class="head" data-open="f'+i+'" role="button" tabindex="0" aria-expanded="false">'+
       '<span class="swatch" style="background:'+esc(safeColor(f.color,'#ccc'))+'"></span>'+
       '<span class="nm">'+esc(f.name||'Sem nome')+'</span>'+
-      '<span class="'+filMetaClass(f)+'">'+esc(filMeta(f))+'</span></div>'+
+      '<span class="'+filMetaClass(f)+'">'+esc(filMeta(f))+'</span>'+CHEV+'</div>'+
       '<div class="body" id="body-f'+i+'" hidden>'+
         pField('Apelido','','fn'+i,i,'name',f.name,false)+
         '<div class="row">'+pField('Material','','fm'+i,i,'material',f.material,false)+
@@ -3334,7 +3557,10 @@ function renderFilaments(){
         '<div class="btnrow"><button type="button" class="btn" data-buy-f="'+i+'">Registrar compra deste rolo</button></div>'+
         '<div class="btnrow"><button type="button" class="btn danger" data-del-f="'+i+'">Excluir filamento</button></div>'+
       '</div></div>';
-  }).join('') || '<div class="empty">Nenhum filamento cadastrado.</div>';
+  }).join('') || emptyCad(filamentQuery, S.filaments.length,
+      'Nenhum filamento cadastrado',
+      'Cadastre um rolo com preço e peso para o app achar o preço por grama.',
+      'btn-add-filament', 'Adicionar filamento', ' filamento');
   wireList(el, S.filaments, renderFilaments, 'f');
   each(qsa(el,'[data-fill-f]'), function(b){
     b.addEventListener('click', function(){
@@ -3362,9 +3588,17 @@ function renderFilaments(){
 var TXTKEYS = {name:1, material:1, color:1, override:1, brand:1, url:1, stockG:1};
 function wireList(el, arr, rerender, pfx){
   each(qsa(el,'[data-open]'), function(h){
-    h.addEventListener('click', function(){
+    var toggle = function(){
       var b = $('body-'+h.getAttribute('data-open'));
-      if(b) b.hidden = !b.hidden;
+      if(!b) return;
+      b.hidden = !b.hidden;
+      h.setAttribute('aria-expanded', b.hidden ? 'false' : 'true');
+      var it = h.closest('.item');
+      if(it) it.classList.toggle('open', !b.hidden);
+    };
+    h.addEventListener('click', toggle);
+    h.addEventListener('keydown', function(e){
+      if(e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar'){ e.preventDefault(); toggle(); }
     });
   });
   each(qsa(el,'[data-list]'), function(inp){
@@ -3425,14 +3659,25 @@ var CATCOLORS = ['#FF6B2C','#0F9D8F','#3D7BD9','#8F5BD6','#E4B429','#D64545','#5
 function catById(id){ return S.categories.filter(function(c){return c.id===id;})[0] || null; }
 function renderCats(){
   var el = $('cat-list');
-  $('cat-tag').textContent = S.categories.length + (S.categories.length === 1 ? ' categoria' : ' categorias');
+  paintCadCounts();
   if(busyIn('#cat-list')){ pendingRender.categories = true; return; }
-  el.innerHTML = S.categories.map(function(c,i){
+  var list = withIndex(S.categories).filter(function(o){
+    return hitsQuery(catQuery, [o.x.name||'']);
+  });
+  var card = $('cad-cats-card');
+  el.innerHTML = list.map(function(o){
+    var c = o.x, i = o.i;
     return '<div class="extra">'+
       '<input type="text" value="'+esc(c.name)+'" placeholder="Nome da categoria" data-cat="'+i+'" data-ck="name">'+
       '<input type="color" value="'+esc(safeColor(c.color,'#FF6B2C'))+'" data-cat="'+i+'" data-ck="color" style="flex:none;width:52px;padding:4px">'+
       '<button type="button" data-catdel="'+i+'" aria-label="Remover">×</button></div>';
-  }).join('') || '<div class="empty" style="padding:16px">Nenhuma categoria ainda.</div>';
+  }).join('') || (catQuery && S.categories.length
+      ? emptyFind(catQuery, 'a categoria')
+      : emptyBox('Nenhuma categoria ainda',
+          'Crie categorias como “Chaveiros” ou “Vasos” para filtrar o catálogo de produtos.',
+          'btn-add-cat', '+ Nova categoria'));
+  /* a moldura do cartão só faz sentido em volta de linhas de verdade */
+  if(card) card.classList.toggle('bare', !list.length);
   each(qsa(el,'[data-cat]'), function(inp){
     inp.addEventListener('input', function(){
       var c = S.categories[+inp.getAttribute('data-cat')];
@@ -3554,8 +3799,11 @@ function renderProducts(){
         '<span class="cat">'+(c ? '<span class="cdot" style="background:'+esc(safeColor(c.color,'#ccc'))+';width:8px;height:8px;border-radius:50%;display:inline-block;flex:none"></span><span class="t">'+esc(c.name)+'</span>' : '<span class="t" style="color:var(--ink3)">sem categoria</span>')+'</span>'+
       '</span></button>';
   }).join('');
-  $('product-empty').innerHTML = list.length ? '' :
-    '<div class="empty">'+(S.products.length ? 'Nenhum produto com esse filtro.' : 'Nenhum produto ainda.<br>Toque em <b>+ Novo</b> ou calcule uma peça e use <b>Salvar como produto</b>.')+'</div>';
+  $('product-empty').innerHTML = list.length ? '' : (S.products.length
+    ? (prodQuery ? emptyFind(prodQuery, ' produto') : emptyFilter('o catálogo inteiro'))
+    : emptyBox('Nenhum produto ainda',
+        'Produto é uma peça que você já calculou e guardou com foto, preço e parâmetros — para reabrir na calculadora com um toque.',
+        'btn-add-product', '+ Novo produto'));
   each(qsa(grid,'[data-p]'), function(b){
     b.addEventListener('click', function(){ openProduct(b.getAttribute('data-p')); });
   });
@@ -3723,7 +3971,11 @@ function renderBuys(){
       '<span class="mid"><span class="nm">'+esc(b.desc||'Sem descrição')+'</span>'+
       '<span class="sb">'+brDate(b.date)+' · '+esc(KINDS[b.kind]||'Outro')+(b.supplier?' · '+esc(b.supplier):'')+(b.invoice?' · '+esc(b.invoice):'')+'</span></span>'+
       '<span class="amt">'+brl(num(b.amount))+'</span></div></div>';
-  }).join('') || '<div class="empty">'+(S.buys.length ? 'Nenhuma compra com esse filtro.' : 'Nenhuma compra registrada.<br>Toque em <b>+ Nova</b> para guardar a nota do próximo rolo.')+'</div>';
+  }).join('') || (S.buys.length
+    ? (buyQuery ? emptyFind(buyQuery, 'a compra') : emptyFilter('as compras de novo'))
+    : emptyBox('Nenhuma compra registrada',
+        'Guarde aqui a nota do próximo rolo: foto do comprovante, valor e loja. É o que salva na garantia e no fechamento do mês.',
+        'btn-add-buy', '+ Nova compra'));
 
   var ym = todayISO().slice(0,7);
   var mTot = S.buys.reduce(function(a,b){ return a + (String(b.date||'').slice(0,7) === ym ? num(b.amount) : 0); }, 0);
@@ -3841,9 +4093,10 @@ function renderSaved(){
   var list = sortedJobs().filter(jobMatch);
   var el = $('saved-list');
   if(!list.length){
-    el.innerHTML = '<div class="empty">'+(S.jobs.length
-      ? 'Nenhum pedido com esse filtro.'
-      : 'Nenhum orçamento salvo ainda.<br>Monte o orçamento na aba Calcular e toque em <b>Salvar orçamento</b>.')+'</div>';
+    el.innerHTML = S.jobs.length
+      ? (jobQuery ? emptyFind(jobQuery, ' pedido') : emptyFilter('os pedidos de novo'))
+      : emptyBox('Nenhum orçamento salvo ainda',
+          'Monte o orçamento em <b>Calcular</b> e toque em <b>Salvar orçamento</b>. Ele vira um pedido com status: orçado, aprovado, entregue e pago.');
     return;
   }
 
@@ -4142,7 +4395,8 @@ function renderDash(){
       '<p class="dashnote">Base: pedidos marcados como <b>Pago</b> com data de pagamento neste mês. '+
       'O frete é repasse e fica fora do lucro.</p>';
   } else {
-    out += '<div class="empty">Nenhum pedido pago neste mês.<br>Em <b>Salvos</b>, marque o pedido como <b>Pago</b> para ele entrar aqui.</div>';
+    out += emptyBox('Nenhum pedido pago neste mês',
+      'O painel conta só o que já entrou no caixa. Em <b>Salvos</b>, marque o pedido como <b>Pago</b> para ele aparecer aqui.');
   }
   out += '</div>';
 
@@ -4246,6 +4500,50 @@ function setSeg(id,v){
   each(qsa($(id),'button'), function(b){
     b.setAttribute('aria-pressed', b.getAttribute('data-v')===v ? 'true':'false');
   });
+}
+/* aba de dentro dos Cadastros. Fica numa função só para que o menu, os atalhos
+   de outras telas e o tutorial abram exatamente a mesma coisa. */
+var cadTab = 'printers';
+function showCad(v){
+  cadTab = (v === 'filaments' || v === 'cats') ? v : 'printers';
+  setSeg('seg-cad', cadTab);
+  $('cad-printers').hidden  = (cadTab !== 'printers');
+  $('cad-filaments').hidden = (cadTab !== 'filaments');
+  $('cad-cats').hidden      = (cadTab !== 'cats');
+  if(cadTab === 'cats') renderCats();
+}
+/* item recém-criado já nasce aberto e com o nome selecionado: sem isso o
+   usuário só vê aparecer uma linha "Nova impressora" e não sabe o que fazer */
+function openCadItem(pfx, i, fieldPfx){
+  var body = $('body-'+pfx+i);
+  if(!body) return;
+  body.hidden = false;
+  var head = document.querySelector('[data-open="'+pfx+i+'"]');
+  if(head){
+    head.setAttribute('aria-expanded','true');
+    var it = head.closest('.item');
+    if(it){ it.classList.add('open'); it.scrollIntoView({block:'nearest'}); }
+  }
+  var inp = $(fieldPfx+i);
+  if(inp){ inp.focus(); inp.select(); }
+}
+function clearCadSearch(id, reset){
+  var el = $(id);
+  if(el && el.value){ el.value = ''; }
+  reset();
+}
+/* aba de dentro dos Ajustes */
+var setTab = 'biz';
+function showSet(v){
+  setTab = (v === 'app' || v === 'data') ? v : 'biz';
+  setSeg('seg-set', setTab);
+  $('set-biz').hidden  = (setTab !== 'biz');
+  $('set-app').hidden  = (setTab !== 'app');
+  $('set-data').hidden = (setTab !== 'data');
+}
+function bindSearch(id, fn){
+  var el = $(id); if(!el) return;
+  el.addEventListener('input', function(){ fn(this.value.trim().toLowerCase()); });
 }
 function syncMarginLabel(){
   $('lbl-margin').textContent = mode==='margem' ? 'Margem' : 'Markup';
@@ -4800,13 +5098,11 @@ function bindCalc(){
     b.addEventListener('click', function(){ mode = b.getAttribute('data-v'); setSeg('seg-mode',mode); syncMarginLabel(); render(); });
   });
   each(qsa($('seg-cad'),'button'), function(b){
-    b.addEventListener('click', function(){
-      var v = b.getAttribute('data-v');
-      setSeg('seg-cad', v);
-      $('cad-printers').hidden = (v !== 'printers');
-      $('cad-filaments').hidden = (v !== 'filaments');
-    });
+    b.addEventListener('click', function(){ showCad(b.getAttribute('data-v')); });
   });
+  bindSearch('cad-p-search', function(v){ printerQuery = v; renderPrinters(); });
+  bindSearch('cad-f-search', function(v){ filamentQuery = v; renderFilaments(); });
+  bindSearch('cad-c-search', function(v){ catQuery = v; renderCats(); });
   $('btn-extra').addEventListener('click', function(){ extras.push({n:'',v:'',q:1}); renderExtras(); render(); });
 
   $('btn-save').addEventListener('click', function(){
@@ -4876,11 +5172,17 @@ function bindCalc(){
 
   $('btn-add-printer').addEventListener('click', function(){
     S.printers.push({id:uid(),name:'Nova impressora',watts:150,price:2000,life:4000,maint:0,hoursYear:1000,override:'',createdAt:Date.now()});
-    persist(); renderPrinters(); fillSelects();
+    persist();
+    clearCadSearch('cad-p-search', function(){ printerQuery = ''; });
+    renderPrinters(); fillSelects();
+    openCadItem('p', S.printers.length-1, 'pn');
   });
   $('btn-add-filament').addEventListener('click', function(){
     S.filaments.push({id:uid(),name:'Novo filamento',material:'PLA',color:'#3D7BD9',spoolPrice:110,spoolWeight:1000,brand:'',url:'',createdAt:Date.now()});
-    persist(); renderFilaments(); fillSelects();
+    persist();
+    clearCadSearch('cad-f-search', function(){ filamentQuery = ''; });
+    renderFilaments(); fillSelects();
+    openCadItem('f', S.filaments.length-1, 'fn');
   });
 }
 
@@ -4941,7 +5243,12 @@ function bindProducts(){
   });
   $('btn-add-cat').addEventListener('click', function(){
     S.categories.push({id:uid(), name:'Nova categoria', color:CATCOLORS[S.categories.length % CATCOLORS.length], createdAt:Date.now()});
-    persist(); renderCats(); renderCatFilter(); fillCatSelect();
+    persist();
+    clearCadSearch('cad-c-search', function(){ catQuery = ''; });
+    renderCats(); renderCatFilter(); fillCatSelect();
+    var last = qsa($('cat-list'),'[data-ck="name"]');
+    var inp = last[last.length-1];
+    if(inp){ inp.focus(); inp.select(); }
   });
   $('btn-back-products').addEventListener('click', function(){ renderCatFilter(); renderProducts(); go('products'); });
 
@@ -5190,7 +5497,11 @@ function bindSettings(){
     fr.readAsText(file);
   });
 
-  $('sync-badge').addEventListener('click', function(){ go('settings'); });
+  each(qsa($('seg-set'),'button'), function(b){
+    b.addEventListener('click', function(){ showSet(b.getAttribute('data-v')); });
+  });
+  /* o selo de sincronização no topo é um atalho: tem que cair na aba certa */
+  $('sync-badge').addEventListener('click', function(){ setTab = 'data'; go('settings'); });
 
   if(!hasLS){
     $('storage-warn').innerHTML = '<div class="alert">Este navegador está bloqueando o armazenamento local, então os dados somem ao fechar a aba. Publicado no GitHub Pages funciona normalmente.</div>';
@@ -5295,6 +5606,231 @@ function bindScrollShadow(){
   upd();
 }
 
+/* ============ tutorial guiado ============
+   Um passo por vez: leva o app até a tela certa, recorta o elemento de que o
+   texto está falando e explica em uma frase. Aparece sozinho na primeira
+   abertura, com "pular" bem visível, e fica guardado em Ajustes › Aplicativo
+   para rever quando quiser. */
+var TOUR_KEY = 'calc3d.tour.v1';
+var TOUR = [
+  {t:'Bem-vindo à Calculadora 3D',
+   d:'Ela pega as <b>gramas</b> e as <b>horas</b> que o fatiador mostrou e devolve o preço certo da peça — com filamento, energia, máquina, sua mão de obra e o seu lucro já dentro da conta.<br><br>São dois minutos de passeio. Dá para pular e voltar depois.'},
+
+  {sel:['#topnav','#tabbar'],
+   t:'O menu do app',
+   d:'São sete telas. <b>Calcular</b> é onde você passa a maior parte do tempo; as outras guardam os seus dados e mostram como o mês está indo.'},
+
+  {view:'cadastros', cad:'printers', sel:'#seg-cad',
+   t:'Comece pelos Cadastros',
+   d:'Aqui ficam as três coisas que a calculadora usa: <b>impressoras</b>, <b>filamentos</b> e <b>categorias</b>. Preencha uma vez e todo cálculo já sai com os seus números.'},
+
+  {view:'cadastros', cad:'printers', sel:'#printer-list',
+   t:'Impressoras',
+   d:'Toque em uma para abrir. O valor de compra dividido pela vida útil, mais a manutenção do ano, viram o <b>custo por hora de máquina</b> — a parte do preço que paga o desgaste do equipamento.'},
+
+  {view:'cadastros', cad:'filaments', sel:'#filament-list',
+   t:'Filamentos',
+   d:'Preço e peso do rolo viram o <b>preço por grama</b>. Se você preencher as gramas que ainda tem no rolo, o app dá baixa sozinho a cada orçamento salvo e avisa quando estiver acabando.'},
+
+  {view:'cadastros', cad:'cats', sel:'#cad-cats',
+   t:'Categorias',
+   d:'Servem para agrupar o seu catálogo — chaveiros, vasos, peças sob encomenda. Depois você filtra os produtos por elas.'},
+
+  {view:'settings', set:'biz', sel:'#set-biz',
+   t:'Ajustes › Meu negócio',
+   d:'Tarifa de energia, quanto vale a sua hora, o custo fixo do mês e a taxa da maquininha. <b>Estes quatro números entram em todo cálculo</b> — vale preencher com calma.'},
+
+  {view:'calc', sel:'#gc-drop',
+   t:'Comece pelo arquivo fatiado',
+   d:'Arraste aqui o <b>.gcode</b> ou <b>.3mf</b> do Prusa, Orca, Bambu ou Cura. O app lê gramas, tempo e cores sozinho e preenche os campos. Sem erro de digitação.'},
+
+  {view:'calc', sel:'#fld-grams',
+   t:'Ou digite na mão',
+   d:'Gramas e tempo da peça. Logo abaixo você diz se esses números são de <b>uma peça</b> ou da <b>mesa toda</b> — se for da mesa, o app divide pela quantidade.'},
+
+  {view:'calc', sel:'#seg-multi',
+   t:'Peça de várias cores',
+   d:'Com AMS, CFS ou MMU, marque <b>Multicolor</b> e informe as gramas de cada cor. A torre de purga entra em gramas à parte: em peça pequena ela chega a pesar mais que a própria peça.'},
+
+  {view:'calc', sel:'#fold-fine',
+   t:'Ajuste fino',
+   d:'Desperdício, reserva de falhas e os minutos que você gasta <b>com a mão</b> na peça: preparo por lote e acabamento por peça. Em peça pequena, o acabamento costuma ser o maior custo de todos.'},
+
+  {view:'calc', sel:'#sup-presets',
+   t:'Insumos e acessórios',
+   d:'Embalagem, etiqueta, argola, ímã, parafuso, tinta. Toque para somar da lista e ajuste o preço para o seu custo. A quantidade é <b>por peça</b>.'},
+
+  {view:'calc', sel:'#seg-mode',
+   t:'O seu lucro',
+   d:'<b>Margem</b> é a fatia do preço que sobra para você; <b>markup</b> é o quanto você soma em cima do custo. Não são a mesma coisa — 50% de markup dá só 33% de margem.'},
+
+  {view:'calc', sel:'#strip',
+   t:'O preço aparece aqui',
+   d:'Esta faixa acompanha você enquanto digita: o <b>preço por peça</b> e o lucro que sobra. Se você preferir cobrar um valor redondo, escreva em “preço que eu vou cobrar” e o app recalcula o lucro real.'},
+
+  {view:'calc', sel:'#r-card',
+   t:'Camadas do preço e conferência',
+   d:'A barra mostra para onde o dinheiro está indo: filamento, energia, máquina, mão de obra, insumos e lucro. Logo abaixo, a conferência refaz o caminho de volta — do preço de etiqueta até o que entra no bolso.'},
+
+  {view:'calc', sel:'#tiers',
+   t:'Preço por faixa de quantidade',
+   d:'Fatiar e preparar custa igual para 1 ou para 50 peças. Diluído, o preço unitário cai com o volume. Esta tabela sai pronta do seu cálculo — é argumento de venda sem perder margem.'},
+
+  {view:'calc', sel:'#ord-card',
+   t:'Monte o orçamento',
+   d:'Pedido de verdade quase nunca é uma peça só. Junte várias peças, ponha o cliente, o desconto e o frete — e mande tudo pelo <b>WhatsApp</b> ou em <b>PDF</b>.'},
+
+  {view:'calc', sel:'#btn-save-product',
+   t:'Guarde o que já calculou',
+   d:'<b>Salvar como produto</b> guarda a peça com foto, preço e parâmetros no catálogo. Da próxima vez é um toque para reabrir na calculadora, sem refazer nada.'},
+
+  {view:'products', sel:'#seg-psort',
+   t:'Catálogo de produtos',
+   d:'Ordene por <b>lucro por hora</b>: o seu recurso escasso não é dinheiro, é hora de impressora. Duas peças com o mesmo lucro não valem o mesmo se uma leva 2 h e a outra 20 h.'},
+
+  {view:'buys', sel:'#btn-add-buy',
+   t:'Compras e notas',
+   d:'Fotografe a nota, anote o valor e a loja. É o que salva na hora da garantia e no fechamento do mês — e sai em planilha quando você precisar.'},
+
+  {view:'saved', sel:'#v-saved .sumbar',
+   t:'Pedidos e orçamentos',
+   d:'Todo orçamento salvo vira um pedido com status: orçado, aprovado, entregue, pago. Daqui você acompanha o que ainda está em aberto e o que já entrou no caixa.'},
+
+  {view:'dash', sel:'#dash-sum',
+   t:'Painel do mês',
+   d:'Quanto entrou, quanto foi custo, quanto sobrou e quantas horas de máquina rodaram. É onde você descobre se o preço que está cobrando fecha a conta no fim do mês.'},
+
+  {view:'settings', set:'app', sel:'#btn-tour',
+   t:'Este tutorial fica guardado aqui',
+   d:'Sempre que quiser rever, é <b>Ajustes › Aplicativo › Tutorial do app</b>. Nesta mesma aba você troca o tema e instala o app no aparelho.'},
+
+  {view:'calc',
+   t:'Pronto para começar',
+   d:'O melhor primeiro passo é ir em <b>Cadastros</b> e colocar a sua impressora e o seu filamento. Com esses dois preenchidos, o primeiro preço já sai certo.'}
+];
+
+var tourI = -1, tourOn = false, tourRaf = 0;
+
+function tourSeen(){ return load(TOUR_KEY) === '1'; }
+function tourMarkSeen(){ save(TOUR_KEY, '1'); }
+
+/* aceita uma lista de seletores porque o mesmo passo aponta para o menu de
+   baixo no celular e para o de cima no computador — só um dos dois existe na
+   tela em cada tamanho */
+function tourTarget(sel){
+  if(!sel) return null;
+  var list = (typeof sel === 'string') ? [sel] : sel;
+  for(var i = 0; i < list.length; i++){
+    var e = document.querySelector(list[i]);
+    if(!e) continue;
+    var r = e.getBoundingClientRect();
+    if(r.width > 4 && r.height > 4) return e;
+  }
+  return null;
+}
+function tourPlace(){
+  if(!tourOn) return;
+  var st = TOUR[tourI] || {};
+  var el = tourTarget(st.sel);
+  var hole = $('tour-hole'), card = $('tour-card'), block = $('tour-block');
+  if(!el){
+    hole.hidden = true;
+    block.classList.add('veil');
+    card.classList.add('center');
+    card.style.top = ''; card.style.bottom = '';
+    return;
+  }
+  block.classList.remove('veil');
+  card.classList.remove('center');
+  var vh = window.innerHeight, vw = window.innerWidth, pad = 8;
+  var r = el.getBoundingClientRect();
+  var top = Math.max(6, r.top - pad);
+  var h = Math.min(r.height + pad * 2, vh - 12);
+  /* o alvo pode ter ficado atrás da barra fixa do topo depois do scroll */
+  if(top + h > vh - 6) h = Math.max(40, vh - 6 - top);
+  hole.hidden = false;
+  hole.style.top = top + 'px';
+  hole.style.left = Math.max(6, r.left - pad) + 'px';
+  hole.style.width = Math.min(vw - 12, r.width + pad * 2) + 'px';
+  hole.style.height = h + 'px';
+  /* o cartão nunca cobre o que ele está explicando: vai para a metade livre */
+  if(top + h / 2 > vh / 2){ card.style.top = '12px'; card.style.bottom = 'auto'; }
+  else { card.style.top = 'auto'; card.style.bottom = 'var(--tour-gap)'; }
+}
+function tourGo(i){
+  if(i < 0) i = 0;
+  if(i >= TOUR.length){ tourEnd(); return; }
+  var st = TOUR[i];
+  tourI = i;
+  if(st.cad) cadTab = st.cad;
+  if(st.set) setTab = st.set;
+  if(st.view && current !== st.view) go(st.view);
+  else if(st.view === 'cadastros') showCad(cadTab);
+  else if(st.view === 'settings') showSet(setTab);
+
+  $('tour-title').textContent = st.t;
+  $('tour-text').innerHTML = st.d;
+  $('tour-count').textContent = 'Passo ' + (i + 1) + ' de ' + TOUR.length;
+  $('tour-prev').hidden = (i === 0);
+  $('tour-next').textContent = (i === 0) ? 'Começar' : (i === TOUR.length - 1 ? 'Concluir' : 'Próximo');
+  $('tour-x').textContent = (i === 0) ? 'Pular' : 'Sair do tutorial';
+  $('tour-dots').innerHTML = TOUR.map(function(_, k){
+    return '<i class="' + (k === i ? 'on' : (k < i ? 'done' : '')) + '"></i>';
+  }).join('');
+
+  var el = tourTarget(st.sel);
+  if(el){
+    var tall = el.getBoundingClientRect().height > window.innerHeight * 0.5;
+    el.scrollIntoView({block: tall ? 'start' : 'center', inline:'nearest'});
+    /* a barra do topo é fixa e comeria o começo do alvo */
+    var r = el.getBoundingClientRect();
+    if(r.top < 78) window.scrollBy(0, r.top - 82);
+  }
+  if(tourRaf) cancelAnimationFrame(tourRaf);
+  tourRaf = requestAnimationFrame(function(){ tourRaf = requestAnimationFrame(tourPlace); });
+}
+function tourStart(){
+  if(tourOn) return;
+  tourOn = true;
+  hideTip();
+  $('tour').hidden = false;
+  tourGo(0);
+}
+function tourEnd(){
+  if(!tourOn) return;
+  tourOn = false;
+  tourMarkSeen();
+  /* o passeio mexeu nas abas de dentro de Cadastros e Ajustes; devolve cada
+     tela ao estado em que o usuário a encontraria */
+  cadTab = 'printers'; setTab = 'biz';
+  $('tour').hidden = true;
+  $('tour-hole').hidden = true;
+  if(tourRaf){ cancelAnimationFrame(tourRaf); tourRaf = 0; }
+}
+function bindTour(){
+  $('tour-next').addEventListener('click', function(){ tourGo(tourI + 1); });
+  $('tour-prev').addEventListener('click', function(){ tourGo(tourI - 1); });
+  $('tour-x').addEventListener('click', tourEnd);
+  /* durante o passeio a tela é rolada pelo próprio tutorial: rolagem do dedo
+     ou da rodinha descolaria o recorte do elemento destacado */
+  var stop = function(e){ e.preventDefault(); };
+  $('tour-block').addEventListener('wheel', stop, {passive:false});
+  $('tour-block').addEventListener('touchmove', stop, {passive:false});
+  $('btn-tour').addEventListener('click', function(){ go('calc'); tourStart(); });
+  document.addEventListener('keydown', function(e){
+    if(!tourOn) return;
+    if(e.key === 'Escape'){ e.preventDefault(); tourEnd(); }
+    else if(e.key === 'ArrowRight'){ e.preventDefault(); tourGo(tourI + 1); }
+    else if(e.key === 'ArrowLeft' && tourI > 0){ e.preventDefault(); tourGo(tourI - 1); }
+  });
+  window.addEventListener('resize', function(){ if(tourOn) tourPlace(); });
+  /* o recorte é medido em coordenadas de tela: qualquer rolagem tem que
+     redesenhá-lo ou ele descola do elemento que está explicando */
+  window.addEventListener('scroll', function(){ if(tourOn) tourPlace(); }, {passive:true});
+  /* o passeio começa sozinho só na primeira vez, e depois da tela montada */
+  if(!tourSeen()) setTimeout(function(){ if(!tourOn) tourStart(); }, 700);
+}
+
 /* ============ boot ============ */
 function boot(reload){
   fillSelects();
@@ -5335,6 +5871,8 @@ if('serviceWorker' in navigator && window.isSecureContext){
 buildNav();
 placeStrip();
 bindHelp();
+bindGoLinks();
+bindEmptyActions();
 bindCalc();
 bindImport();
 bindOrder();
@@ -5346,6 +5884,7 @@ bindSettings();
 bindInstall();
 bindTheme();
 bindScrollShadow();
+bindTour();
 refreshShadow();
 boot(false);
 go('calc');
