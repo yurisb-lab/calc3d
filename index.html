@@ -328,6 +328,7 @@ select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns=
 .btn.ghost:hover{color:var(--ink)}
 .btn.ghost:hover{background:var(--surface2);box-shadow:none}
 .btn:active{transform:translateY(1px);box-shadow:var(--sh-1)}
+.btn:disabled{opacity:.35;pointer-events:none}
 .btnrow{display:flex;gap:10px;margin-top:8px}
 
 /* ---------- sticky result strip ---------- */
@@ -398,12 +399,16 @@ details.fold>summary span.tag{font-size:12px;font-weight:500;color:var(--ink3);m
 .check .cr .v.pos{color:var(--teal)}
 .check .cr .v.neg{color:var(--red)}
 
-.mini{display:flex;gap:10px;margin-top:14px}
+.mini{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:14px}
 .mini div{
   flex:1;background:var(--surface2);border:1px solid var(--line);border-radius:var(--r-sm);
   padding:10px 12px;text-align:center;box-shadow:var(--sh-in);
 }
 .mini .k{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);display:block}
+.mini .k .help{width:15px;height:15px;font-size:10px;margin-left:5px;vertical-align:0}
+.mini .v.pos{color:var(--teal)}
+.mini .v.neg{color:var(--red)}
+.alert a{color:inherit;font-weight:700}
 .mini .v{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:15px;display:block;margin-top:2px}
 
 .alert{background:var(--warn-bg);border:1px solid var(--warn-line);color:var(--warn-ink);border-radius:var(--r-sm);padding:11px 13px;font-size:13.5px;margin-bottom:12px}
@@ -486,7 +491,7 @@ h2.section .amt{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size
   width:26px;height:2.5px;border-radius:0 0 3px 3px;background:var(--hot);
   transition:transform .2s ease;
 }
-@media (max-width:359px){.tabbar button{font-size:8.5px}.tabbar button svg{width:19px;height:19px}}
+@media (max-width:399px){.tabbar button{font-size:8.5px;padding-left:0;padding-right:0}.tabbar button svg{width:19px;height:19px}}
 .tabbar button svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:transform .18s}
 .tabbar button[aria-current="true"]{color:var(--hot)}
 .tabbar button[aria-current="true"]::before{transform:translateX(-50%) scaleX(1)}
@@ -620,6 +625,8 @@ h2.section .amt{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size
 .pbody{padding:10px 11px 11px;display:flex;flex-direction:column;gap:2px;flex:1}
 .pbody .nm{font-weight:600;font-size:14px;line-height:1.25;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .pbody .pr{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:15px;color:var(--hot);margin-top:2px}
+.pbody .lh{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal);font-weight:600;margin-top:1px}
+.pbody .lh.neg{color:var(--red)}
 .pbody .cat{font-size:11.5px;color:var(--ink2);display:flex;align-items:center;gap:6px;margin-top:auto;padding-top:8px;min-width:0;border-top:1px solid var(--line)}
 .pbody .cat span.t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
@@ -743,6 +750,54 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
 
 /* segmented sub-nav */
 .subnav{margin-bottom:16px}
+
+/* ---------- painel do mes ---------- */
+.dashhead{display:flex;gap:8px;align-items:flex-end;margin-bottom:14px}
+.dashhead .field{flex:1;min-width:0;margin-bottom:0}
+.dashhead .btn{width:auto;flex:none;padding:12px 14px;font-size:18px;line-height:1}
+.delta{font-size:11.5px;font-weight:600;font-family:'IBM Plex Mono',monospace;display:block;margin-top:3px;color:var(--on-panel-2)}
+.delta.up{color:#7FE3C9}
+.delta.down{color:#FFB4A8}
+.hbar{display:flex;height:14px;border-radius:20px;overflow:hidden;background:var(--surface3);box-shadow:var(--sh-in);margin:2px 0 12px}
+.hbar span{display:block;min-width:2px}
+.hkey{display:flex;flex-wrap:wrap;gap:4px 14px;margin:-6px 0 14px;font-size:11.5px;color:var(--ink3)}
+.hkey span{display:inline-flex;align-items:center;gap:5px}
+.hkey i{width:9px;height:9px;border-radius:3px;flex:none}
+.dashnote{font-size:12.5px;color:var(--ink3);margin:12px 0 0;line-height:1.6}
+.toprow{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px dashed var(--line)}
+.toprow:last-child{border-bottom:0}
+.toprow .rk{flex:none;width:22px;height:22px;border-radius:50%;background:var(--surface3);color:var(--ink2);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.toprow .mid{flex:1;min-width:0}
+.toprow .nm{display:block;font-weight:600;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.toprow .sb{display:block;font-size:11.5px;color:var(--ink3);font-family:'IBM Plex Mono',monospace}
+.toprow .vl{flex:none;text-align:right}
+.toprow .vl b{display:block;font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600}
+.toprow .vl span{display:block;font-size:11px;color:var(--ink3);font-family:'IBM Plex Mono',monospace}
+
+/* ---------- estoque do rolo ---------- */
+.stockbar{height:8px;border-radius:20px;background:var(--surface3);overflow:hidden;box-shadow:var(--sh-in);margin:9px 0 4px}
+.stockbar i{display:block;height:100%;background:var(--teal);border-radius:20px;transition:width .25s}
+.stockbar.low i{background:var(--amber)}
+.stockbar.out i{background:var(--red)}
+.stockline{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--ink3);font-family:'IBM Plex Mono',monospace;margin-bottom:12px}
+.lowdot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--amber);flex:none;margin-right:5px;vertical-align:1px}
+.lowdot.out{background:var(--red)}
+.item .head .meta.low{color:var(--amber)}
+.item .head .meta.out{color:var(--red)}
+.rollrow{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px dashed var(--line)}
+.rollrow:last-child{border-bottom:0}
+.rollrow .swatch{width:14px;height:14px}
+.rollrow .mid{flex:1;min-width:0}
+.rollrow .nm{display:block;font-weight:600;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rollrow .sb{display:block;font-size:11.5px;color:var(--ink3);font-family:'IBM Plex Mono',monospace}
+.rollrow .go{
+  flex:none;width:42px;height:42px;padding:0;border-radius:var(--r-sm);
+  border:1px solid var(--line);background:var(--surface);color:var(--ink2);
+  display:flex;align-items:center;justify-content:center;box-shadow:var(--sh-1);text-decoration:none;
+}
+.rollrow .go:hover{border-color:var(--line2);color:var(--ink)}
+.rollrow .go svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.rollrow .go[aria-disabled="true"]{opacity:.35;pointer-events:none}
 
 /* ---------- desktop ---------- */
 @media (min-width:1024px){
@@ -977,6 +1032,7 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
         <button type="button" class="btn" id="btn-save">Salvar orçamento</button>
         <button type="button" class="btn" id="btn-pdf">Gerar PDF</button>
       </div>
+      <div id="save-msg" style="margin-top:10px"></div>
       <div class="btnrow"><button type="button" class="btn ghost" id="btn-ord-clear">Limpar orçamento</button></div>
     </section>
 
@@ -986,6 +1042,11 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
       <div class="toolbar">
         <input id="p-search" type="search" placeholder="Buscar produto ou categoria...">
         <button type="button" class="btn primary" id="btn-add-product">+ Novo</button>
+      </div>
+      <div class="seg subnav" id="seg-psort" style="margin-bottom:12px">
+        <button type="button" data-v="name" aria-pressed="true">A–Z</button>
+        <button type="button" data-v="hour" aria-pressed="false">Lucro / h</button>
+        <button type="button" data-v="profit" aria-pressed="false">Lucro</button>
       </div>
       <div class="filterbar" id="cat-filter"></div>
       <div class="pgrid" id="product-grid"></div>
@@ -1164,6 +1225,18 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
       <div id="saved-list"></div>
     </section>
 
+    <!-- ============ PAINEL DO MES ============ -->
+    <section class="view" id="v-dash" hidden>
+      <h2 class="section">Painel do mês</h2>
+      <div class="dashhead">
+        <button type="button" class="btn" id="dash-prev" aria-label="Mês anterior">‹</button>
+        <div class="field"><select id="dash-month" aria-label="Mês do painel"></select></div>
+        <button type="button" class="btn" id="dash-next" aria-label="Próximo mês">›</button>
+      </div>
+      <div class="sumbar" id="dash-sum"></div>
+      <div id="dash-body"></div>
+    </section>
+
     <!-- ============ CADASTROS ============ -->
     <section class="view" id="v-cadastros" hidden>
       <div class="seg subnav" id="seg-cad">
@@ -1225,6 +1298,21 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
         </div>
       </div>
 
+      <h2 class="section">Custo fixo mensal</h2>
+      <div class="card">
+        <div class="row">
+          <div class="field" style="margin-bottom:0">
+            <label for="s-fixed">Custo fixo <span class="hint">R$ / mês</span><button type="button" class="help" data-h="custofixo" aria-label="O que é isso?">?</button></label>
+            <input id="s-fixed" type="text" inputmode="decimal">
+          </div>
+          <div class="field" style="margin-bottom:0">
+            <label for="s-fixedhours">Horas impressas <span class="hint">por mês</span><button type="button" class="help" data-h="horasmes" aria-label="O que é isso?">?</button></label>
+            <input id="s-fixedhours" type="text" inputmode="decimal">
+          </div>
+        </div>
+        <div class="hourbox" id="fixed-box" style="margin:14px 0 0"></div>
+      </div>
+
       <h2 class="section">Recebimento</h2>
       <div class="card">
         <div class="field" style="margin-bottom:0">
@@ -1283,8 +1371,9 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
         <div class="legend" id="legend"></div>
       </div>
       <div class="mini">
-        <div><span class="k">Por grama</span><span class="v" id="r-pg">—</span></div>
-        <div><span class="k">Por hora</span><span class="v" id="r-ph">—</span></div>
+        <div><span class="k">Preço por grama</span><span class="v" id="r-pg">—</span></div>
+        <div><span class="k">Preço por hora</span><span class="v" id="r-ph">—</span></div>
+        <div><span class="k">Lucro / hora<button type="button" class="help" data-h="lucrohora" aria-label="O que é isso?">?</button></span><span class="v" id="r-lph">—</span></div>
         <div><span class="k">Pedido</span><span class="v" id="r-total">—</span></div>
       </div>
       <details class="fold" id="fold-fx" style="margin:14px 0 0">
@@ -1374,7 +1463,7 @@ var DEFAULTS = {
   /* ids fixos: dois aparelhos que semeiam o mesmo padrão geram o MESMO documento
      na nuvem em vez de duas cópias. Igual ao que já era feito nas categorias. */
   printers:[{id:'seed-printer',name:'Minha impressora',watts:150,price:2500,life:4000,maint:0,hoursYear:1200,override:'',createdAt:1}],
-  filaments:[{id:'seed-filament',name:'PLA genérico',material:'PLA',color:'#FF6B2C',spoolPrice:110,spoolWeight:1000,brand:'',url:'',createdAt:1}],
+  filaments:[{id:'seed-filament',name:'PLA genérico',material:'PLA',color:'#FF6B2C',spoolPrice:110,spoolWeight:1000,brand:'',url:'',stockG:'',lowG:150,createdAt:1}],
   categories:[
     {id:'cat-deco', name:'Decoração',     color:'#FF6B2C', createdAt:1},
     {id:'cat-util', name:'Utilidades',    color:'#0F9D8F', createdAt:2},
@@ -1383,7 +1472,9 @@ var DEFAULTS = {
   ],
   products:[],
   buys:[],
-  settings:{kwh:0.75,hour:25,waste:8,fail:8,fee:0,biz:'',contact:'',valid:7},
+  /* fixed/fixedHours nascem em 0: quem nunca abriu Ajustes continua com o preço
+     de antes, e o rateio só entra depois que o usuário informa os dois números */
+  settings:{kwh:0.75,hour:25,waste:8,fail:8,fee:0,fixed:0,fixedHours:0,biz:'',contact:'',valid:7},
   jobs:[],
   /* orçamento em montagem: fica só neste aparelho (não entra em COLLS, não sincroniza).
      Um rascunho meio pronto pulando de celular para celular no meio de uma venda
@@ -1407,7 +1498,14 @@ function migrate(seed){
       if(!Array.isArray(it.photos) && (c==='products'||c==='buys')) it.photos = [];
     });
   });
-  S.filaments.forEach(function(f){ if(f.brand==null) f.brand=''; if(f.url==null) f.url=''; });
+  /* stockG vazio = "não controlo o estoque deste rolo". É diferente de 0 g, que
+     quer dizer rolo acabado — por isso ele é texto, como o custo/hora manual. */
+  S.filaments.forEach(function(f){
+    if(f.brand==null) f.brand='';
+    if(f.url==null) f.url='';
+    if(f.stockG==null) f.stockG='';
+    if(f.lowG==null || !isFinite(num(f.lowG))) f.lowG = 150;
+  });
   Object.keys(DEFAULTS.settings).forEach(function(k){ if(S.settings[k]===undefined) S.settings[k] = DEFAULTS.settings[k]; });
 
   if(!S.order || typeof S.order !== 'object') S.order = JSON.parse(JSON.stringify(DEFAULTS.order));
@@ -1424,6 +1522,9 @@ function migrate(seed){
     if(typeof j.note !== 'string') j.note = '';
     if(typeof j.due !== 'string') j.due = '';
     if(j.discountType !== 'pct') j.discountType = 'brl';
+    /* pedidos gravados antes do estoque nunca deram baixa; marcar como aplicado
+       evita que um "duplicar" antigo desconte o rolo duas vezes */
+    if(typeof j.stockApplied !== 'boolean') j.stockApplied = true;
   });
 }
 
@@ -1659,6 +1760,10 @@ var HELP = {
   stl:{t:'Link do modelo', d:'Onde você baixou ou comprou o STL: MakerWorld, Printables, Thingiverse, Cults, Patreon. Serve pra reimprimir sem caçar o arquivo e pra conferir a licença antes de vender.', e:''},
   filurl:{t:'Link do filamento', d:'A página onde você comprou esse rolo. Quando acabar, é um toque pra recomprar exatamente o mesmo — e dá pra conferir se o preço mudou.', e:''},
   nf:{t:'Nº da nota / pedido', d:'Guarde o número da nota fiscal ou do pedido junto com a foto do comprovante. É o que salva na hora da garantia, da troca e do fechamento do mês.', e:''},
+  custofixo:{t:'Custo fixo mensal', d:'O que você paga todo mês exista pedido ou não: aluguel do espaço, internet, assinatura do fatiador, energia da máquina parada, contador. O app divide esse total pelas horas impressas no mês e cobra a fatia de cada peça. Deixe 0 se não quiser ratear.', e:'R$ 300/mês ÷ 100 h = R$ 3,00/h\nPeça de 9 h → R$ 27,00 de custo fixo'},
+  horasmes:{t:'Horas impressas por mês', d:'A base do rateio: quantas horas as suas impressoras rodam num mês típico. Use um número conservador — se você imprimir menos que isso, o custo fixo do mês não se paga. O Painel mostra a média real dos seus pedidos para você calibrar.', e:''},
+  estoque:{t:'Estoque do rolo', d:'Quantos gramas ainda existem no rolo. Ao salvar um orçamento o app dá baixa sozinho, já contando o desperdício. Deixe vazio para não controlar este filamento. Quando chegar no aviso, o link de compra do cadastro fica a um toque.', e:'1000 g − (82 g + 8%) × 3 peças = 734,4 g'},
+  lucrohora:{t:'Lucro por hora de máquina', d:'Seu recurso escasso não é dinheiro, é hora de impressora. Duas peças com o mesmo lucro não valem o mesmo se uma leva 2 h e a outra 20 h. Ordene o catálogo por este número para saber o que compensa colocar na mesa.', e:'Lucro R$ 24,00 ÷ 9 h = R$ 2,67/h\nLucro R$ 8,00 ÷ 1,5 h = R$ 5,33/h'},
   custohora:{t:'Custo/hora da máquina', d:'Depreciação (valor da impressora ÷ vida útil em horas) mais manutenção anual diluída. Não copie o número de outra pessoa — depende da SUA máquina e do SEU uso.', e:'R$ 2.500 ÷ 4.000 h = R$ 0,625/h'},
   vidautil:{t:'Vida útil', d:'Quantas horas de impressão a máquina deve durar antes da troca. Referência: 3.000 a 10.000 h. Conservador e comum: 4.000 a 5.000 h.', e:''},
   potencia:{t:'Potência média', d:'Consumo médio em watts durante a impressão. FDM de mesa: 100 W a 250 W. Fechada ou com câmara aquecida: 200 W a 400 W.', e:''}
@@ -1721,6 +1826,7 @@ var TABS = [
   {id:'products',  label:'Produtos',  icon:'<path d="M12 2.8l8.2 4.6v9.2L12 21.2 3.8 16.6V7.4z"/><path d="M3.8 7.4L12 12l8.2-4.6"/><line x1="12" y1="12" x2="12" y2="21.2"/>'},
   {id:'buys',      label:'Compras',   icon:'<path d="M6 2.5h12v19l-3-2-3 2-3-2-3 2z"/><line x1="9.5" y1="8" x2="14.5" y2="8"/><line x1="9.5" y1="12" x2="14.5" y2="12"/>'},
   {id:'saved',     label:'Salvos',    icon:'<path d="M6 3h12v18l-6-4.5L6 21z"/>'},
+  {id:'dash',      label:'Painel',    icon:'<line x1="4" y1="20.5" x2="20" y2="20.5"/><rect x="5" y="11" width="3.6" height="7"/><rect x="10.2" y="6.5" width="3.6" height="11.5"/><rect x="15.4" y="13.5" width="3.6" height="4.5"/>'},
   {id:'cadastros', label:'Cadastros', icon:'<path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="7" rx="2"/><path d="M7 16v5h10v-5"/>'},
   {id:'settings',  label:'Ajustes',   icon:'<line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="17" x2="20" y2="17"/><circle cx="9" cy="7" r="2.5"/><circle cx="15" cy="17" r="2.5"/>'}
 ];
@@ -1754,6 +1860,7 @@ function go(id){
   if(id === 'products'){ renderCatFilter(); renderProducts(); renderCats(); }
   if(id === 'buys'){ renderBuyFilter(); renderBuys(); }
   if(id === 'cadastros'){ renderPrinters(); renderFilaments(); }
+  if(id === 'dash') renderDash();
 }
 
 /* ============ selects ============ */
@@ -1784,6 +1891,14 @@ function machineHour(p){
 }
 
 /* ============ cálculo ============ */
+/* Custo fixo do mês (aluguel, internet, assinatura do fatiador, energia parada)
+   dividido pelas horas que a máquina roda num mês típico. Vira R$/h e cada peça
+   paga a fatia do tempo que ocupou a mesa. Sem os dois números, o rateio é 0 e
+   nada muda no preço. */
+function fixedHour(){
+  var f = num(S.settings.fixed), h = num(S.settings.fixedHours);
+  return (f > 0 && h > 0) ? f/h : 0;
+}
 function compute(){
   var p = curPrinter(), f = curFilament(), st = S.settings;
   var qty = Math.max(1, Math.round(num($('f-qty').value) || 1));
@@ -1797,10 +1912,11 @@ function compute(){
   var material = g * (1 + waste) * perGram;
   var energy   = (num(p.watts)/1000) * h * num(st.kwh);
   var machine  = machineHour(p) * h;
+  var overhead = fixedHour() * h;
   var labor    = (num($('f-prep').value)/60 * num(st.hour))/qty + (num($('f-finish').value)/60 * num(st.hour));
   var supplies = extrasTotal(extras);
 
-  var subtotal = material + energy + machine + labor + supplies;
+  var subtotal = material + energy + machine + overhead + labor + supplies;
   var notes = [];
   var failIn = num($('f-fail').value)/100;
   var failR = Math.min(0.95, Math.max(0, failIn));
@@ -1836,11 +1952,14 @@ function compute(){
 
   return {
     g:g, h:h, qty:qty, perGram:perGram,
-    material:material, energy:energy, machine:machine, labor:labor, supplies:supplies,
+    material:material, energy:energy, machine:machine, overhead:overhead, labor:labor, supplies:supplies,
     subtotal:subtotal, reserve:reserve, cost:cost, fee:fee, feeR:feeR,
     suggested:suggested, chosen:usedChosen ? chosen : 0, usedChosen:usedChosen,
     price:price, profit:profit, realMargin:realMargin, realMarkup:realMarkup, warn:warn, notes:notes,
-    machineHour:machineHour(p),
+    /* o recurso escasso é hora de impressora, não dinheiro: é este número que
+       diz o que vale a pena colocar na mesa */
+    profitHour: h > 0 ? profit/h : 0,
+    machineHour:machineHour(p), fixedHour:fixedHour(),
     waste:waste, failR:failR, watts:num(p.watts), kwh:num(st.kwh), hourRate:num(st.hour),
     prep:num($('f-prep').value), finish:num($('f-finish').value)
   };
@@ -1850,6 +1969,7 @@ var BANDS = [
   {k:'material', n:'Filamento',   c:'#FF6B2C'},
   {k:'energy',   n:'Energia',     c:'#E4B429'},
   {k:'machine',  n:'Máquina',     c:'#5A6672'},
+  {k:'overhead', n:'Custo fixo',  c:'#C2547E'},
   {k:'labor',    n:'Mão de obra', c:'#3D7BD9'},
   {k:'supplies', n:'Insumos',     c:'#8F5BD6'},
   {k:'reserve',  n:'Falhas',      c:'#D64545'},
@@ -1865,6 +1985,7 @@ function fxHtml(r){
   out += fxRow('Filamento', dec(r.g,1)+' g'+(r.waste > 0 ? ' + '+dec(r.waste*100,0)+'% desperdício' : '')+' × '+brl(r.perGram)+'/g', r.material);
   out += fxRow('Energia', '('+dec(r.watts,0)+' W ÷ 1000) × '+dec(r.h,2)+' h × '+brl(r.kwh)+'/kWh', r.energy);
   out += fxRow('Máquina', brl(r.machineHour)+'/h × '+dec(r.h,2)+' h  (depreciação + manutenção)', r.machine);
+  if(r.overhead > 0) out += fxRow('Custo fixo', brl(r.fixedHour)+'/h × '+dec(r.h,2)+' h  ('+brl(num(S.settings.fixed))+'/mês ÷ '+dec(num(S.settings.fixedHours),0)+' h)', r.overhead);
   if(r.labor > 0){
     var f = [];
     if(r.prep > 0)   f.push(dec(r.prep,0)+' min ÷ '+r.qty+(r.qty === 1 ? ' peça' : ' peças'));
@@ -1906,7 +2027,8 @@ function render(){
   $('r-alert').innerHTML =
     (r.warn ? '<div class="alert bad">'+esc(r.warn)+'</div>'
             : (r.price > 0 && r.profit < 0 ? '<div class="alert">Este preço não cobre o custo. Reveja a margem ou os custos.</div>' : ''))+
-    r.notes.map(function(t){ return '<div class="alert">'+esc(t)+'</div>'; }).join('');
+    r.notes.map(function(t){ return '<div class="alert">'+esc(t)+'</div>'; }).join('') +
+    stockAlertHtml(r);
 
   var shown = BANDS.map(function(b){ return {b:b, v: Math.max(0, r[b.k]||0)}; }).filter(function(x){ return x.v > 0.0001; });
   var sum = shown.reduce(function(a,x){ return a + x.v; }, 0) || 1;
@@ -1924,6 +2046,8 @@ function render(){
 
   $('r-pg').textContent    = r.g > 0 ? brl(r.price/r.g) : '—';
   $('r-ph').textContent    = r.h > 0 ? brl(r.price/r.h) : '—';
+  $('r-lph').textContent   = r.h > 0 && r.price > 0 ? brl(r.profitHour) + '/h' : '—';
+  $('r-lph').className     = 'v' + (r.h > 0 && r.price > 0 ? (r.profitHour >= 0 ? ' pos' : ' neg') : '');
   $('r-total').textContent = brl(r.price * r.qty);
 
   var rows = [
@@ -1997,7 +2121,7 @@ function calcPayload(){
 function makeItem(){
   var r = compute(), c = calcPayload();
   return {
-    id:uid(), name:c.piece || 'Peca em impressao 3D',
+    id:uid(), name:c.piece || 'Peça em impressão 3D',
     qty:r.qty, unit:r.price, cost:r.cost, profit:r.profit,
     grams:r.g, hours:r.h, material:curFilament().material || '',
     productId:c.productId, calc:c
@@ -2153,6 +2277,7 @@ function orderClear(){
      !confirm('Limpar o orçamento (itens, cliente, desconto e frete)?')) return;
   S.order = JSON.parse(JSON.stringify(DEFAULTS.order));
   editingItemId = null;
+  $('save-msg').innerHTML = '';
   persist(); refreshOrderInputs(); renderOrder();
 }
 
@@ -2359,6 +2484,76 @@ function renderExtras(){
   $('sup-total').textContent = brl(extrasTotal(extras));
 }
 
+/* ============ estoque do rolo ============ */
+/* Campo vazio = não controlo este rolo. Zero = rolo acabado. São coisas
+   diferentes, então stockG é texto (como o custo/hora manual da impressora). */
+function stockOn(f){ return !!f && f.stockG !== '' && f.stockG != null; }
+function stockG(f){ return Math.max(0, num(f.stockG)); }
+function stockLow(f){ var v = num(f.lowG); return v > 0 ? v : 150; }
+function stockStr(f){ return stockOn(f) ? String(num(f.stockG)).replace('.', ',') : ''; }
+function stockState(f){
+  if(!stockOn(f)) return '';
+  var g = stockG(f);
+  return g <= 0 ? 'out' : (g <= stockLow(f) ? 'low' : 'ok');
+}
+function setStock(f, grams){
+  f.stockG = Math.round(Math.max(0, grams) * 10)/10;
+  f.updatedAt = Date.now();
+}
+function lowFilaments(){
+  return S.filaments.filter(function(f){ var st = stockState(f); return st === 'low' || st === 'out'; });
+}
+/* o que um item do orçamento tira do rolo de verdade: o líquido mais o
+   desperdício que o próprio item já assumiu no cálculo */
+function itemGrams(it){
+  var w = (it && it.calc) ? Math.max(0, num(it.calc.waste)/100) : 0;
+  return num(it.grams) * (1 + w) * itemQty(it);
+}
+function stockApply(lines){
+  var hit = [];
+  lines.forEach(function(it){
+    var id = it.calc && it.calc.filament;
+    var f = id ? S.filaments.filter(function(x){ return x.id === id; })[0] : null;
+    if(!f || !stockOn(f)) return;
+    setStock(f, stockG(f) - itemGrams(it));
+    if(hit.indexOf(f) < 0) hit.push(f);
+  });
+  return hit;
+}
+/* o que o usuário precisa saber depois de salvar: quanto saiu de cada rolo e
+   qual deles já pede recompra — com o link que ele mesmo cadastrou */
+function stockSaveMsg(hit){
+  if(!hit || !hit.length) return '';
+  var lowNow = hit.filter(function(f){ var st = stockState(f); return st === 'low' || st === 'out'; });
+  var body = hit.map(function(f){
+    return '<b>'+esc(f.name || 'filamento')+'</b>: '+dec(stockG(f),0)+' g restantes';
+  }).join(' · ');
+  if(!lowNow.length) return '<div class="alert" style="margin-bottom:0">Baixa no estoque — '+body+'.</div>';
+  return '<div class="alert'+(lowNow.some(function(f){ return stockState(f) === 'out'; }) ? ' bad' : '')+'" style="margin-bottom:0">'+
+    'Baixa no estoque — '+body+'.<br>' +
+    lowNow.map(function(f){
+      return (stockState(f) === 'out' ? 'Rolo <b>'+esc(f.name||'')+'</b> acabou.' : 'Rolo <b>'+esc(f.name||'')+'</b> está acabando.') + buyLink(f, 'Comprar');
+    }).join('<br>') + '</div>';
+}
+function buyLink(f, label){
+  var u = safeUrl(f.url);
+  return u ? ' <a href="'+esc(u)+'" target="_blank" rel="noopener noreferrer">'+label+' &rarr;</a>' : '';
+}
+function stockAlertHtml(r){
+  var f = curFilament();
+  if(!stockOn(f)) return '';
+  var have = stockG(f), st = stockState(f), nm = esc(f.name || 'filamento');
+  var need = r.g * (1 + r.waste) * r.qty;
+  if(st === 'out')
+    return '<div class="alert bad">O rolo <b>'+nm+'</b> está zerado no seu estoque.'+buyLink(f,'Comprar de novo')+'</div>';
+  if(need > have)
+    return '<div class="alert bad">Este pedido precisa de <b>'+dec(need,0)+' g</b> e o rolo <b>'+nm+
+           '</b> tem <b>'+dec(have,0)+' g</b> — faltam '+dec(need-have,0)+' g.'+buyLink(f,'Comprar mais')+'</div>';
+  if(st === 'low')
+    return '<div class="alert">O rolo <b>'+nm+'</b> está acabando: <b>'+dec(have,0)+' g</b> restantes.'+buyLink(f,'Comprar de novo')+'</div>';
+  return '';
+}
+
 /* ============ cadastros: impressoras e filamentos ============ */
 var LINKSVG = '<svg viewBox="0 0 24 24"><path d="M14 4h6v6"/><path d="M20 4l-9 9"/><path d="M19 14v5a1 1 0 01-1 1H5a1 1 0 01-1-1V6a1 1 0 011-1h5"/></svg>';
 function helpBtn(k){ return '<button type="button" class="help" data-h="'+k+'" aria-label="O que é isso?">?</button>'; }
@@ -2387,22 +2582,53 @@ function renderPrinters(){
   }).join('') || '<div class="empty">Nenhuma impressora cadastrada.</div>';
   wireList(el, S.printers, renderPrinters, 'p');
 }
+/* rótulo da direita no cabeçalho: preço por grama e, quando o rolo é
+   controlado, quanto ainda tem dentro dele */
+function filMeta(f){
+  var pg = num(f.spoolWeight) > 0 ? num(f.spoolPrice)/num(f.spoolWeight) : 0;
+  var st = stockState(f);
+  return brl(pg)+'/g' + (st ? ' · ' + dec(stockG(f),0) + ' g' : '');
+}
+function filMetaClass(f){
+  var st = stockState(f);
+  return 'meta' + (st === 'out' ? ' out' : (st === 'low' ? ' low' : ''));
+}
+/* só a barra e a legenda; ficam num container próprio para poderem ser
+   redesenhadas enquanto o usuário digita sem que o campo perca o foco */
+function stockMeterHtml(f){
+  var st = stockState(f);
+  if(!st) return '<p class="note" style="margin:8px 0 12px">Sem controle de estoque. Preencha as gramas restantes para o app dar baixa a cada orçamento salvo.</p>';
+  var cap = num(f.spoolWeight) > 0 ? num(f.spoolWeight) : 1000;
+  var pct = Math.max(0, Math.min(100, stockG(f)/cap*100));
+  return '<div class="stockbar '+(st === 'ok' ? '' : st)+'"><i style="width:'+pct.toFixed(1)+'%"></i></div>'+
+    '<div class="stockline"><span>'+dec(stockG(f),0)+' g de '+dec(cap,0)+' g</span><span>'+
+      (st === 'out' ? 'rolo acabado' : (st === 'low' ? 'acabando' : dec(pct,0)+'%'))+'</span></div>';
+}
+function stockBoxHtml(f, i){
+  var cap = num(f.spoolWeight) > 0 ? num(f.spoolWeight) : 1000;
+  return '<div class="row">'+
+      '<div class="field"><label for="fs'+i+'">Estoque <span class="hint">g restantes</span>'+helpBtn('estoque')+'</label>'+
+        '<input id="fs'+i+'" type="text" inputmode="decimal" placeholder="vazio = não controlar" value="'+esc(stockStr(f))+'" data-list="'+i+'" data-key="stockG"></div>'+
+      pField('Avisar em','g','fl'+i,i,'lowG',f.lowG,true)+'</div>'+
+    '<div class="stockmeter">'+stockMeterHtml(f)+'</div>'+
+    '<div class="btnrow" style="margin-top:0"><button type="button" class="btn" data-fill-f="'+i+'">Rolo novo ('+dec(cap,0)+' g)</button></div>';
+}
 function renderFilaments(){
   var el = $('filament-list');
   if(busyIn('#filament-list')) { pendingRender.filaments = true; return; }
   el.innerHTML = S.filaments.map(function(f,i){
-    var pg = num(f.spoolWeight) > 0 ? num(f.spoolPrice)/num(f.spoolWeight) : 0;
     var u = safeUrl(f.url);
     return '<div class="item"><div class="head" data-open="f'+i+'">'+
       '<span class="swatch" style="background:'+esc(safeColor(f.color,'#ccc'))+'"></span>'+
       '<span class="nm">'+esc(f.name||'Sem nome')+'</span>'+
-      '<span class="meta">'+brl(pg)+'/g</span></div>'+
+      '<span class="'+filMetaClass(f)+'">'+esc(filMeta(f))+'</span></div>'+
       '<div class="body" id="body-f'+i+'" hidden>'+
         pField('Apelido','','fn'+i,i,'name',f.name,false)+
         '<div class="row">'+pField('Material','','fm'+i,i,'material',f.material,false)+
         '<div class="field"><label for="fc'+i+'">Cor</label><input id="fc'+i+'" type="color" value="'+esc(safeColor(f.color,'#FF6B2C'))+'" data-list="'+i+'" data-key="color" style="padding:4px"></div></div>'+
         '<div class="row">'+pField('Preço do rolo','R$','fp'+i,i,'spoolPrice',f.spoolPrice,true)+
         pField('Peso do rolo','g','fw'+i,i,'spoolWeight',f.spoolWeight,true)+'</div>'+
+        stockBoxHtml(f, i)+
         pField('Marca / loja','','fb'+i,i,'brand',f.brand||'',false)+
         '<div class="field"><label for="fu'+i+'">Link de compra'+helpBtn('filurl')+'</label>'+
           '<div class="linkrow"><div class="field"><input id="fu'+i+'" type="url" inputmode="url" placeholder="https://..." value="'+esc(f.url||'')+'" data-list="'+i+'" data-key="url"></div>'+
@@ -2413,6 +2639,14 @@ function renderFilaments(){
       '</div></div>';
   }).join('') || '<div class="empty">Nenhum filamento cadastrado.</div>';
   wireList(el, S.filaments, renderFilaments, 'f');
+  each(qsa(el,'[data-fill-f]'), function(b){
+    b.addEventListener('click', function(){
+      var f = S.filaments[+b.getAttribute('data-fill-f')];
+      if(!f) return;
+      setStock(f, num(f.spoolWeight) > 0 ? num(f.spoolWeight) : 1000);
+      persist(); renderFilaments(); render();
+    });
+  });
   each(qsa(el,'[data-buy-f]'), function(b){
     b.addEventListener('click', function(){
       var f = S.filaments[+b.getAttribute('data-buy-f')];
@@ -2428,7 +2662,7 @@ function renderFilaments(){
     });
   });
 }
-var TXTKEYS = {name:1, material:1, color:1, override:1, brand:1, url:1};
+var TXTKEYS = {name:1, material:1, color:1, override:1, brand:1, url:1, stockG:1};
 function wireList(el, arr, rerender, pfx){
   each(qsa(el,'[data-open]'), function(h){
     h.addEventListener('click', function(){
@@ -2452,7 +2686,17 @@ function wireList(el, arr, rerender, pfx){
         var hb = item.querySelector('.hourbox');
         if(hb) hb.innerHTML = machineHourHtml(it);
       }
-      if(pfx==='f') head.querySelector('.meta').textContent = brl(num(it.spoolWeight)>0?num(it.spoolPrice)/num(it.spoolWeight):0)+'/g';
+      if(pfx==='f'){
+        var meta = head.querySelector('.meta');
+        meta.textContent = filMeta(it);
+        meta.className = filMetaClass(it);
+        if(k === 'stockG' || k === 'lowG' || k === 'spoolWeight'){
+          var mt = item.querySelector('.stockmeter');
+          if(mt) mt.innerHTML = stockMeterHtml(it);
+          var fill = item.querySelector('[data-fill-f]');
+          if(fill) fill.textContent = 'Rolo novo (' + dec(num(it.spoolWeight) > 0 ? num(it.spoolWeight) : 1000, 0) + ' g)';
+        }
+      }
       if(k==='color') head.querySelector('.swatch').style.background = inp.value;
       if(k==='url'){
         var a = item.querySelector('a.go'), u = safeUrl(inp.value);
@@ -2527,6 +2771,17 @@ var catFilter = 'all', prodQuery = '', pdId = null;
 var BOXSVG = '<svg viewBox="0 0 24 24"><path d="M12 2.8l8.2 4.6v9.2L12 21.2 3.8 16.6V7.4z"/><path d="M3.8 7.4L12 12l8.2-4.6"/><line x1="12" y1="12" x2="12" y2="21.2"/></svg>';
 
 function productPrice(p){ return num(p.priceSet) > 0 ? num(p.priceSet) : num(p.price); }
+/* horas POR PEÇA: o produto pode ter sido salvo com os números da mesa cheia */
+function productHours(p){
+  var q = Math.max(1, Math.round(num(p.qty)) || 1);
+  return p.scope === 'plate' ? num(p.hours)/q : num(p.hours);
+}
+/* o número que decide o que vale a pena imprimir: lucro dividido pelo recurso
+   escasso, que é hora de impressora — não dinheiro */
+function productPerHour(p){
+  var h = productHours(p);
+  return h > 0 ? productMoney(p).profit/h : 0;
+}
 function productMoney(p){
   var feeR = Math.min(0.95, Math.max(0, num(S.settings.fee)/100));
   var price = productPrice(p);
@@ -2564,10 +2819,21 @@ function matchProduct(p){
   }
   return true;
 }
+var prodSort = 'name';
+function byProductName(a,b){
+  return String(a.name||'').localeCompare(String(b.name||''), 'pt-BR', {sensitivity:'base'});
+}
 function sortedProducts(){
-  return S.products.slice().sort(function(a,b){
-    return String(a.name||'').localeCompare(String(b.name||''), 'pt-BR', {sensitivity:'base'});
+  var list = S.products.slice();
+  if(prodSort === 'hour') return list.sort(function(a,b){
+    var d = productPerHour(b) - productPerHour(a);
+    return d !== 0 ? d : byProductName(a,b);
   });
+  if(prodSort === 'profit') return list.sort(function(a,b){
+    var d = productMoney(b).profit - productMoney(a).profit;
+    return d !== 0 ? d : byProductName(a,b);
+  });
+  return list.sort(byProductName);
 }
 function renderProducts(){
   var list = sortedProducts().filter(matchProduct);
@@ -2576,6 +2842,7 @@ function renderProducts(){
     var c = catById(p.category);
     var ph = (p.photos||[])[0];
     var price = productPrice(p);
+    var lucroH = productHours(p) > 0 && price > 0 ? productPerHour(p) : null;
     return '<button type="button" class="pcard" data-p="'+esc(p.id)+'">'+
       '<span class="pthumb">'+
         (ph ? '<img data-photo="'+esc(ph)+'" data-kind="thumb" alt="">' : '')+
@@ -2585,6 +2852,8 @@ function renderProducts(){
       '<span class="pbody">'+
         '<span class="nm">'+esc(p.name||'Sem nome')+'</span>'+
         '<span class="pr">'+(price > 0 ? brl(price) : '—')+'</span>'+
+        '<span class="lh'+(lucroH !== null && lucroH < 0 ? ' neg' : '')+'">'+
+          (lucroH !== null ? brl(lucroH)+'/h de máquina' : 'sem tempo salvo')+'</span>'+
         '<span class="cat">'+(c ? '<span class="cdot" style="background:'+esc(safeColor(c.color,'#ccc'))+';width:8px;height:8px;border-radius:50%;display:inline-block;flex:none"></span><span class="t">'+esc(c.name)+'</span>' : '<span class="t" style="color:var(--ink3)">sem categoria</span>')+'</span>'+
       '</span></button>';
   }).join('');
@@ -2966,6 +3235,8 @@ function duplicateJob(j){
   var c = JSON.parse(JSON.stringify(j));
   c.id = uid(); c.createdAt = Date.now(); c.date = new Date().toLocaleDateString('pt-BR');
   c.status = 'orcado'; c.due = ''; c.paidAt = '';
+  /* a cópia é um orçamento novo: só desconta o rolo se for salva de novo */
+  c.stockApplied = true;
   c.items = jobItems(j).map(function(it){ var n = JSON.parse(JSON.stringify(it)); n.id = uid(); return n; });
   S.jobs.unshift(c);
   if(S.jobs.length > 200) S.jobs.length = 200;
@@ -2992,6 +3263,270 @@ function restore(j){
   restoreCalc(items[0] && items[0].calc);
   persist();
   refreshOrderInputs(); renderOrder(); go('calc');
+}
+
+/* ============ painel do mes ============ */
+/* O app ja guardava receita (pedidos) e despesa (compras) sem nunca cruzar as
+   duas. O painel responde "estou ganhando dinheiro?" sem pedir nenhum dado novo.
+   Duas bases, cada uma dita na tela para ninguem somar laranja com banana:
+   - DINHEIRO: pedidos marcados como Pago, pelo mes do pagamento.
+   - PRODUCAO: pedidos que passaram de orcado, pelo mes em que foram criados —
+     e o que aproxima as horas que a maquina realmente rodou. */
+var dashYM = '';
+
+function ymOf(ts){
+  var d = new Date(num(ts));
+  if(!isFinite(d.getTime())) return '';
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+}
+function ymNow(){ return todayISO().slice(0,7); }
+function ymLabel(ym){
+  var m = /^(\d{4})-(\d{2})$/.exec(String(ym||''));
+  if(!m) return ym || '';
+  var t = new Date(+m[1], +m[2]-1, 1).toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+  return t.charAt(0).toUpperCase() + t.slice(1);
+}
+function ymShift(ym, n){
+  var m = /^(\d{4})-(\d{2})$/.exec(String(ym||''));
+  if(!m) return ymNow();
+  var d = new Date(+m[1], +m[2]-1+n, 1);
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+}
+/* faixa contínua do mês mais antigo com dados até o mês corrente: mês sem
+   movimento também precisa poder ser aberto, nem que seja para mostrar zero */
+function dashMonths(){
+  var keys = [ymNow()];
+  var add = function(k){ if(/^\d{4}-\d{2}$/.test(String(k||''))) keys.push(String(k)); };
+  S.jobs.forEach(function(j){
+    if(jobStatus(j) === 'pago') add(String(j.paidAt||'').slice(0,7));
+    add(ymOf(j.createdAt));
+  });
+  S.buys.forEach(function(b){ add(String(b.date||'').slice(0,7)); });
+  keys.sort();
+  var out = [], k = keys[0], last = keys[keys.length-1], guard = 0;
+  while(k <= last && guard++ < 480){ out.push(k); k = ymShift(k, 1); }
+  return out.reverse();
+}
+function paidJobs(ym){
+  return S.jobs.filter(function(j){ return jobStatus(j) === 'pago' && String(j.paidAt||'').slice(0,7) === ym; });
+}
+/* aprovado em diante: e o que de fato foi para a mesa */
+function producedJobs(ym){
+  return S.jobs.filter(function(j){ return jobStatus(j) !== 'orcado' && ymOf(j.createdAt) === ym; });
+}
+/* soma o dinheiro de um conjunto de pedidos ja abrindo a taxa de recebimento,
+   que fica escondida dentro do lucro de cada item */
+function moneyOf(jobs){
+  var o = {n:jobs.length, total:0, ship:0, sub:0, disc:0, cost:0, fee:0, profit:0, hours:0, grams:0, qty:0};
+  jobs.forEach(function(j){
+    var items = jobItems(j), t = jobTotals(j);
+    var raw = 0;
+    items.forEach(function(it){ raw += num(it.profit) * itemQty(it); });
+    o.total += t.total; o.ship += t.ship; o.sub += t.sub; o.disc += t.disc;
+    o.cost += t.cost; o.fee += (t.sub - t.cost - raw);
+    o.profit += raw - t.disc;
+    o.hours += t.hours; o.grams += t.grams; o.qty += t.qty;
+  });
+  o.sales = o.sub - o.disc;             /* o que e venda de peca, sem o frete */
+  o.margin = o.sales > 0 ? o.profit/o.sales : 0;
+  o.perHour = o.hours > 0 ? o.profit/o.hours : 0;
+  return o;
+}
+function buysOf(ym){
+  return S.buys.filter(function(b){ return String(b.date||'').slice(0,7) === ym; });
+}
+/* media de horas impressas por mes, so entre os meses que tiveram producao —
+   e a referencia para calibrar o rateio do custo fixo */
+function monthlyHoursAverage(){
+  var by = {};
+  S.jobs.forEach(function(j){
+    if(jobStatus(j) === 'orcado') return;
+    var ym = ymOf(j.createdAt); if(!ym) return;
+    by[ym] = (by[ym] || 0) + jobTotals(j).hours;
+  });
+  var keys = Object.keys(by), tot = 0;
+  keys.forEach(function(k){ tot += by[k]; });
+  return {months:keys.length, avg: keys.length ? tot/keys.length : 0, total:tot};
+}
+/* o que deu mais lucro no mes, juntando itens de mesmo nome (ou mesmo produto) */
+function topItems(jobs){
+  var by = {};
+  jobs.forEach(function(j){
+    jobItems(j).forEach(function(it){
+      var key = it.productId || ('nm:' + String(it.name||'').toLowerCase());
+      var q = itemQty(it);
+      var e = by[key] || (by[key] = {name:it.name || 'Sem nome', qty:0, profit:0, hours:0, revenue:0});
+      e.qty += q; e.profit += num(it.profit)*q; e.hours += num(it.hours)*q; e.revenue += num(it.unit)*q;
+    });
+  });
+  return Object.keys(by).map(function(k){
+    var e = by[k];
+    e.perHour = e.hours > 0 ? e.profit/e.hours : 0;
+    return e;
+  }).sort(function(a,b){ return b.profit - a.profit; });
+}
+function deltaHtml(now, prev){
+  if(!(Math.abs(prev) > 0.005)) return '';
+  var d = (now - prev)/Math.abs(prev)*100;
+  if(!isFinite(d)) return '';
+  var up = d >= 0;
+  return '<span class="delta '+(up ? 'up' : 'down')+'">'+(up ? '▲ ' : '▼ ')+dec(Math.abs(d),0)+'% vs. mês anterior</span>';
+}
+function hbarHtml(parts){
+  var use = parts.filter(function(x){ return x.v > 0.005; });
+  var sum = use.reduce(function(a,x){ return a + x.v; }, 0);
+  if(!(sum > 0)) return '';
+  return '<div class="hbar">'+use.map(function(x){
+    return '<span style="flex-grow:'+(x.v/sum*100).toFixed(3)+';background:'+x.c+'" title="'+esc(x.n)+'"></span>';
+  }).join('')+'</div>'+
+  '<div class="hkey">'+use.map(function(x){
+    return '<span><i style="background:'+x.c+'"></i>'+esc(x.n)+' '+dec(x.v/sum*100,0)+'%</span>';
+  }).join('')+'</div>';
+}
+
+function renderDash(){
+  var months = dashMonths();
+  if(months.indexOf(dashYM) < 0) dashYM = months[0] || ymNow();
+  var ym = dashYM;
+
+  var sel = $('dash-month');
+  sel.innerHTML = months.map(function(k){
+    return '<option value="'+esc(k)+'"'+(k === ym ? ' selected' : '')+'>'+esc(ymLabel(k))+'</option>';
+  }).join('');
+  var at = months.indexOf(ym);
+  $('dash-prev').disabled = at >= months.length - 1;
+  $('dash-next').disabled = at <= 0;
+
+  var m  = moneyOf(paidJobs(ym));
+  var mp = moneyOf(paidJobs(ymShift(ym,-1)));
+  var prod = moneyOf(producedJobs(ym));
+  var buys = buysOf(ym);
+  var spend = buys.reduce(function(a,b){ return a + num(b.amount); }, 0);
+  var spendPrev = buysOf(ymShift(ym,-1)).reduce(function(a,b){ return a + num(b.amount); }, 0);
+
+  $('dash-sum').innerHTML =
+    '<div><span class="k">Recebido</span><span class="v">'+brl(m.total)+'</span>'+deltaHtml(m.total, mp.total)+'</div>'+
+    '<div><span class="k">Lucro</span><span class="v">'+brl(m.profit)+'</span>'+deltaHtml(m.profit, mp.profit)+'</div>';
+
+  var out = '';
+
+  /* ---- resultado ---- */
+  out += '<h2 class="section">Resultado do mês</h2><div class="card">';
+  if(m.n){
+    out += hbarHtml([
+      {n:'Custo de produção', v:m.cost,   c:'#5A6672'},
+      {n:'Taxas',             v:m.fee,    c:'#B0BAC4'},
+      {n:'Lucro',             v:m.profit, c:'#0F9D8F'}
+    ]);
+    out += '<div class="kv"><span>Recebido · '+m.n+(m.n === 1 ? ' pedido' : ' pedidos')+'</span><span class="v">'+brl(m.total)+'</span></div>';
+    if(m.ship > 0){
+      out += '<div class="kv"><span>Frete repassado</span><span class="v">−'+brl(m.ship)+'</span></div>'+
+        '<div class="kv"><span>Venda das peças</span><span class="v">'+brl(m.sales)+'</span></div>';
+    }
+    if(m.fee > 0.005) out += '<div class="kv"><span>Taxas de recebimento</span><span class="v">−'+brl(m.fee)+'</span></div>';
+    out += '<div class="kv"><span>Custo de produção</span><span class="v">−'+brl(m.cost)+'</span></div>'+
+      '<div class="kv tot"><span>Lucro</span><span class="v" style="color:'+(m.profit >= 0 ? 'var(--teal)' : 'var(--red)')+'">'+
+        brl(m.profit)+' · '+dec(m.margin*100,1)+'%</span></div>'+
+      '<p class="dashnote">Base: pedidos marcados como <b>Pago</b> com data de pagamento neste mês. '+
+      'O frete é repasse e fica fora do lucro.</p>';
+  } else {
+    out += '<div class="empty">Nenhum pedido pago neste mês.<br>Em <b>Salvos</b>, marque o pedido como <b>Pago</b> para ele entrar aqui.</div>';
+  }
+  out += '</div>';
+
+  /* ---- caixa ---- */
+  out += '<h2 class="section">Caixa do mês</h2><div class="card">'+
+    '<div class="kv"><span>Entrou (pedidos pagos)</span><span class="v">'+brl(m.total)+'</span></div>'+
+    '<div class="kv"><span>Saiu (compras registradas · '+buys.length+')</span><span class="v">−'+brl(spend)+'</span></div>'+
+    '<div class="kv tot"><span>Saldo</span><span class="v" style="color:'+(m.total - spend >= 0 ? 'var(--teal)' : 'var(--red)')+'">'+
+      brl(m.total - spend)+'</span>'+'</div>'+
+    (spendPrev > 0 ? '<p class="dashnote">Compras no mês anterior: '+brl(spendPrev)+'.</p>' : '')+
+    '<p class="dashnote">Dinheiro que entrou e saiu de verdade. É diferente do lucro acima: um rolo de R$ 110 sai do caixa hoje e vira custo aos poucos, a cada peça impressa.</p>'+
+    '</div>';
+
+  /* ---- producao ---- */
+  out += '<h2 class="section">Produção do mês</h2><div class="card">'+
+    '<div class="mini" style="margin-top:0">'+
+      '<div><span class="k">Horas impressas</span><span class="v">'+dec(prod.hours,1)+' h</span></div>'+
+      '<div><span class="k">Filamento</span><span class="v">'+dec(prod.grams/1000,2)+' kg</span></div>'+
+      '<div><span class="k">Peças</span><span class="v">'+dec(prod.qty,0)+'</span></div>'+
+      '<div><span class="k">Pedidos</span><span class="v">'+prod.n+'</span></div>'+
+    '</div>'+
+    '<div class="kv" style="margin-top:14px"><span>Lucro por hora de máquina'+helpBtn('lucrohora')+'</span>'+
+      '<span class="v" style="color:'+(m.perHour >= 0 ? 'var(--teal)' : 'var(--red)')+'">'+
+        (m.hours > 0 ? brl(m.perHour)+'/h' : '—')+'</span></div>'+
+    '<div class="kv"><span>Ticket médio do pedido</span><span class="v">'+(m.n ? brl(m.total/m.n) : '—')+'</span></div>'+
+    '<p class="dashnote">Base: pedidos aprovados, em impressão, entregues ou pagos criados neste mês. '+
+    'O lucro por hora usa os pedidos pagos.</p>';
+  if(fixedHour() > 0){
+    var esperado = num(S.settings.fixedHours);
+    out += '<div class="hourbox" style="margin:14px 0 0">Rateio do custo fixo: <b>'+brl(fixedHour())+'/h</b>'+
+      '<span>Você configurou '+dec(esperado,0)+' h por mês e imprimiu '+dec(prod.hours,0)+' h neste mês. '+
+      (prod.hours > 0 && prod.hours < esperado * 0.75
+        ? 'Imprimindo menos que o previsto, o custo fixo do mês não se paga — considere baixar as horas em Ajustes.'
+        : 'Ajuste as horas em Ajustes se esse padrão se repetir.')+'</span></div>';
+  }
+  out += '</div>';
+
+  /* ---- o que deu mais lucro ---- */
+  var top = topItems(paidJobs(ym)).slice(0,6);
+  out += '<h2 class="section">O que deu mais lucro</h2><div class="card">';
+  out += top.length ? top.map(function(e,i){
+    return '<div class="toprow"><span class="rk">'+(i+1)+'</span>'+
+      '<span class="mid"><span class="nm">'+esc(e.name)+'</span>'+
+      '<span class="sb">'+dec(e.qty,0)+(e.qty === 1 ? ' peça' : ' peças')+' · '+dec(e.hours,1)+' h · '+brl(e.revenue)+'</span></span>'+
+      '<span class="vl"><b style="color:'+(e.profit >= 0 ? 'var(--teal)' : 'var(--red)')+'">'+brl(e.profit)+'</b>'+
+      '<span>'+(e.hours > 0 ? brl(e.perHour)+'/h' : '—')+'</span></span></div>';
+  }).join('') : '<div class="empty">Sem pedidos pagos neste mês.</div>';
+  if(top.length) out += '<p class="dashnote">A coluna de baixo é o lucro por hora de máquina. É ela que diz o que vale a pena colocar de novo na mesa.</p>';
+  out += '</div>';
+
+  /* ---- em aberto ---- */
+  var openJobs = S.jobs.filter(function(j){ return jobStatus(j) !== 'pago'; });
+  var openM = moneyOf(openJobs);
+  out += '<h2 class="section">Em aberto agora</h2><div class="card">';
+  if(openJobs.length){
+    STATUS_ORDER.forEach(function(k){
+      if(k === 'pago') return;
+      var g = openJobs.filter(function(j){ return jobStatus(j) === k; });
+      if(!g.length) return;
+      out += '<div class="kv"><span>'+statusPill(k)+' <span style="color:var(--ink3)">· '+g.length+'</span></span>'+
+        '<span class="v">'+brl(moneyOf(g).total)+'</span></div>';
+    });
+    out += '<div class="kv tot"><span>Total a receber</span><span class="v">'+brl(openM.total)+'</span></div>'+
+      '<p class="dashnote">Vale para todos os meses, não só o selecionado — é dinheiro que ainda não entrou.</p>';
+  } else {
+    out += '<div class="empty">Nada em aberto. Todos os pedidos estão pagos.</div>';
+  }
+  out += '</div>';
+
+  /* ---- rolos acabando ---- */
+  var low = lowFilaments();
+  if(low.length){
+    out += '<h2 class="section">Rolos acabando</h2><div class="card">'+low.map(function(f){
+      var st = stockState(f), u = safeUrl(f.url);
+      return '<div class="rollrow"><span class="swatch" style="background:'+esc(safeColor(f.color,'#ccc'))+'"></span>'+
+        '<span class="mid"><span class="nm"><span class="lowdot'+(st === 'out' ? ' out' : '')+'"></span>'+esc(f.name || 'Sem nome')+'</span>'+
+        '<span class="sb">'+dec(stockG(f),0)+' g restantes'+(st === 'out' ? ' · rolo acabado' : '')+'</span></span>'+
+        '<a class="go" '+(u ? 'href="'+esc(u)+'" target="_blank" rel="noopener noreferrer"'
+                            : 'aria-disabled="true" tabindex="-1"')+' aria-label="Comprar de novo">'+LINKSVG+'</a></div>';
+    }).join('')+'<p class="dashnote">O link abre a página onde você comprou o rolo, cadastrada em <b>Cadastros → Filamentos</b>.</p></div>';
+  }
+
+  $('dash-body').innerHTML = out;
+}
+
+function bindDash(){
+  $('dash-month').addEventListener('change', function(){ dashYM = this.value; renderDash(); });
+  var step = function(n){
+    var months = dashMonths(), at = months.indexOf(dashYM || ymNow());
+    if(at < 0) at = 0;
+    var to = at - n;   /* a lista vem do mais novo para o mais antigo */
+    if(to < 0 || to >= months.length) return;
+    dashYM = months[to]; renderDash();
+  };
+  $('dash-prev').addEventListener('click', function(){ step(-1); });
+  $('dash-next').addEventListener('click', function(){ step(1); });
 }
 
 /* ============ segmentos e chips ============ */
@@ -3303,6 +3838,7 @@ function refreshAfterSync(coll){
   if(coll === 'products'){ renderCatFilter(); renderProducts(); if(current === 'productdetail') renderProductDetail(); }
   if(coll === 'buys'){ renderBuyFilter(); renderBuys(); if(current === 'buydetail') renderBuyDetail(); }
   if(coll === 'jobs' && current === 'saved') renderSaved();
+  if(current === 'dash') renderDash();
   render();
   updateSyncUI();
 }
@@ -3565,10 +4101,19 @@ function bindCalc(){
       subtotal:t.sub, total:t.total, cost:t.cost, profit:t.profit,
       grams:t.grams, hours:t.hours, qty:t.qty,
       /* resumo da primeira peça: mantém legível quem só olha os campos antigos */
-      piece:first.name, price:num(first.unit), productId:first.productId || ''
+      piece:first.name, price:num(first.unit), productId:first.productId || '',
+      stockApplied:false
     });
     if(S.jobs.length > 200) S.jobs.length = 200;
+
+    /* salvar o orçamento é o momento em que o filamento sai do rolo de verdade */
+    var job = S.jobs[0];
+    var hit = stockApply(lines);
+    job.stockApplied = true;
     persist();
+    renderFilaments();
+    render();
+    $('save-msg').innerHTML = stockSaveMsg(hit);
     flash(this, 'Salvo ✓');
   });
 
@@ -3602,6 +4147,7 @@ function bindCalc(){
     if(!confirm('Limpar os campos da calculadora? Os itens já adicionados ao orçamento continuam lá.')) return;
     ['f-piece','f-grams','f-h','f-m','f-prep','f-finish','f-final'].forEach(function(id){ $(id).value=''; });
     $('f-qty').value = 1; extras = []; activeProductId = null; editingItemId = null;
+    $('save-msg').innerHTML = '';
     renderExtras(); render();
   });
 
@@ -3617,6 +4163,13 @@ function bindCalc(){
 
 function bindProducts(){
   $('p-search').addEventListener('input', function(){ prodQuery = this.value.trim().toLowerCase(); renderProducts(); });
+  each(qsa($('seg-psort'),'button'), function(b){
+    b.addEventListener('click', function(){
+      prodSort = b.getAttribute('data-v');
+      setSeg('seg-psort', prodSort);
+      renderProducts();
+    });
+  });
   $('btn-add-product').addEventListener('click', function(){
     var p = newProduct();
     p.name = '';
@@ -3710,6 +4263,9 @@ function renderMoneyBox(p, m){
     '<div class="kv"><span>Custo real da peça</span><span class="v">'+brl(m.cost)+'</span></div>'+
     (m.fee > 0 ? '<div class="kv"><span>Taxa de recebimento</span><span class="v">−'+brl(m.fee)+'</span></div>' : '')+
     '<div class="kv"><span><b>Lucro por peça</b></span><span class="v" style="color:'+(m.profit>=0?'var(--teal)':'var(--red)')+'"><b>'+brl(m.profit)+'</b> · '+dec(m.margin*100,1)+'%</span></div>'+
+    (productHours(p) > 0 && m.price > 0
+      ? '<div class="kv"><span>Lucro por hora de máquina'+helpBtn('lucrohora')+'</span><span class="v" style="color:'+(m.profit>=0?'var(--teal)':'var(--red)')+'">'+brl(productPerHour(p))+'/h</span></div>'
+      : '')+
     (m.price <= 0 ? '<p class="note">Defina seu preço acima, ou abra na calculadora para o app sugerir um.</p>' : '');
 }
 
@@ -3770,7 +4326,8 @@ function downloadBlob(text, type, name){
   setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 1200);
 }
 
-var SMAP = {'s-kwh':'kwh','s-hour':'hour','s-waste':'waste','s-fail':'fail','s-fee':'fee','s-biz':'biz','s-contact':'contact','s-valid':'valid'};
+var SMAP = {'s-kwh':'kwh','s-hour':'hour','s-waste':'waste','s-fail':'fail','s-fee':'fee',
+  's-fixed':'fixed','s-fixedhours':'fixedHours','s-biz':'biz','s-contact':'contact','s-valid':'valid'};
 var STXT = {biz:1, contact:1};
 /* 0.75 aparecia com ponto num app que pede vírgula em todo o resto */
 function settingStr(k){
@@ -3779,9 +4336,30 @@ function settingStr(k){
 }
 function refreshSettingsInputs(){
   Object.keys(SMAP).forEach(function(id){
-    var el = $(id);
-    if(el && document.activeElement !== el) el.value = settingStr(SMAP[id]);
+    var id2 = id, el = $(id2);
+    if(el && document.activeElement !== el) el.value = settingStr(SMAP[id2]);
   });
+  paintFixedBox();
+}
+/* mostra o R$/h que sai do rateio e, ao lado, a média real das horas impressas
+   por mês nos pedidos salvos — é com ela que o usuário calibra o palpite */
+function paintFixedBox(){
+  var box = $('fixed-box');
+  if(!box) return;
+  var f = num(S.settings.fixed), h = num(S.settings.fixedHours), rate = fixedHour();
+  var m = monthlyHoursAverage();
+  var real = m.months ? '<span>Nos seus pedidos salvos: <b>'+dec(m.avg,0)+' h por mês</b> em '+
+      m.months+(m.months === 1 ? ' mês com pedido.' : ' meses com pedido.')+'</span>' : '';
+  if(rate > 0){
+    box.innerHTML = 'Cada hora de impressão carrega <b>'+brl(rate)+'</b> de custo fixo.'+
+      '<span>'+brl(f)+' por mês ÷ '+dec(h,0)+' h impressas. Uma peça de 9 h paga '+brl(rate*9)+'.</span>'+real;
+  } else if(f > 0 && !(h > 0)){
+    box.innerHTML = 'Falta informar as horas impressas por mês.'+
+      '<span>Sem elas não há como ratear — o custo fixo continua fora do preço.</span>'+real;
+  } else {
+    box.innerHTML = 'Rateio desligado: o custo fixo não entra no preço.'+
+      '<span>Some aluguel, internet, assinatura do fatiador e energia da máquina parada, e informe quantas horas você imprime num mês típico.</span>'+real;
+  }
 }
 function bindSettings(){
   Object.keys(SMAP).forEach(function(id){
@@ -3792,6 +4370,7 @@ function bindSettings(){
       persist();
       if(k==='waste') $('f-waste').value = S.settings.waste;
       if(k==='fail')  $('f-fail').value  = S.settings.fail;
+      if(k==='fixed' || k==='fixedHours') paintFixedBox();
       render();
     });
   });
@@ -3967,6 +4546,7 @@ function boot(reload){
   syncMarginLabel();
   refreshOrderInputs();
   if(reload) refreshSettingsInputs();
+  paintFixedBox();
   render();
 }
 
@@ -3998,6 +4578,7 @@ bindOrder();
 bindProducts();
 bindBuys();
 bindSaved();
+bindDash();
 bindSettings();
 bindInstall();
 bindTheme();
