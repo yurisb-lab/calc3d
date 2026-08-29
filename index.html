@@ -80,6 +80,7 @@
   --seg-on:#FFFFFF;
 
   /* estados coloridos */
+  --ok-bg:#E6F4F1;     --ok-line:#B4DDD5;   --ok-ink:#0A6A60;
   --warn-bg:#FCF4E1;   --warn-line:#EEDCA9; --warn-ink:#7A5D0B;
   --err-bg:#FBEBEB;    --err-line:#EFCFCF;  --err-ink:#8F2C2C;
   --acc-bg:#FDECEF;    --acc-line:#F6C9D1;  --acc-ink:#94263C;
@@ -145,6 +146,7 @@
   --seg-track:#0D1218;
   --seg-on:#2A3441;
 
+  --ok-bg:rgba(44,195,176,.10);    --ok-line:rgba(44,195,176,.26);   --ok-ink:#6FD9C8;
   --warn-bg:rgba(239,196,79,.11);  --warn-line:rgba(239,196,79,.26); --warn-ink:#EACB74;
   --err-bg:rgba(242,114,111,.11);  --err-line:rgba(242,114,111,.28); --err-ink:#F09A97;
   --acc-bg:rgba(235,103,117,.12);  --acc-line:rgba(235,103,117,.28); --acc-ink:#F3919B;
@@ -263,14 +265,14 @@ h2.section:first-child{margin-top:4px}
 .card.tight{padding:12px}
 
 /* ---------- fields ---------- */
-.field{margin-bottom:14px}
+.field{margin-bottom:13px}
 .field:last-child{margin-bottom:0}
-label{display:block;font-size:12.5px;font-weight:600;color:var(--ink2);margin-bottom:6px}
+label{display:block;font-size:12px;font-weight:600;color:var(--ink2);margin-bottom:5px;letter-spacing:.005em}
 label .hint{font-weight:400;color:var(--ink3)}
 input,select,textarea{
   width:100%;font-family:inherit;font-size:16px;color:var(--ink);
   background:var(--field);border:1px solid var(--line);border-radius:var(--r-sm);
-  padding:11px 12px;min-height:48px;
+  padding:10px 12px;min-height:46px;
   box-shadow:var(--sh-in);
   transition:border-color .15s,box-shadow .15s,background .15s;
 }
@@ -294,11 +296,12 @@ select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns=
 .seg{display:flex;background:var(--seg-track);border:1px solid var(--line);border-radius:var(--r-sm);padding:3px;gap:3px;box-shadow:var(--sh-in)}
 .seg button{
   flex:1;border:0;background:none;font:inherit;font-size:13px;font-weight:600;color:var(--ink2);
-  padding:9px 6px;border-radius:var(--r-xs);cursor:pointer;min-height:42px;
+  padding:8px 6px;border-radius:var(--r-xs);cursor:pointer;min-height:40px;
   transition:background .15s,color .15s,box-shadow .15s;
 }
 .seg button:hover{color:var(--ink)}
-.seg button[aria-pressed="true"]{background:var(--seg-on);color:var(--ink);box-shadow:var(--sh-2),var(--sh-lip)}
+.seg button[aria-pressed="true"]{background:var(--seg-on);color:var(--ink);box-shadow:var(--sh-1),var(--sh-lip)}
+.seg button[aria-pressed="true"]{font-weight:700}
 
 /* chips */
 .chips{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
@@ -486,9 +489,9 @@ h2.section .amt{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size
 }
 [data-theme="dark"] .tabbar{box-shadow:0 -6px 22px -8px rgba(0,0,0,.6)}
 .tabbar button{
-  position:relative;flex:1;border:0;background:none;font:inherit;cursor:pointer;
+  position:relative;flex:1;min-width:0;border:0;background:none;font:inherit;cursor:pointer;
   display:flex;flex-direction:column;align-items:center;gap:3px;
-  padding:9px 1px 8px;color:var(--ink3);font-size:9.5px;font-weight:600;letter-spacing:0;min-height:58px;
+  padding:9px 1px 8px;color:var(--ink3);font-size:9px;font-weight:600;letter-spacing:-.01em;min-height:56px;
   white-space:nowrap;overflow:hidden;transition:color .15s;
 }
 .tabbar button::before{
@@ -496,8 +499,8 @@ h2.section .amt{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size
   width:26px;height:2.5px;border-radius:0 0 3px 3px;background:var(--hot);
   transition:transform .2s ease;
 }
-@media (max-width:399px){.tabbar button{font-size:8.5px;padding-left:0;padding-right:0}.tabbar button svg{width:19px;height:19px}}
-.tabbar button svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:transform .18s}
+@media (max-width:409px){.tabbar button{font-size:8px;padding-left:0;padding-right:0;gap:2px}.tabbar button svg{width:18px;height:18px}}
+.tabbar button svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:transform .18s}
 .tabbar button[aria-current="true"]{color:var(--hot)}
 .tabbar button[aria-current="true"]::before{transform:translateX(-50%) scaleX(1)}
 .tabbar button[aria-current="true"] svg{transform:translateY(-1px)}
@@ -939,13 +942,75 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
 .tierfoot .field input{min-height:44px}
 .tierfoot .btn{width:auto;flex:none;padding:11px 14px;white-space:nowrap}
 
+/* ---------- cálculo rápido: veredicto ----------
+   A tela inteira existe para uma frase. Ela vem em cartão próprio, com a cor
+   dizendo o resultado antes mesmo de o número ser lido. */
+.verdict{margin-bottom:14px}
+.verdict-in{
+  position:relative;overflow:hidden;
+  border:1px solid var(--line);border-radius:var(--r);
+  background:var(--surface);padding:17px 18px 16px 22px;
+  box-shadow:var(--sh-2),var(--sh-lip);
+}
+.verdict-in::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--ink3)}
+.verdict-in .vk{
+  display:block;font-size:10.5px;font-weight:700;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--ink3);
+}
+.verdict-in .vv{display:block;font-size:33px;font-weight:600;letter-spacing:-.03em;line-height:1.12;margin:5px 0 7px}
+.verdict-in .vs{display:block;font-size:13px;line-height:1.6;color:var(--ink2)}
+.verdict-in .vs b{color:var(--ink);font-weight:700;font-variant-numeric:tabular-nums}
+.verdict-in.good{background:var(--ok-bg);border-color:var(--ok-line)}
+.verdict-in.good::before{background:var(--teal)}
+.verdict-in.good .vk,.verdict-in.good .vv{color:var(--ok-ink)}
+.verdict-in.even{background:var(--warn-bg);border-color:var(--warn-line)}
+.verdict-in.even::before{background:var(--amber)}
+.verdict-in.even .vk,.verdict-in.even .vv{color:var(--warn-ink)}
+.verdict-in.bad{background:var(--err-bg);border-color:var(--err-line)}
+.verdict-in.bad::before{background:var(--red)}
+.verdict-in.bad .vk,.verdict-in.bad .vv{color:var(--err-ink)}
+.verdict-in.idle .vv{color:var(--ink)}
+.verdict-in.empty{background:var(--surface2);box-shadow:var(--sh-1)}
+.verdict-in.empty::before{background:var(--line2)}
+.verdict-in.empty .vk{color:var(--ink2)}
+.verdict-in.empty .vs{margin-top:7px}
+
+.qtiles{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:0 0 12px}
+@media (min-width:560px){.qtiles{grid-template-columns:repeat(4,1fr)}}
+.qtiles div{
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);
+  padding:11px 12px;box-shadow:var(--sh-1),var(--sh-lip);min-width:0;
+}
+.qtiles .k{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qtiles .k .help{width:15px;height:15px;font-size:10px;margin-left:4px;vertical-align:0}
+.qtiles .v{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:15px;display:block;margin-top:3px;letter-spacing:-.01em}
+.qtiles .v.pos{color:var(--teal)}
+.qtiles .v.neg{color:var(--red)}
+
+/* ---------- estado vazio do resultado ----------
+   Sem gramas nem tempo não existe pilha de custo: uma barra cinza vazia parecia
+   defeito. No lugar dela vai um recado dizendo o que falta preencher. */
+.stackempty{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+  text-align:center;min-height:170px;padding:22px 16px;
+  border:1px dashed var(--line2);border-radius:var(--r-sm);background:var(--surface2);
+}
+.stackempty svg{width:26px;height:26px;stroke:var(--ink3);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.stackempty .t{font-size:13.5px;font-weight:600;color:var(--ink2)}
+.stackempty .s{font-size:12px;color:var(--ink3);line-height:1.55;max-width:34ch}
+.strip.idle .big{color:var(--on-panel-2)}
+
 /* ---------- desktop ---------- */
 @media (min-width:1024px){
   body{padding-bottom:24px}
+  /* no computador o cartão pode respirar mais que no celular */
+  :root{--pad:18px}
   .topnav{display:flex}
   .tabbar{display:none}
-  main{display:grid;grid-template-columns:1fr 400px;gap:24px;align-items:start;padding:24px}
-  main.single{display:block;max-width:900px}
+  main{display:grid;grid-template-columns:minmax(0,1fr) 396px;gap:24px;align-items:start;padding:24px;max-width:1160px}
+  /* tela de coluna única não vira uma faixa de formulário de 900 px: linha
+     longa demais cansa a leitura e faz o app parecer um celular esticado */
+  main.single{display:block;max-width:820px}
   main>.strip{display:none}
   #col-a{min-width:0}
   #col-b{position:sticky;top:calc(var(--topbar-h) + 24px)}
@@ -1010,6 +1075,65 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
   </div>
 
   <div id="col-a">
+
+    <!-- ============ CÁLCULO RÁPIDO ============ -->
+    <!-- Modo emergência: a pergunta é só "estou perdendo dinheiro nisso?".
+         Três campos, um veredicto. Sem orçamento, sem insumos, sem catálogo. -->
+    <section class="view" id="v-quick" hidden>
+      <h2 class="section">Cálculo rápido</h2>
+      <p class="viewintro">Para responder na hora, com o cliente na frente: gramas, tempo e o preço oferecido. O app diz se dá lucro ou se você está pagando para trabalhar.</p>
+
+      <div class="verdict" id="q-verdict"></div>
+
+      <div class="card">
+        <div class="row">
+          <div class="field" id="q-fld-grams">
+            <label for="q-grams">Gramas<button type="button" class="help" data-h="gramas" aria-label="O que é isso?">?</button></label>
+            <input id="q-grams" type="text" inputmode="decimal" placeholder="82">
+          </div>
+          <div class="field">
+            <label for="q-h">Horas</label>
+            <input id="q-h" type="text" inputmode="decimal" placeholder="9">
+          </div>
+          <div class="field">
+            <label for="q-m">Minutos</label>
+            <input id="q-m" type="text" inputmode="decimal" placeholder="0">
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label for="q-printer">Impressora</label>
+            <select id="q-printer"></select>
+          </div>
+          <div class="field">
+            <label for="q-filament">Filamento</label>
+            <select id="q-filament"></select>
+          </div>
+        </div>
+        <div class="field" style="margin:14px 0 0">
+          <label for="q-price">Preço que vão pagar <span class="hint">R$ por peça</span><button type="button" class="help" data-h="qpreco" aria-label="O que é isso?">?</button></label>
+          <input id="q-price" type="text" inputmode="decimal" placeholder="0,00">
+          <div class="chips" id="q-chips"></div>
+        </div>
+      </div>
+
+      <div class="qtiles" id="q-tiles"></div>
+
+      <details class="fold" id="fold-q">
+        <summary>O que entrou nessa conta</summary>
+        <div class="body">
+          <div class="fx" id="q-fx"></div>
+          <p class="note">O rápido cobra só o que a máquina gasta sozinha: filamento, energia, desgaste, custo fixo e a reserva de falhas. <b>Não</b> entram a sua mão de obra, insumos nem embalagem — então é um piso, não um preço final. Para o preço de verdade, use a <button type="button" class="golink" data-go="calc">calculadora completa</button>.</p>
+        </div>
+      </details>
+
+      <div class="btnrow" style="margin-top:14px">
+        <button type="button" class="btn primary" id="btn-q-full">Levar para a calculadora completa</button>
+      </div>
+      <div class="btnrow">
+        <button type="button" class="btn ghost" id="btn-q-clear">Limpar</button>
+      </div>
+    </section>
 
     <!-- ============ CALCULAR ============ -->
     <section class="view" id="v-calc">
@@ -2014,6 +2138,8 @@ var HELP = {
   purga:{t:'Torre de purga e troca de cor', d:'O filamento que o fatiador joga fora a cada troca: torre de purga, prime tower e o que sai no lixo do AMS. Pegue o número do próprio fatiador — no Bambu e no Orca ele aparece como "flush" ou na estimativa de peso da mesa. Já entra no custo e dá baixa no estoque.', e:'4 trocas × 6,5 g = 26 g de purga'},
   importar:{t:'Importar do fatiador', d:'Arraste o arquivo que o fatiador gerou. Prusa, Orca, Bambu e Cura escrevem gramas, tempo e cores em texto no cabeçalho do G-code — o app lê e preenche os campos. Some o erro de digitação. Como o arquivo já conta purga, brim e suporte, o desperdício é zerado para não cobrar duas vezes.', e:'; filament used [g] = 18.4, 4.1\n; estimated printing time = 2h 30m'},
   faixas:{t:'Preço por faixa de quantidade', d:'O preparo é por lote: fatiar, limpar a mesa e ligar custa igual para 1 ou para 50 peças. Diluído, o preço unitário cai com o volume. Esta tabela sai pronta do seu próprio cálculo — é argumento de venda para o cliente subir o pedido, e a margem continua a mesma.', e:'1 un — R$ 49,90 cada\n10 un — R$ 45,10 cada (−10%)\n50 un — R$ 43,20 cada (−13%)'},
+  qpreco:{t:'Preço que vão pagar', d:'O valor por peça que o cliente ofereceu ou que você pensou em cobrar. O app compara com o custo real e diz na hora se sobra ou se falta. Deixe vazio para ver só o custo e o preço mínimo.', e:''},
+  qminimo:{t:'Preço mínimo', d:'O preço em que o lucro é exatamente zero: paga filamento, energia, desgaste da máquina, custo fixo, reserva de falhas e a taxa de recebimento. Um centavo abaixo disso é prejuízo — e ele ainda não paga a sua mão de obra.', e:''},
   potencia:{t:'Potência média', d:'Consumo médio em watts durante a impressão. FDM de mesa: 100 W a 250 W. Fechada ou com câmara aquecida: 200 W a 400 W.', e:''}
 };
 var tipEl = null, tipFor = null;
@@ -2070,6 +2196,7 @@ function bindHelp(){
 
 /* ============ navegação ============ */
 var TABS = [
+  {id:'quick',     label:'Rápido',    icon:'<path d="M13 2.5L4.5 13.4h6L11 21.5l8.5-10.9h-6z"/>'},
   {id:'calc',      label:'Calcular',  icon:'<rect x="4" y="2.5" width="16" height="19" rx="2.5"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="12" x2="8" y2="12.01"/><line x1="12" y1="12" x2="12" y2="12.01"/><line x1="16" y1="12" x2="16" y2="12.01"/><line x1="8" y1="17" x2="12" y2="17"/>'},
   {id:'products',  label:'Produtos',  icon:'<path d="M12 2.8l8.2 4.6v9.2L12 21.2 3.8 16.6V7.4z"/><path d="M3.8 7.4L12 12l8.2-4.6"/><line x1="12" y1="12" x2="12" y2="21.2"/>'},
   {id:'buys',      label:'Compras',   icon:'<path d="M6 2.5h12v19l-3-2-3 2-3-2-3 2z"/><line x1="9.5" y1="8" x2="14.5" y2="8"/><line x1="9.5" y1="12" x2="14.5" y2="12"/>'},
@@ -2115,6 +2242,7 @@ function go(id){
   $('main').classList.toggle('single', !showResult);
   hideTip();
   window.scrollTo(0,0);
+  if(id === 'quick') renderQuick();
   if(id === 'saved') renderSaved();
   if(id === 'products'){ renderCatFilter(); renderProducts(); renderCats(); }
   if(id === 'buys'){ renderBuyFilter(); renderBuys(); }
@@ -2124,13 +2252,17 @@ function go(id){
 }
 
 /* ============ selects ============ */
+function fillSelect(el, list){
+  if(!el) return;
+  var keep = el.value;
+  el.innerHTML = list.map(function(x){ return '<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>'; }).join('');
+  if(keep && list.some(function(x){ return x.id === keep; })) el.value = keep;
+}
 function fillSelects(){
-  var p = $('f-printer'), f = $('f-filament');
-  var pv = p.value, fv = f.value;
-  p.innerHTML = S.printers.map(function(x){ return '<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>'; }).join('');
-  f.innerHTML = S.filaments.map(function(x){ return '<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>'; }).join('');
-  if(pv && S.printers.some(function(x){return x.id===pv;})) p.value = pv;
-  if(fv && S.filaments.some(function(x){return x.id===fv;})) f.value = fv;
+  fillSelect($('f-printer'),  S.printers);
+  fillSelect($('f-filament'), S.filaments);
+  fillSelect($('q-printer'),  S.printers);
+  fillSelect($('q-filament'), S.filaments);
 }
 function curPrinter(){ return S.printers.filter(function(x){return x.id===$('f-printer').value;})[0] || S.printers[0] || {watts:0,price:0,life:1,maint:0,hoursYear:1,override:''}; }
 function curFilament(){ return S.filaments.filter(function(x){return x.id===$('f-filament').value;})[0] || S.filaments[0] || {spoolPrice:0,spoolWeight:1000}; }
@@ -2295,6 +2427,163 @@ function compute(){
   };
 }
 
+/* ============ cálculo rápido ============ */
+/* O modo emergência responde uma pergunta só: "nesse preço eu estou perdendo
+   dinheiro?". Por isso ele cobra apenas o que a máquina gasta sozinha —
+   filamento, energia, desgaste, custo fixo e a reserva de falhas. Mão de obra,
+   insumos e embalagem ficam de fora de propósito: o número que sai daqui é o
+   PISO, e qualquer coisa abaixo dele é prejuízo garantido. */
+function qPrinter(){ return S.printers.filter(function(x){return x.id===$('q-printer').value;})[0] || S.printers[0] || {watts:0,price:0,life:1,maint:0,hoursYear:1,override:''}; }
+function qFilament(){ return S.filaments.filter(function(x){return x.id===$('q-filament').value;})[0] || S.filaments[0] || {spoolPrice:0,spoolWeight:1000}; }
+
+function quickCompute(){
+  var p = qPrinter(), f = qFilament(), st = S.settings;
+  var g = Math.max(0, num($('q-grams').value));
+  var h = Math.max(0, num($('q-h').value) + num($('q-m').value)/60);
+
+  var waste   = Math.max(0, num(st.waste))/100;
+  var perGram = num(f.spoolWeight) > 0 ? num(f.spoolPrice)/num(f.spoolWeight) : 0;
+  var material = g * (1 + waste) * perGram;
+  var energy   = (num(p.watts)/1000) * h * num(st.kwh);
+  var machine  = machineHour(p) * h;
+  var overhead = fixedHour() * h;
+
+  var subtotal = material + energy + machine + overhead;
+  var failR = Math.min(0.95, Math.max(0, num(st.fail)/100));
+  var cost  = subtotal/(1 - failR);
+  var feeR  = Math.min(0.95, Math.max(0, num(st.fee)/100));
+
+  /* piso: o preço em que o lucro é exatamente zero depois da taxa */
+  var floor = cost/(1 - feeR);
+  var mR = Math.max(0, margin/100);
+  var suggested = mode === 'margem'
+    ? (mR + feeR < 0.95 ? cost/(1 - mR - feeR) : 0)
+    : (cost * (1 + mR))/(1 - feeR);
+
+  var price  = Math.max(0, num($('q-price').value));
+  var fee    = price * feeR;
+  var profit = price - fee - cost;
+
+  return {
+    g:g, h:h, perGram:perGram,
+    material:material, energy:energy, machine:machine, overhead:overhead,
+    subtotal:subtotal, reserve:cost - subtotal, cost:cost,
+    floor:floor, suggested:suggested,
+    price:price, fee:fee, feeR:feeR, failR:failR, waste:waste,
+    profit:profit,
+    realMargin: price > 0 ? profit/price : 0,
+    profitHour: h > 0 ? profit/h : 0,
+    machineHour:machineHour(p), fixedHour:fixedHour(),
+    watts:num(p.watts), kwh:num(st.kwh), qty:1,
+    filled: g > 0 || h > 0
+  };
+}
+
+function verdictHtml(r){
+  var k, v, s, cls;
+  if(!r.filled){
+    return '<div class="verdict-in idle empty">' +
+      '<span class="vk">O veredicto aparece aqui</span>' +
+      '<span class="vs">Informe as <b>gramas</b> e o <b>tempo</b> da peça — os dois números que o fatiador mostra depois de fatiar. Com o preço oferecido no último campo, o app diz na hora se sobra ou se falta.</span></div>';
+  } else if(r.price <= 0){
+    cls = 'idle';
+    k = 'Custo da peça';
+    v = brl(r.cost);
+    s = 'Abaixo de <b>' + brl(r.floor) + '</b> você perde dinheiro. Digite o preço oferecido para ver o veredicto.';
+  } else if(r.profit < -0.005){
+    cls = 'bad';
+    k = 'Prejuízo';
+    v = '−' + brl(-r.profit);
+    s = 'Nesse preço você paga para trabalhar. Faltam <b>' + brl(r.floor - r.price) +
+        '</b> só para empatar — o mínimo é <b>' + brl(r.floor) + '</b>.';
+  } else if(r.realMargin < 0.05){
+    cls = 'even';
+    k = 'No empate';
+    v = brl(r.profit);
+    s = 'Sobram só <b>' + dec(r.realMargin*100,1) + '%</b> do preço, e isso ainda é antes da sua mão de obra. Peça pelo menos <b>' +
+        brl(r.suggested) + '</b>.';
+  } else {
+    cls = 'good';
+    k = 'Dá lucro';
+    v = brl(r.profit);
+    s = 'Sobram <b>' + dec(r.realMargin*100,0) + '%</b> do preço' +
+        (r.h > 0 ? ', o que dá <b>' + brl(r.profitHour) + '/h</b> de máquina' : '') +
+        '. Ainda falta descontar a sua mão de obra e a embalagem.';
+  }
+  return '<div class="verdict-in ' + cls + '">' +
+    '<span class="vk">' + k + '</span>' +
+    '<span class="vv mono">' + v + '</span>' +
+    '<span class="vs">' + s + '</span></div>';
+}
+
+function renderQuick(){
+  var r = quickCompute();
+  $('q-verdict').innerHTML = verdictHtml(r);
+
+  var tiles = [
+    {k:'Custo da peça', v:r.filled ? brl(r.cost) : '—'},
+    {k:'Preço mínimo', v:r.filled ? brl(r.floor) : '—', h:'qminimo'},
+    {k:(mode === 'margem' ? 'Sugerido · ' : 'Sugerido · +') + dec(margin,0) + '%', v:(r.filled && r.suggested > 0) ? brl(r.suggested) : '—'},
+    {k:'Lucro / hora', v:(r.price > 0 && r.h > 0) ? brl(r.profitHour) + '/h' : '—', h:'lucrohora',
+     c:(r.price > 0 && r.h > 0) ? (r.profitHour >= 0 ? 'pos' : 'neg') : ''}
+  ];
+  $('q-tiles').innerHTML = tiles.map(function(t){
+    return '<div><span class="k">' + t.k + (t.h ? helpBtn(t.h) : '') + '</span>' +
+           '<span class="v ' + (t.c || '') + '">' + t.v + '</span></div>';
+  }).join('');
+
+  var chips = r.filled ? roundSuggestions(r.suggested) : [];
+  $('q-chips').innerHTML = chips.map(function(v){
+    return '<button type="button" data-qf="' + v + '">' + brl(v) + '</button>';
+  }).join('');
+  each(qsa($('q-chips'),'[data-qf]'), function(b){
+    b.addEventListener('click', function(){
+      $('q-price').value = dec(+b.getAttribute('data-qf'), 2);
+      renderQuick();
+    });
+  });
+
+  var fx = fxRow('Filamento', dec(r.g,1) + ' g' + (r.waste > 0 ? ' + ' + dec(r.waste*100,0) + '% desperdício' : '') +
+                 ' × ' + brl(r.perGram) + '/g', r.material) +
+           fxRow('Energia', '(' + dec(r.watts,0) + ' W ÷ 1000) × ' + dec(r.h,2) + ' h × ' + brl(r.kwh) + '/kWh', r.energy) +
+           fxRow('Máquina', brl(r.machineHour) + '/h × ' + dec(r.h,2) + ' h  (depreciação + manutenção)', r.machine);
+  if(r.overhead > 0) fx += fxRow('Custo fixo', brl(r.fixedHour) + '/h × ' + dec(r.h,2) + ' h', r.overhead);
+  if(r.reserve > 0)  fx += fxRow('Reserva de falhas', brl(r.subtotal) + ' ÷ ' + dec(1 - r.failR,2) + ' — reserva de ' + dec(r.failR*100,0) + '%', r.reserve);
+  fx += fxRow('<b>Custo da peça</b>', '', r.cost);
+  if(r.price > 0 && r.fee > 0) fx += fxRow('Taxa de recebimento', dec(r.feeR*100,1) + '% sobre ' + brl(r.price), -r.fee);
+  $('q-fx').innerHTML = fx;
+}
+
+function bindQuick(){
+  ['q-grams','q-h','q-m','q-price'].forEach(function(id){
+    $(id).addEventListener('input', renderQuick);
+  });
+  ['q-printer','q-filament'].forEach(function(id){
+    $(id).addEventListener('change', renderQuick);
+  });
+  /* o rápido é a porta de entrada da pressa: o que foi digitado aqui não pode
+     se perder quando a conversa vira um orçamento de verdade */
+  $('btn-q-full').addEventListener('click', function(){
+    setMulti(false);
+    scope = 'unit'; setSeg('seg-scope','unit');
+    $('f-grams').value = $('q-grams').value;
+    $('f-h').value     = $('q-h').value;
+    $('f-m').value     = $('q-m').value;
+    $('f-qty').value   = '1';
+    $('f-final').value = $('q-price').value;
+    if($('q-printer').value)  $('f-printer').value  = $('q-printer').value;
+    if($('q-filament').value) $('f-filament').value = $('q-filament').value;
+    gcMsgHtml('');
+    render();
+    go('calc');
+  });
+  $('btn-q-clear').addEventListener('click', function(){
+    ['q-grams','q-h','q-m','q-price'].forEach(function(id){ $(id).value = ''; });
+    renderQuick();
+    $('q-grams').focus();
+  });
+}
+
 var BANDS = [
   {k:'material', n:'Filamento',   c:'#FF6B2C'},
   {k:'energy',   n:'Energia',     c:'#E4B429'},
@@ -2373,9 +2662,22 @@ function render(){
   var shown = BANDS.map(function(b){ return {b:b, v: Math.max(0, r[b.k]||0)}; }).filter(function(x){ return x.v > 0.0001; });
   var sum = shown.reduce(function(a,x){ return a + x.v; }, 0) || 1;
 
+  /* nada preenchido ainda: a pilha e a legenda dão lugar a um recado, senão a
+     coluna cinza vazia e uma fileira de travessões parecem tela quebrada */
+  var wrap = document.querySelector('#r-card .stackwrap');
+  wrap.classList.toggle('empty', !shown.length);
+  $('strip').classList.toggle('idle', !(r.price > 0));
+  if(!shown.length){
+    wrap.innerHTML = '<div class="stackempty">'+
+      '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="2.5" width="16" height="19" rx="2.5"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="12" x2="8" y2="12.01"/><line x1="12" y1="12" x2="12" y2="12.01"/><line x1="16" y1="12" x2="16" y2="12.01"/></svg>'+
+      '<span class="t">O preço aparece aqui</span>'+
+      '<span class="s">Informe as gramas e o tempo da peça — ou arraste o arquivo do fatiador — e a pilha mostra para onde vai cada real.</span></div>';
+  } else {
+  /* o recado ocupou o lugar da pilha: remonta os dois nós antes de pintar */
+  if(!$('stack')) wrap.innerHTML = '<div class="stack" id="stack"></div><div class="legend" id="legend"></div>';
   $('stack').innerHTML = shown.map(function(x){
     return '<div class="band" style="flex-grow:'+(x.v/sum*100).toFixed(3)+';background:'+x.b.c+'" title="'+x.b.n+'"></div>';
-  }).join('') || '<div class="band" style="flex-grow:1;background:var(--surface3)"></div>';
+  }).join('');
 
   $('legend').innerHTML = shown.slice().reverse().map(function(x){
     return '<div class="lrow"><span class="dot" style="background:'+x.b.c+'"></span>'+
@@ -2383,6 +2685,7 @@ function render(){
            '<span class="vl">'+brl(x.v)+'</span>'+
            '<span class="pc">'+dec(x.v/sum*100,0)+'%</span></div>';
   }).join('') + '<div class="lrow total"><span class="dot" style="background:transparent"></span><span class="nm">Preço</span><span class="vl">'+brl(r.price)+'</span><span class="pc"></span></div>';
+  }
 
   $('r-pg').textContent    = r.g > 0 ? brl(r.price/r.g) : '—';
   $('r-ph').textContent    = r.h > 0 ? brl(r.price/r.h) : '—';
@@ -5618,7 +5921,11 @@ var TOUR = [
 
   {sel:['#topnav','#tabbar'],
    t:'O menu do app',
-   d:'São sete telas. <b>Calcular</b> é onde você passa a maior parte do tempo; as outras guardam os seus dados e mostram como o mês está indo.'},
+   d:'São oito telas. <b>Calcular</b> é onde você passa a maior parte do tempo; as outras guardam os seus dados e mostram como o mês está indo.'},
+
+  {view:'quick', sel:'#v-quick .verdict',
+   t:'Rápido: para emergência',
+   d:'Cliente na sua frente e um preço na mesa? Aqui são <b>três campos</b> — gramas, tempo e o valor oferecido — e um veredicto: dá lucro, empata ou é prejuízo. Serve para não dizer sim a um preço ruim; o preço de verdade sai na tela ao lado.'},
 
   {view:'cadastros', cad:'printers', sel:'#seg-cad',
    t:'Comece pelos Cadastros',
@@ -5846,6 +6153,7 @@ function boot(reload){
   if(reload) refreshSettingsInputs();
   paintFixedBox();
   render();
+  renderQuick();
 }
 
 /* faixa no topo no celular, dentro da coluna direita no desktop */
@@ -5874,6 +6182,7 @@ bindHelp();
 bindGoLinks();
 bindEmptyActions();
 bindCalc();
+bindQuick();
 bindImport();
 bindOrder();
 bindProducts();
