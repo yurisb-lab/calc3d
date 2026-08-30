@@ -718,6 +718,8 @@ h2.section .amt{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size
 textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;line-height:1.5;resize:vertical}
 .note{font-size:12.5px;color:var(--ink2);margin:12px 0 0;line-height:1.6}
 .note code,.ol code{font-family:'IBM Plex Mono',monospace;font-size:11.5px;background:var(--surface3);color:var(--ink);padding:1px 5px;border-radius:4px}
+.orgcode{font-family:'IBM Plex Mono',monospace;font-size:17px;font-weight:600;letter-spacing:1.5px;background:var(--surface3);color:var(--ink);border:1px solid var(--line);border-radius:var(--r-sm);padding:10px 12px;display:block;user-select:all;-webkit-user-select:all;word-break:break-all}
+.orgwho{font-size:13px;color:var(--ink2);padding-left:18px;margin:8px 0 0;line-height:1.7}
 .ol{font-size:13px;color:var(--ink2);padding-left:20px;margin:6px 0 0;line-height:1.7}
 .ol li{margin-bottom:5px}
 .spin{display:inline-block;width:13px;height:13px;border:2px solid var(--line);border-top-color:var(--hot);border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px}
@@ -1775,8 +1777,8 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
       </div>
 
       <div id="set-data" hidden>
-        <p class="cadhint">Seus dados ficam neste aparelho. Sincronize para vê-los no celular e no computador, e exporte de vez em quando como cópia de segurança.</p>
-        <h2 class="section">Sincronização entre aparelhos</h2>
+        <p class="cadhint">Seus dados ficam neste aparelho. Sincronize para vê-los no celular, no computador e nas outras contas da empresa, e exporte de vez em quando como cópia de segurança.</p>
+        <h2 class="section">Sincronização entre aparelhos e contas</h2>
         <div class="card">
           <div class="syncrow"><span class="syncdot" id="sync-dot"></span><span class="st" id="sync-status">Modo local.</span></div>
           <div id="sync-body"></div>
@@ -5384,7 +5386,7 @@ var FB_VERSIONS = ['11.6.1','10.14.1'];
 var dynImport = null;
 try { dynImport = new Function('u', 'return import(u);'); } catch(e){ dynImport = null; }
 
-var SYNC = {status:'local', msg:'', cfg:null, uid:null, email:null,
+var SYNC = {status:'local', msg:'', cfg:null, uid:null, email:null, org:null, members:[],
             applying:false, ready:{}, F:null, U:null, db:null, auth:null, unsub:[], lastAt:0, busy:false};
 var shadow = {}, timers = {};
 var pendingRender = {};
@@ -5426,8 +5428,16 @@ function refreshShadow(){
   shadow.__set = JSON.stringify(S.settings);
 }
 function later(key, fn){ clearTimeout(timers[key]); timers[key] = setTimeout(fn, 700); }
-function online(){ return SYNC.status === 'online' && SYNC.uid && SYNC.F; }
-function dref(coll, id){ return SYNC.F.doc(SYNC.db, 'users', SYNC.uid, coll, id); }
+function online(){ return SYNC.status === 'online' && SYNC.uid && SYNC.org && SYNC.F; }
+/* Os dados ficam na pasta da EMPRESA, não na de cada usuário: é isso que faz
+   as contas dos sócios e funcionários enxergarem o mesmo catálogo. */
+function oref(){
+  var a = [SYNC.db, 'orgs', SYNC.org];
+  for(var i = 0; i < arguments.length; i++) a.push(arguments[i]);
+  return SYNC.F.doc.apply(null, a);
+}
+function ocoll(name){ return SYNC.F.collection(SYNC.db, 'orgs', SYNC.org, name); }
+function dref(coll, id){ return oref(coll, id); }
 function clean(o){
   var r = {};
   Object.keys(o).forEach(function(k){
@@ -5466,7 +5476,7 @@ function syncPush(){
   }
 }
 function pushSettings(){
-  return SYNC.F.setDoc(SYNC.F.doc(SYNC.db,'users',SYNC.uid,'meta','settings'), clean(S.settings)).then(syncOk, syncErr);
+  return SYNC.F.setDoc(oref('meta','settings'), clean(S.settings)).then(syncOk, syncErr);
 }
 function pushColl(coll){
   return Promise.all((S[coll]||[]).map(function(it){
@@ -5487,7 +5497,7 @@ function syncErr(e){
 /* fotos na nuvem */
 function cloudPhotoGet(id){
   if(!online()) return Promise.resolve(null);
-  return SYNC.F.getDoc(SYNC.F.doc(SYNC.db,'users',SYNC.uid,'photos',id)).then(function(s){
+  return SYNC.F.getDoc(oref('photos',id)).then(function(s){
     if(!s.exists()) return null;
     var d = s.data();
     return {id:id, thumb:d.thumb, full:d.full, at:d.at||0};
@@ -5495,12 +5505,12 @@ function cloudPhotoGet(id){
 }
 function cloudPhotoPut(id, v){
   if(!online()) return;
-  SYNC.F.setDoc(SYNC.F.doc(SYNC.db,'users',SYNC.uid,'photos',id),
+  SYNC.F.setDoc(oref('photos',id),
     {thumb:v.thumb, full:v.full, at:v.at || Date.now()}).catch(function(){});
 }
 function cloudPhotoDel(id){
   if(!online()) return;
-  SYNC.F.deleteDoc(SYNC.F.doc(SYNC.db,'users',SYNC.uid,'photos',id)).catch(function(){});
+  SYNC.F.deleteDoc(oref('photos',id)).catch(function(){});
 }
 function pushAllPhotos(){
   return photoLocalKeys().then(function(keys){
@@ -5535,6 +5545,114 @@ function parseCfg(txt){
   return o;
 }
 
+
+/* ============ empresa (a pasta compartilhada pelas contas) ============ */
+/* Cada conta entra com o e-mail dela, mas todas apontam para a MESMA empresa.
+   O código da empresa é o endereço dessa pasta no Firestore e funciona como
+   convite: quem tem o código entra; quem não tem, não enxerga nada. */
+var ORG_ALPHA = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';   /* sem 0/O/1/I, para ditar por telefone */
+var ORG_LAST = 'calc3d_org';   /* última empresa usada neste aparelho, para abrir offline */
+function newOrgId(){
+  var n = 12, out = '', i;
+  var buf = null;
+  try {
+    if(window.crypto && window.crypto.getRandomValues){ buf = new Uint8Array(n); window.crypto.getRandomValues(buf); }
+  } catch(e){ buf = null; }
+  for(i = 0; i < n; i++){
+    var r = buf ? buf[i] : Math.floor(Math.random()*256);
+    out += ORG_ALPHA.charAt(r % ORG_ALPHA.length);
+  }
+  return out;
+}
+function normOrgCode(txt){
+  var v = String(txt||'').toUpperCase(), out = '';
+  for(var i = 0; i < v.length; i++){
+    if(ORG_ALPHA.indexOf(v.charAt(i)) > -1) out += v.charAt(i);
+  }
+  return out;
+}
+function orgPretty(id){
+  var v = String(id||''), out = [];
+  for(var i = 0; i < v.length; i += 4) out.push(v.slice(i, i+4));
+  return out.join('-');
+}
+function profileRef(uid){ return SYNC.F.doc(SYNC.db, 'users', uid, 'meta', 'profile'); }
+function memberRef(org, uid){ return SYNC.F.doc(SYNC.db, 'orgs', org, 'members', uid); }
+/* Cartão de visita da empresa: existe só para o colega conferir que o código
+   está certo antes de entrar. Não guarda nada além da data de criação. */
+function orgInfoRef(org){ return SYNC.F.doc(SYNC.db, 'orgs', org, 'meta', 'info'); }
+
+/* Grava o crachá do usuário na empresa e guarda a empresa no perfil dele. */
+function joinOrg(org, role){
+  var F = SYNC.F, uid = SYNC.uid;
+  return F.setDoc(memberRef(org, uid),
+      {email: SYNC.email || '', role: role || 'member', at: Date.now()}, {merge:true})
+    .then(function(){
+      return F.setDoc(profileRef(uid), {orgId: org, email: SYNC.email || '', at: Date.now()}, {merge:true});
+    });
+}
+
+/* Descobre a empresa da conta. Conta nova ganha uma empresa própria; contas
+   antigas trazem junto o que já estava na pasta pessoal delas. */
+function resolveOrg(){
+  var F = SYNC.F, uid = SYNC.uid;
+  return F.getDoc(profileRef(uid)).then(function(snap){
+    var d = (snap.exists() && snap.data()) || {};
+    if(d.orgId){
+      /* mantém o crachá em dia (e-mail novo, primeira vez neste aparelho) */
+      return joinOrg(d.orgId, d.role).then(function(){ return d.orgId; },
+                                           function(){ return d.orgId; });
+    }
+    var org = newOrgId();
+    return F.setDoc(orgInfoRef(org), {createdAt: Date.now()}, {merge:true})
+      .then(function(){ return joinOrg(org, 'owner'); })
+      .then(function(){ return liftLegacy(org); })
+      .then(function(){ return org; });
+  }, function(e){
+    /* sem rede e sem cache do perfil: usa a última empresa deste aparelho */
+    var last = load(ORG_LAST);
+    if(last) return last;
+    throw e;
+  });
+}
+
+/* Sobe para a empresa o que a conta tinha na pasta antiga users/{uid}. */
+function liftLegacy(org){
+  var F = SYNC.F, db = SYNC.db, uid = SYNC.uid;
+  var names = COLLS.concat(['photos']);
+  function copyColl(name){
+    return F.getDocs(F.collection(db,'users',uid,name)).then(function(snap){
+      if(snap.empty) return null;
+      var jobs = [];
+      snap.forEach(function(d){ jobs.push(F.setDoc(F.doc(db,'orgs',org,name,d.id), d.data() || {})); });
+      return Promise.all(jobs);
+    }).catch(function(){ return null; });
+  }
+  var first = F.getDoc(F.doc(db,'users',uid,'meta','settings')).then(function(snap){
+    if(!snap.exists()) return null;
+    return F.setDoc(F.doc(db,'orgs',org,'meta','settings'), snap.data() || {});
+  }).catch(function(){ return null; });
+  return names.reduce(function(chain, name){
+    return chain.then(function(){ return copyColl(name); });
+  }, first).catch(function(){ return null; });
+}
+
+/* Troca para a empresa de um colega, usando o código que ele passou. */
+function switchOrg(code){
+  var org = normOrgCode(code);
+  if(org.length < 6) return Promise.reject(new Error('Código incompleto. Confira com quem te passou.'));
+  if(org === SYNC.org) return Promise.reject(new Error('Você já está nesta empresa.'));
+  return SYNC.F.getDoc(orgInfoRef(org)).then(function(snap){
+    if(!snap.exists()) throw new Error('Não achamos empresa com esse código. Confira letra por letra.');
+    return joinOrg(org, 'member');
+  }).then(function(){
+    detach();
+    SYNC.org = org; SYNC.members = [];
+    save(ORG_LAST, org);
+    attach();
+  });
+}
+
 function startSync(){
   SYNC.cfg = cfgLoad();
   if(!SYNC.cfg){ setSync('local',''); return; }
@@ -5552,8 +5670,17 @@ function startSync(){
     try { SYNC.U.setPersistence(SYNC.auth, SYNC.U.browserLocalPersistence).catch(function(){}); } catch(e){}
     SYNC.U.onAuthStateChanged(SYNC.auth, function(user){
       detach();
-      if(user){ SYNC.uid = user.uid; SYNC.email = user.email || ''; attach(); }
-      else { SYNC.uid = null; SYNC.email = ''; setSync('signedout',''); }
+      if(!user){ SYNC.uid = null; SYNC.email = ''; SYNC.org = null; SYNC.members = []; setSync('signedout',''); return; }
+      SYNC.uid = user.uid; SYNC.email = user.email || ''; SYNC.org = null; SYNC.members = [];
+      setSync('connecting','');
+      resolveOrg().then(function(org){
+        if(SYNC.uid !== user.uid) return;          /* trocou de conta no meio do caminho */
+        SYNC.org = org; save(ORG_LAST, org); attach();
+      }, function(e){
+        if(SYNC.uid !== user.uid) return;
+        syncErr(e);
+        if(SYNC.status !== 'error') setSync('error','Não deu para abrir a pasta da empresa: ' + ((e && (e.code || e.message)) || e));
+      });
     });
   }).catch(function(e){
     if(navigator.onLine === false){ setSync('nonet',''); }
@@ -5595,11 +5722,21 @@ function applyRemote(fn){
   }
 }
 function attach(){
-  var F = SYNC.F, db = SYNC.db, uid = SYNC.uid;
+  var F = SYNC.F, db = SYNC.db, org = SYNC.org;
+  if(!org) return;
   setSync('online','');
   var hadLocal = S.products.length || S.buys.length || S.jobs.length;
 
-  SYNC.unsub.push(F.onSnapshot(F.doc(db,'users',uid,'meta','settings'), function(snap){
+  /* quem mais tem acesso a esta empresa */
+  SYNC.unsub.push(F.onSnapshot(F.collection(db,'orgs',org,'members'), function(snap){
+    var m = [];
+    snap.forEach(function(d){ var o = d.data() || {}; m.push({uid:d.id, email:o.email || '', role:o.role || 'member'}); });
+    m.sort(function(a,b){ return (a.email||'').localeCompare(b.email||''); });
+    SYNC.members = m;
+    updateSyncUI();
+  }, function(){}));
+
+  SYNC.unsub.push(F.onSnapshot(F.doc(db,'orgs',org,'meta','settings'), function(snap){
     var fromCache = !!(snap.metadata && snap.metadata.fromCache);
     if(snap.exists()){
       var d = snap.data();
@@ -5616,7 +5753,7 @@ function attach(){
   }, syncErr));
 
   COLLS.forEach(function(coll){
-    SYNC.unsub.push(F.onSnapshot(F.collection(db,'users',uid,coll), function(snap){
+    SYNC.unsub.push(F.onSnapshot(F.collection(db,'orgs',org,coll), function(snap){
       /* O PRIMEIRO snapshot vem do cache local e num aparelho novo chega vazio,
          mesmo com dados no servidor. Tratar isso como "a nuvem está vazia" fazia
          o app subir o cadastro-semente por cima da nuvem (duplicatas) e pular o
@@ -5675,7 +5812,9 @@ function updateSyncUI(){
   else if(SYNC.status === 'signedout'){ cls = 'off'; txt = 'Firebase configurado. Falta entrar na sua conta.'; btxt = 'Entrar'; }
   else if(SYNC.status === 'online'){
     cls = 'on';
-    txt = 'Sincronizado como ' + (SYNC.email || 'conta') + (SYNC.lastAt ? ' · ' + new Date(SYNC.lastAt).toLocaleTimeString('pt-BR') : '');
+    txt = 'Sincronizado como ' + (SYNC.email || 'conta') +
+          ' · empresa ' + orgPretty(SYNC.org || '') +
+          (SYNC.lastAt ? ' · ' + new Date(SYNC.lastAt).toLocaleTimeString('pt-BR') : '');
     btxt = 'Nuvem';
   }
   else if(SYNC.status === 'error'){ cls = 'err'; txt = SYNC.msg || 'Erro na sincronização.'; btxt = 'Erro'; }
@@ -5683,8 +5822,15 @@ function updateSyncUI(){
   stx.textContent = txt;
   badge.className = 'syncbadge' + (SYNC.status === 'local' ? '' : ' show');
   badge.innerHTML = '<span class="syncdot '+cls+'"></span>' + esc(btxt);
-  if(body.getAttribute('data-st') !== SYNC.status){
-    body.setAttribute('data-st', SYNC.status);
+  /* o painel só é redesenhado quando algo nele muda de verdade — senão o
+     código digitado no campo de convite se perderia a cada sincronização */
+  var key = SYNC.status + '|' + (SYNC.org || '') + '|' +
+            SYNC.members.map(function(m){ return m.uid + ':' + m.email; }).join(',') + '|' +
+            (load('calc3d_backup_local') ? '1' : '0');
+  var was = body.getAttribute('data-st') || '';
+  var stepChanged = was.split('|')[0] !== SYNC.status;
+  if(was !== key && (stepChanged || !busyIn('#sync-body'))){
+    body.setAttribute('data-st', key);
     body.innerHTML = syncBody();
     wireSyncBody();
   }
@@ -5710,7 +5856,8 @@ function syncBody(){
       '<li>Em <b>Configurações do projeto › Seus apps</b>, clique no ícone <b>&lt;/&gt;</b> (Web) e registre o app.</li>'+
       '<li>Copie o bloco <code>firebaseConfig</code> que aparece e cole aqui em cima.</li>'+
       '<li>Em <b>Firestore › Regras</b>, cole as regras que estão no arquivo <code>FIREBASE.md</code> do repositório e publique.</li>'+
-      '<li>Repita este passo 5 nos outros aparelhos, entrando com o <b>mesmo e-mail e senha</b>.</li>'+
+      '<li>Repita este passo 5 nos outros aparelhos. Cada pessoa entra com a conta dela e usa o '+
+      '<b>código da empresa</b> deste painel para ver os mesmos dados.</li>'+
       '</ol>'+
       '<p class="note">Essa configuração não é segredo — ela vai no código de qualquer app web. Quem protege os dados são as regras do Firestore e a sua senha.</p>'+
       '</div></details>'+
@@ -5723,11 +5870,14 @@ function syncBody(){
       '<button type="button" class="btn" id="sy-up">Criar conta</button></div>'+
       '<div class="btnrow"><button type="button" class="btn ghost" id="sy-reset">Esqueci a senha</button></div>'+
       '<div id="sy-msg"></div>'+
-      '<p class="note">Use o <b>mesmo e-mail e senha</b> nos 2 ou 3 aparelhos. É isso que faz os dados aparecerem em todos — não precisa configurar mais nada.</p>'+
+      '<p class="note">Cada pessoa da empresa pode ter a <b>sua própria conta</b>. Depois de entrar, use o '+
+      '<b>código da empresa</b> que aparece neste painel para juntar as contas — aí todas veem o mesmo catálogo, '+
+      'os mesmos clientes e os mesmos orçamentos. No seu segundo aparelho, entrar com o mesmo e-mail também funciona.</p>'+
       '<div class="btnrow" style="margin-top:10px"><button type="button" class="btn ghost" id="sy-forget">Usar só neste aparelho, sem nuvem</button></div>';
   }
   if(SYNC.status === 'online'){
-    return '<p class="note" style="margin-top:0">Tudo o que você mudar aqui aparece nos outros aparelhos em segundos. Sem internet o app continua funcionando e envia quando voltar.</p>'+
+    return '<p class="note" style="margin-top:0">Tudo o que você mudar aqui aparece nos outros aparelhos e nas contas da equipe em segundos. Sem internet o app continua funcionando e envia quando voltar.</p>'+
+      orgPanel()+
       '<div class="btnrow" style="margin-top:12px"><button type="button" class="btn" id="sy-upload">Enviar dados deste aparelho</button>'+
       '<button type="button" class="btn" id="sy-out">Sair da conta</button></div>'+
       '<div id="sy-msg"></div>'+
@@ -5740,6 +5890,34 @@ function syncBody(){
   }
   return '';
 }
+/* painel da empresa: código para convidar, quem já tem acesso e a entrada
+   para quem vai usar o código de um colega */
+function orgPanel(){
+  var who = SYNC.members.length
+    ? '<ul class="orgwho">'+SYNC.members.map(function(m){
+        return '<li>'+esc(m.email || 'conta sem e-mail')+
+          (m.uid === SYNC.uid ? ' <span class="hint">— você</span>' : '')+
+          (m.role === 'owner' ? ' <span class="hint">— criou a empresa</span>' : '')+'</li>';
+      }).join('')+'</ul>'
+    : '<p class="note">Só esta conta, por enquanto.</p>';
+  return '<div class="field" style="margin-top:16px"><label>Código da empresa '+
+      '<span class="hint">— quem entrar com ele vê os mesmos dados</span></label>'+
+      '<code class="orgcode" id="sy-org-code">'+esc(orgPretty(SYNC.org || ''))+'</code></div>'+
+    '<div class="btnrow"><button type="button" class="btn" id="sy-org-copy">Copiar código</button></div>'+
+    '<p class="note" style="margin-bottom:0"><b>Quem tem acesso a esta empresa</b></p>'+ who +
+    '<p class="note">Para a outra conta enxergar estes dados: entre nela, abra este mesmo painel, '+
+      'clique em <b>Entrar na empresa de um colega</b> e cole o código acima.</p>'+
+    '<details class="fold" style="margin-top:12px"><summary>Entrar na empresa de um colega</summary><div class="body">'+
+      '<div class="field"><label for="sy-org-in">Código que ele te passou</label>'+
+      '<input id="sy-org-in" type="text" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="XXXX-XXXX-XXXX"></div>'+
+      '<div class="btnrow"><button type="button" class="btn primary" id="sy-org-join">Entrar nesta empresa</button></div>'+
+      '<div id="sy-org-msg"></div>'+
+      '<p class="note">Os dados que estavam nesta conta continuam guardados na empresa antiga — '+
+      'nada é apagado. Se a empresa do colega já tiver catálogo, ele passa a valer aqui; '+
+      'se estiver vazia, o que está neste aparelho sobe para ela.</p>'+
+    '</div></details>';
+}
+
 function authMsg(e){
   var c = (e && e.code) ? String(e.code) : '';
   if(c.indexOf('invalid-email') > -1) return 'E-mail inválido.';
@@ -5802,6 +5980,23 @@ function wireSyncBody(){
     save('calc3d_backup_local', '');
     var b = $('sync-body'); if(b) b.removeAttribute('data-st');
     updateSyncUI();
+  });
+  if((el = $('sy-org-copy'))) el.addEventListener('click', function(){
+    var code = orgPretty(SYNC.org || ''), b = el;
+    function done(){ b.textContent = 'Copiado!'; setTimeout(function(){ b.textContent = 'Copiar código'; }, 1800); }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(code).then(done, function(){ prompt('Copie o código da empresa:', code); });
+    } else { prompt('Copie o código da empresa:', code); }
+  });
+  if((el = $('sy-org-join'))) el.addEventListener('click', function(){
+    var m = $('sy-org-msg'), code = $('sy-org-in').value;
+    if(!confirm('Passar esta conta para a empresa do código informado?\nOs dados desta conta ficam guardados na empresa atual e você pode voltar com o código dela.')) return;
+    m.innerHTML = '<p class="note"><span class="spin"></span> Entrando na empresa…</p>';
+    switchOrg(code).then(function(){
+      m.innerHTML = '<div class="alert">Pronto. Agora as duas contas usam os mesmos dados.</div>';
+    }, function(e){
+      m.innerHTML = '<div class="alert bad">'+esc((e && e.message) ? e.message : authMsg(e))+'</div>';
+    });
   });
   if((el = $('sy-upload'))) el.addEventListener('click', function(){
     if(!confirm('Enviar impressoras, filamentos, categorias, produtos, compras, fotos e orçamentos deste aparelho para a nuvem?\nItens com o mesmo nome/identificador na nuvem serão sobrescritos por estes.')) return;
