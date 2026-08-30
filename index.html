@@ -1209,8 +1209,21 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
           <span class="s">.gcode, .gcode.gz ou .3mf do Prusa, Orca, Bambu ou Cura — o app lê gramas e tempo sozinho</span>
         </div>
         <p class="suphint" style="margin:-4px 0 12px">Ou toque na área acima para escolher o arquivo.<button type="button" class="help" data-h="importar" aria-label="O que é isso?">?</button></p>
-        <input type="file" id="gc-file" accept=".gcode,.gco,.g,.gz,.3mf,.gcode.gz" hidden>
+        <!-- sem accept no HTML: no celular ele esconde o .gcode. Quem coloca o
+             filtro (só no computador) é o bindImport. -->
+        <input type="file" id="gc-file" hidden>
         <div id="gc-msg"></div>
+        <details class="fold" id="gc-help" style="margin:0 0 14px">
+          <summary>Não estou achando o arquivo no celular</summary>
+          <div class="body">
+            <p class="note"><b>Primeiro:</b> o fatiador roda no computador, então o arquivo precisa chegar ao celular. Mande para você mesmo pelo WhatsApp, Google Drive, Telegram ou e-mail, ou ligue o cabo. Depois de baixado ele fica em <b>Downloads</b>.</p>
+            <p class="note"><b>No Android:</b> o seletor abre em <b>Recentes</b>, que quase só mostra foto. Toque no menu <b>☰</b> (ou nos três pontinhos) e escolha <b>Downloads</b>, <b>Drive</b> ou o nome do aparelho para ver todos os arquivos.</p>
+            <p class="note"><b>No iPhone:</b> escolha <b>Procurar</b> e vá em <b>No meu iPhone</b> ou <b>iCloud Drive</b> — a pasta onde o app de download salvou.</p>
+            <p class="note"><b>Se o arquivo aparecer apagado</b>, era filtro do seletor: o app agora aceita qualquer arquivo e confere o conteúdo depois. Se o nome tiver chegado sem extensão, pode mandar assim mesmo — o app reconhece o arquivo pelo que tem dentro.</p>
+            <p class="note">Bambu Studio e Orca exportam <b>.gcode.3mf</b>: serve. Já o <b>.stl</b> não serve — ele é o modelo, ainda sem gramas nem tempo.</p>
+            <p class="note">Sem o arquivo à mão, digite gramas e tempo logo abaixo. O cálculo é o mesmo.</p>
+          </div>
+        </details>
         <div class="row">
           <div class="field" id="fld-grams">
             <label for="f-grams">Gramas<button type="button" class="help" data-h="gramas" aria-label="O que é isso?">?</button></label>
@@ -2289,7 +2302,7 @@ var HELP = {
   vidautil:{t:'Vida útil', d:'Quantas horas de impressão a máquina deve durar antes da troca. Referência: 3.000 a 10.000 h. Conservador e comum: 4.000 a 5.000 h.', e:''},
   multicolor:{t:'Multicolor / AMS', d:'Peça de uma cor só: deixe em "1 filamento". Com AMS, CFS ou MMU, marque "Multicolor" e informe as gramas de CADA cor. A troca de cor gasta filamento fora da peça — a torre de purga entra em gramas, não em porcentagem, porque em peça pequena ela pesa mais que a própria peça.', e:'Corpo branco 18 g\nDetalhe vermelho 4 g\nPurga 26 g → 48 g no rolo'},
   purga:{t:'Torre de purga e troca de cor', d:'O filamento que o fatiador joga fora a cada troca: torre de purga, prime tower e o que sai no lixo do AMS. Pegue o número do próprio fatiador — no Bambu e no Orca ele aparece como "flush" ou na estimativa de peso da mesa. Já entra no custo e dá baixa no estoque.', e:'4 trocas × 6,5 g = 26 g de purga'},
-  importar:{t:'Importar do fatiador', d:'Arraste o arquivo que o fatiador gerou. Prusa, Orca, Bambu e Cura escrevem gramas, tempo e cores em texto no cabeçalho do G-code — o app lê e preenche os campos. Some o erro de digitação. Como o arquivo já conta purga, brim e suporte, o desperdício é zerado para não cobrar duas vezes.', e:'; filament used [g] = 18.4, 4.1\n; estimated printing time = 2h 30m'},
+  importar:{t:'Importar do fatiador', d:'Arraste o arquivo que o fatiador gerou. Prusa, Orca, Bambu e Cura escrevem gramas, tempo e cores em texto no cabeçalho do G-code — o app lê e preenche os campos. Some o erro de digitação. Como o arquivo já conta purga, brim e suporte, o desperdício é zerado para não cobrar duas vezes. No celular, o arquivo precisa estar baixado no aparelho: se o seletor não mostrar, abra o menu dele e vá em Downloads ou Drive.', e:'; filament used [g] = 18.4, 4.1\n; estimated printing time = 2h 30m'},
   faixas:{t:'Preço por faixa de quantidade', d:'O preparo é por lote: fatiar, limpar a mesa e ligar custa igual para 1 ou para 50 peças. Diluído, o preço unitário cai com o volume. Esta tabela sai pronta do seu próprio cálculo — é argumento de venda para o cliente subir o pedido, e a margem continua a mesma.', e:'1 un — R$ 49,90 cada\n10 un — R$ 45,10 cada (−10%)\n50 un — R$ 43,20 cada (−13%)'},
   qpreco:{t:'Preço que vão pagar', d:'O valor por peça que o cliente ofereceu ou que você pensou em cobrar. O app compara com o custo real e diz na hora se sobra ou se falta. Deixe vazio para ver só o custo e o preço mínimo.', e:''},
   qminimo:{t:'Preço mínimo', d:'O preço em que o lucro é exatamente zero: paga filamento, energia, desgaste da máquina, custo fixo, reserva de falhas e a taxa de recebimento. Um centavo abaixo disso é prejuízo — e ele ainda não paga a sua mão de obra.', e:''},
@@ -3857,17 +3870,47 @@ function applySliced(res, fileName){
 
   render();
 }
+/* O nome do arquivo nem sempre chega inteiro: Drive, WhatsApp e alguns
+   gerenciadores do Android entregam o G-code como "documento" sem extensão.
+   Os primeiros bytes não mentem — 1F 8B é gzip, PK é ZIP (o 3MF). */
+function gcKind(file, low){
+  if(/\.3mf$/.test(low)) return Promise.resolve('zip');
+  if(/\.gz$/.test(low))  return Promise.resolve('gz');
+  if(/\.(gcode|gco|g)$/.test(low)) return Promise.resolve('text');
+  if(!file.slice) return Promise.resolve('text');
+  return fileBuf(file.slice(0, 4)).then(function(b){
+    var u = new Uint8Array(b);
+    if(u.length > 1 && u[0] === 0x1f && u[1] === 0x8b) return 'gz';
+    if(u.length > 1 && u[0] === 0x50 && u[1] === 0x4b) return 'zip';
+    return 'text';
+  }, function(){ return 'text'; });
+}
 function importSliced(file){
   var drop = $('gc-drop'), low = String(file.name || '').toLowerCase();
   if(file.size > 600*1024*1024){ gcErr('Arquivo grande demais.'); return; }
+  /* sem accept, o seletor mostra tudo — então o recado de "não é este arquivo"
+     precisa ser dado aqui, dizendo o que fazer em seguida */
+  if(/^image\//.test(file.type || '') || /\.(jpe?g|png|heic|heif|webp|gif|bmp|tiff?)$/.test(low)){
+    gcErr('Isso é uma imagem. O app precisa do arquivo que o fatiador gerou (.gcode, .gcode.gz ou .3mf) — de um print da tela ele não consegue tirar as gramas. Sem o arquivo, digite gramas e tempo nos campos abaixo.');
+    return;
+  }
+  if(/\.(stl|obj|3ds|step|stp|ply|dae|f3d|blend|scad|svg)$/.test(low)){
+    gcErr('Esse é o modelo 3D, ainda não fatiado: ele não traz gramas nem tempo. Abra no fatiador, fatie e exporte o G-code (ou o 3MF fatiado do Bambu/Orca).');
+    return;
+  }
+  if(/\.(pdf|docx?|xlsx?|txt|csv|zip|rar|mp4|mov|mp3)$/.test(low)){
+    gcErr('Não é um arquivo de fatia. Mande o .gcode, .gcode.gz ou .3mf que o fatiador gerou.');
+    return;
+  }
   drop.classList.add('busy');
   gcMsgHtml('<div class="gcok"><span class="spin"></span> Lendo ' + esc(file.name || 'arquivo') + '…</div>');
-  var work;
-  if(/\.3mf$/.test(low)) work = fileBuf(file).then(parse3mf);
-  else if(/\.gz$/.test(low)) work = fileBuf(file)
-    .then(function(b){ return gcInflate(new Uint8Array(b), 'gzip'); })
-    .then(function(u){ return parseGcodeText(gcBytesText(u)); });
-  else work = readHeadTail(file).then(parseGcodeText);
+  var work = gcKind(file, low).then(function(kind){
+    if(kind === 'zip') return fileBuf(file).then(parse3mf);
+    if(kind === 'gz') return fileBuf(file)
+      .then(function(b){ return gcInflate(new Uint8Array(b), 'gzip'); })
+      .then(function(u){ return parseGcodeText(gcBytesText(u)); });
+    return readHeadTail(file).then(parseGcodeText);
+  });
   work.then(function(res){
     drop.classList.remove('busy');
     applySliced(res, file.name);
@@ -6183,6 +6226,17 @@ function bindClients(){
 function bindImport(){
   var drop = $('gc-drop'), inp = $('gc-file');
   if(!drop || !inp) return;
+  /* O accept ajuda no computador, mas no celular é uma armadilha: Android e
+     iOS traduzem extensão em tipo MIME e, como .gcode não tem tipo conhecido,
+     o arquivo aparece apagado — ou some do seletor. Sem accept o seletor
+     mostra tudo e quem confere o arquivo é o importSliced. */
+  var touch = !!(window.matchMedia && window.matchMedia('(hover: none), (pointer: coarse)').matches);
+  if(!touch) inp.accept = '.gcode,.gco,.g,.gz,.3mf';
+  else{
+    /* no celular não existe arrastar: o convite tem que ser tocar */
+    var t = drop.querySelector('.t');
+    if(t) t.textContent = 'Toque para escolher o arquivo fatiado';
+  }
   drop.addEventListener('click', function(){ inp.click(); });
   drop.addEventListener('keydown', function(e){
     if(e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar'){ e.preventDefault(); inp.click(); }
