@@ -1474,6 +1474,26 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
         <div id="pd-params"></div>
       </div>
 
+      <h2 class="section">Atualizar pelo fatiador</h2>
+      <div class="card">
+        <div class="drop" id="pd-gc-drop" role="button" tabindex="0">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4"/><path d="M8 8l4-4 4 4"/><path d="M4 15v3a2 2 0 002 2h12a2 2 0 002-2v-3"/></svg>
+          <span class="t">Arraste aqui o arquivo fatiado</span>
+          <span class="s">Refaz as gramas, o tempo e as cores deste produto — e o preço junto</span>
+        </div>
+        <p class="suphint" style="margin:-4px 0 12px">Ou toque na área acima para escolher o arquivo.<button type="button" class="help" data-h="importar" aria-label="O que é isso?">?</button></p>
+        <input type="file" id="pd-gc-file" hidden>
+        <div id="pd-gc-msg"></div>
+        <details class="fold" id="pd-gc-paste" style="margin:0">
+          <summary>Colar os números do Handy ou do fatiador</summary>
+          <div class="body">
+            <p class="note">O Bambu Handy não exporta arquivo. Copie da tela dele o peso, o tempo e os materiais e cole aqui — o produto é atualizado do mesmo jeito.</p>
+            <textarea id="pd-gc-text" placeholder="Mesa&#10;1.9h&#10;0.4mm&#10;32g&#10;PLA 21g&#10;PLA 11g"></textarea>
+            <div class="btnrow" style="margin-top:10px"><button type="button" class="btn" id="btn-pd-gc-text">Ler o texto colado</button></div>
+          </div>
+        </details>
+      </div>
+
       <div class="btnrow" style="margin-top:16px">
         <button type="button" class="btn primary" id="btn-pd-calc">Abrir na calculadora</button>
       </div>
@@ -3891,12 +3911,14 @@ function matchFilament(it){
   });
   return both || byColor || byType || null;
 }
-function gcMsgHtml(html){ $('gc-msg').innerHTML = html; }
-function gcErr(t){ gcMsgHtml('<div class="alert bad">' + esc(t) + '</div>'); }
+/* a mesma leitura serve à calculadora e à ficha do produto: muda a caixa onde
+   a mensagem aparece e quem recebe os números */
+function gcMsgHtml(html, box){ var el = $(box || 'gc-msg'); if(el) el.innerHTML = html; }
+function gcErr(t, box){ gcMsgHtml('<div class="alert bad">' + esc(t) + '</div>', box); }
 
-function applySliced(res, fileName){
+function applySliced(res, fileName, box){
   if(!res || (!res.items.length && !(res.seconds > 0))){
-    gcErr('Não achei gramas nem tempo neste arquivo. Ele foi mesmo gerado pelo fatiador?');
+    gcErr('Não achei gramas nem tempo neste arquivo. Ele foi mesmo gerado pelo fatiador?', box);
     return;
   }
   var items = res.items.slice(0, 16);
@@ -3961,7 +3983,7 @@ function applySliced(res, fileName){
   gcMsgHtml('<div class="gcok"><span class="src">Lido do ' + esc(res.source || 'fatiador') + '</span>' +
     '<b>' + dec(totalG,1) + ' g</b>' +
     (res.seconds > 0 ? ' · <b>' + dec(Math.floor(res.seconds/3600),0) + ' h ' + dec(Math.round(res.seconds/60)%60,0) + ' min</b>' : '') +
-    '<ul><li>' + li.join('</li><li>') + '</li></ul></div>');
+    '<ul><li>' + li.join('</li><li>') + '</li></ul></div>', box);
 
   render();
 }
@@ -3980,25 +4002,28 @@ function gcKind(file, low){
     return 'text';
   }, function(){ return 'text'; });
 }
-function importSliced(file){
-  var drop = $('gc-drop'), low = String(file.name || '').toLowerCase();
-  if(file.size > 600*1024*1024){ gcErr('Arquivo grande demais.'); return; }
+/* destino padrão da leitura: a calculadora. A ficha do produto passa o seu. */
+var GC_CALC = {drop:'gc-drop', box:'gc-msg', apply:applySliced};
+function importSliced(file, to){
+  to = to || GC_CALC;
+  var drop = $(to.drop), box = to.box, low = String(file.name || '').toLowerCase();
+  if(file.size > 600*1024*1024){ gcErr('Arquivo grande demais.', box); return; }
   /* sem accept, o seletor mostra tudo — então o recado de "não é este arquivo"
      precisa ser dado aqui, dizendo o que fazer em seguida */
   if(/^image\//.test(file.type || '') || /\.(jpe?g|png|heic|heif|webp|gif|bmp|tiff?)$/.test(low)){
-    gcErr('Isso é uma imagem. O app precisa do arquivo que o fatiador gerou (.gcode, .gcode.gz ou .3mf) — de um print da tela ele não consegue tirar as gramas. Sem o arquivo, digite gramas e tempo nos campos abaixo.');
+    gcErr('Isso é uma imagem. O app precisa do arquivo que o fatiador gerou (.gcode, .gcode.gz ou .3mf) — de um print da tela ele não consegue tirar as gramas. Sem o arquivo, cole os números da tela ou digite nos campos.', box);
     return;
   }
   if(/\.(stl|obj|3ds|step|stp|ply|dae|f3d|blend|scad|svg)$/.test(low)){
-    gcErr('Esse é o modelo 3D, ainda não fatiado: ele não traz gramas nem tempo. Abra no fatiador, fatie e exporte o G-code (ou o 3MF fatiado do Bambu/Orca).');
+    gcErr('Esse é o modelo 3D, ainda não fatiado: ele não traz gramas nem tempo. Abra no fatiador, fatie e exporte o G-code (ou o 3MF fatiado do Bambu/Orca).', box);
     return;
   }
   if(/\.(pdf|docx?|xlsx?|txt|csv|zip|rar|mp4|mov|mp3)$/.test(low)){
-    gcErr('Não é um arquivo de fatia. Mande o .gcode, .gcode.gz ou .3mf que o fatiador gerou.');
+    gcErr('Não é um arquivo de fatia. Mande o .gcode, .gcode.gz ou .3mf que o fatiador gerou.', box);
     return;
   }
-  drop.classList.add('busy');
-  gcMsgHtml('<div class="gcok"><span class="spin"></span> Lendo ' + esc(file.name || 'arquivo') + '…</div>');
+  if(drop) drop.classList.add('busy');
+  gcMsgHtml('<div class="gcok"><span class="spin"></span> Lendo ' + esc(file.name || 'arquivo') + '…</div>', box);
   var work = gcKind(file, low).then(function(kind){
     if(kind === 'zip') return fileBuf(file).then(parse3mf);
     if(kind === 'gz') return fileBuf(file)
@@ -4007,11 +4032,11 @@ function importSliced(file){
     return readHeadTail(file).then(parseGcodeText);
   });
   work.then(function(res){
-    drop.classList.remove('busy');
-    applySliced(res, file.name);
+    if(drop) drop.classList.remove('busy');
+    (to.apply || applySliced)(res, file.name, box);
   }, function(e){
-    drop.classList.remove('busy');
-    gcErr(e && e.message ? e.message : 'Não consegui ler este arquivo.');
+    if(drop) drop.classList.remove('busy');
+    gcErr(e && e.message ? e.message : 'Não consegui ler este arquivo.', box);
   });
 }
 
@@ -4728,6 +4753,11 @@ function renderParams(p){
   $('pd-params').innerHTML =
     '<div class="kv"><span>Material</span><span class="v">'+dec(num(p.grams),0)+' g</span></div>'+
     '<div class="kv"><span>Tempo de impressão</span><span class="v">'+dec(num(p.hours),2)+' h</span></div>'+
+    /* depois de importar, os números são sempre da mesa: sem isto à vista,
+       uma mesa com 4 peças passa por peça única e o preço sai pelo quádruplo */
+    '<div class="kv"><span>Estes números são</span><span class="v">'+
+      (p.scope === 'plate' ? 'da mesa toda, com ' + dec(Math.max(1, Math.round(num(p.qty)) || 1),0) +
+        (Math.max(1, Math.round(num(p.qty)) || 1) > 1 ? ' peças' : ' peça') : 'de 1 peça')+'</span></div>'+
     '<div class="kv"><span>Impressora</span><span class="v">'+esc(pr ? pr.name : '—')+'</span></div>'+
     (p.multi && (p.mats||[]).length
       ? '<div class="kv"><span>Filamentos</span><span class="v">'+
@@ -4742,7 +4772,7 @@ function renderParams(p){
     '<div class="kv"><span>Mão de obra</span><span class="v">'+dec(num(p.prep),0)+' min lote + '+dec(num(p.finish),0)+' min peça</span></div>'+
     ((p.extras||[]).length ? '<div class="kv"><span>Insumos</span><span class="v">'+brl(extrasTotal(p.extras))+'</span></div>' : '')+
     (src ? '<div class="kv"><span>Modelo</span><span class="v"><a class="srcpill" href="'+esc(safeUrl(p.stlUrl))+'" target="_blank" rel="noopener noreferrer">'+esc(src)+'</a></span></div>' : '')+
-    '<p class="note">Para atualizar estes números, toque em <b>Abrir na calculadora</b>, ajuste e salve de novo.</p>';
+    '<p class="note">Para atualizar estes números, mande o arquivo fatiado (ou cole os do Handy) logo abaixo — ou toque em <b>Abrir na calculadora</b>, ajuste e salve de novo.</p>';
 }
 function renderGallery(elId, target, after){
   var el = $(elId);
@@ -4804,6 +4834,30 @@ function fillProductFromCalc(p){
   p.priceSet = r.usedChosen ? r.chosen : num(p.priceSet);
   p.updatedAt = Date.now();
   return p;
+}
+
+/* ---- atualizar a ficha pelo arquivo fatiado ---- */
+/* Os números do produto e o preço nascem da calculadora — refazer a conta aqui
+   seria uma segunda verdade, que um dia discorda da primeira. Então o arquivo
+   entra pelo caminho de sempre: o produto vai para a calculadora, recebe as
+   gramas e o tempo lidos e volta para a ficha com custo e preço refeitos. */
+var PD_GC = {drop:'pd-gc-drop', box:'pd-gc-msg', apply:applySlicedToProduct};
+function applySlicedToProduct(res, fileName, box){
+  var p = S.products.filter(function(x){ return x.id === pdId; })[0];
+  if(!p){ gcErr('Abra um produto antes de mandar o arquivo.', box); return; }
+  if(!res || (!res.items.length && !(res.seconds > 0))){
+    gcErr('Não achei gramas nem tempo aqui. Isso saiu mesmo do fatiador?', box);
+    return;
+  }
+  if(!confirm('Atualizar "' + (p.name || 'sem nome') + '" com estes números? As gramas, o tempo e as cores salvas são substituídas.')){
+    gcMsgHtml('', box);
+    return;
+  }
+  loadProduct(p);                    /* os parâmetros salvos vão para a tela */
+  applySliced(res, fileName, box);   /* e o que veio do fatiador sobrescreve */
+  fillProductFromCalc(p);
+  persist();
+  openProduct(p.id);                 /* volta para a ficha, já atualizada */
 }
 
 /* ============ compras / notas fiscais ============ */
@@ -6318,13 +6372,11 @@ function bindClients(){
 
 /* arrastar e soltar: o arquivo pode cair em qualquer lugar da tela de calcular,
    não só dentro do retângulo tracejado */
-function bindImport(){
-  var drop = $('gc-drop'), inp = $('gc-file');
-  if(!drop || !inp) return;
-  /* O accept ajuda no computador, mas no celular é uma armadilha: Android e
-     iOS traduzem extensão em tipo MIME e, como .gcode não tem tipo conhecido,
-     o arquivo aparece apagado — ou some do seletor. Sem accept o seletor
-     mostra tudo e quem confere o arquivo é o importSliced. */
+/* O accept ajuda no computador, mas no celular é uma armadilha: Android e iOS
+   traduzem extensão em tipo MIME e, como .gcode não tem tipo conhecido, o
+   arquivo aparece apagado — ou some do seletor. Sem accept o seletor mostra
+   tudo e quem confere o arquivo é o importSliced. */
+function bindDrop(drop, inp, to){
   var touch = !!(window.matchMedia && window.matchMedia('(hover: none), (pointer: coarse)').matches);
   if(!touch) inp.accept = '.gcode,.gco,.g,.gz,.3mf';
   else{
@@ -6332,47 +6384,65 @@ function bindImport(){
     var t = drop.querySelector('.t');
     if(t) t.textContent = 'Toque para escolher o arquivo fatiado';
   }
-  var ta = $('gc-text'), tbtn = $('btn-gc-text');
-  if(ta && tbtn){
-    var readText = function(){
-      var res = parsePasted(ta.value);
-      if(!res || (!res.items.length && !(res.seconds > 0))){
-        gcErr('Não achei peso nem tempo no texto colado. Ele precisa ter algo como "32g" e "1.9h" — ou digite gramas e tempo nos campos abaixo.');
-        return;
-      }
-      applySliced(res, '');
-    };
-    tbtn.addEventListener('click', readText);
-    /* colar já é o pedido: ninguém quer tocar em mais um botão depois */
-    ta.addEventListener('paste', function(){ setTimeout(readText, 0); });
-  }
   drop.addEventListener('click', function(){ inp.click(); });
   drop.addEventListener('keydown', function(e){
     if(e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar'){ e.preventDefault(); inp.click(); }
   });
   inp.addEventListener('change', function(){
-    if(inp.files && inp.files[0]) importSliced(inp.files[0]);
+    if(inp.files && inp.files[0]) importSliced(inp.files[0], to);
     inp.value = '';
   });
+}
+/* colar já é o pedido: ninguém quer tocar em mais um botão depois */
+function bindPasteBox(ta, btn, to){
+  if(!ta || !btn) return;
+  var read = function(){
+    var res = parsePasted(ta.value);
+    if(!res || (!res.items.length && !(res.seconds > 0))){
+      gcErr('Não achei peso nem tempo no texto colado. Ele precisa ter algo como "32g" e "1.9h" — ou digite gramas e tempo nos campos.', to.box);
+      return;
+    }
+    (to.apply || applySliced)(res, '', to.box);
+  };
+  btn.addEventListener('click', read);
+  ta.addEventListener('paste', function(){ setTimeout(read, 0); });
+}
+function bindProductImport(){
+  var drop = $('pd-gc-drop'), inp = $('pd-gc-file');
+  if(!drop || !inp) return;
+  bindDrop(drop, inp, PD_GC);
+  bindPasteBox($('pd-gc-text'), $('btn-pd-gc-text'), PD_GC);
+}
+function bindImport(){
+  var drop = $('gc-drop'), inp = $('gc-file');
+  if(!drop || !inp) return;
+  bindDrop(drop, inp, GC_CALC);
+  bindPasteBox($('gc-text'), $('btn-gc-text'), GC_CALC);
   var hasFile = function(e){
     var t = e.dataTransfer && e.dataTransfer.types;
     if(!t) return false;
     return Array.prototype.indexOf.call(t, 'Files') > -1;
   };
+  /* o arquivo cai onde a pessoa está: na ficha do produto ele atualiza o
+     produto; em qualquer outra tela, a calculadora */
+  var here = function(){ return current === 'productdetail' && pdId ? $('pd-gc-drop') : drop; };
   ['dragenter','dragover'].forEach(function(ev){
     document.addEventListener(ev, function(e){
       if(!hasFile(e)) return;
       e.preventDefault();
-      if(current === 'calc') drop.classList.add('over');
+      if(current === 'calc' || current === 'productdetail') here().classList.add('over');
     });
   });
-  document.addEventListener('dragleave', function(e){ if(!e.relatedTarget) drop.classList.remove('over'); });
+  document.addEventListener('dragleave', function(e){
+    if(!e.relatedTarget){ drop.classList.remove('over'); if($('pd-gc-drop')) $('pd-gc-drop').classList.remove('over'); }
+  });
   document.addEventListener('drop', function(e){
     if(!hasFile(e)) return;
     e.preventDefault();
-    drop.classList.remove('over');
+    here().classList.remove('over');
     var f = e.dataTransfer.files && e.dataTransfer.files[0];
     if(!f) return;
+    if(current === 'productdetail' && pdId){ importSliced(f, PD_GC); return; }
     /* soltar o arquivo é um pedido de calcular: a tela vai junto */
     if(current !== 'calc') go('calc');
     importSliced(f);
@@ -7037,6 +7107,7 @@ bindEmptyActions();
 bindCalc();
 bindQuick();
 bindImport();
+bindProductImport();
 bindOrder();
 bindProducts();
 bindClients();
