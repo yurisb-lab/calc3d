@@ -1,8 +1,16 @@
-# Sincronizar entre 2 ou 3 aparelhos (Firebase)
+# Sincronizar aparelhos e contas (Firebase)
 
 A configuração do Firebase **já vem dentro do app** (no topo do bloco de
 sincronização, em `index.html`). Em cada aparelho novo você só precisa
-**fazer login com o mesmo e‑mail e a mesma senha**. Nada de colar código.
+**fazer login**. Nada de colar código.
+
+Os dados são **da empresa, não de cada conta**: todas as contas deste projeto
+gravam e leem a mesma pasta (`orgs/empresa`). Você e sua esposa podem ter cada
+um o seu e‑mail e a sua senha — os dois veem o mesmo catálogo, os mesmos
+clientes e os mesmos orçamentos. Não há código para trocar nem convite para
+aceitar: **quem tem conta neste projeto vê os dados**. Por isso o passo 5 aqui
+embaixo, fechar o cadastro, deixa de ser recomendação e vira parte do
+serviço.
 
 Projeto usado: **`lyke3dcalc`**.
 
@@ -38,13 +46,22 @@ em **Publicar**:
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // cada conta só enxerga e só escreve na própria pasta
+    // a empresa é uma só: toda conta deste projeto usa os mesmos dados
+    match /orgs/empresa/{document=**} {
+      allow read, write: if request.auth != null;
+    }
+    // pasta antiga, de quando cada conta guardava tudo separado
     match /users/{uid}/{document=**} {
       allow read, write: if request.auth != null && request.auth.uid == uid;
     }
   }
 }
 ```
+
+Estas regras mandam ninguém sem conta chegar perto do banco, e toda conta do
+projeto compartilhar a pasta da empresa. Quem já usava a versão anterior
+precisa publicar estas regras **antes** de abrir o app atualizado — senão o
+app avisa que "o Firestore recusou o acesso".
 
 Sem isso, ou o Firestore bloqueia tudo (o app avisa "o Firestore recusou o
 acesso"), ou o banco fica aberto para qualquer pessoa da internet.
@@ -56,32 +73,39 @@ liberado.
 
 Sem esse passo o login falha com `auth/unauthorized-domain`.
 
-### 5. Fechar o cadastro depois de criar suas contas — recomendado
+### 5. Fechar o cadastro — **obrigatório**
 
-A chave do Firebase é pública por natureza (vai no código de qualquer app web),
-e o repositório é aberto. As regras do passo 3 garantem que **ninguém enxerga os
-seus dados** — cada conta só acessa a própria pasta. Mas, enquanto o cadastro
-estiver aberto, um estranho poderia criar uma conta no projeto e consumir a sua
-cota à toa.
+A chave do Firebase é pública por natureza (vai no código de qualquer app web) e
+o repositório é aberto. Como agora **toda conta do projeto vê os dados da
+empresa**, a lista de contas é a lista de quem enxerga: com o cadastro aberto,
+um estranho poderia criar uma conta e entrar junto.
 
-Depois de criar a sua conta e entrar em todos os aparelhos, vá em
-**Authentication › Settings › User actions** e **desmarque "Enable create
-(sign-up)"**. Você continua entrando normalmente; só param os cadastros novos.
-Se precisar de mais um aparelho depois, é só marcar de novo por um minuto.
+Crie as suas duas contas e então vá em **Authentication › Settings › User
+actions** e **desmarque "Enable create (sign-up)"**. Vocês continuam entrando
+normalmente; só param os cadastros novos.
+
+Precisou de mais uma conta depois? Crie direto no console, em
+**Authentication › Users › Adicionar usuário** — sem reabrir o cadastro.
 
 Extra, se quiser apertar mais: no Google Cloud Console, em **APIs e serviços ›
 Credenciais**, restrinja a chave por **referenciador HTTP** aos seus domínios.
 
 ---
 
-## Usar em cada aparelho
+## Usar em cada aparelho, e nas duas contas
 
 1. Abra o app.
 2. **Ajustes › Sincronização entre aparelhos**.
-3. **Criar conta** no primeiro aparelho; **Entrar** nos outros, com o mesmo
-   e‑mail e senha.
+3. **Criar conta** na primeira vez; **Entrar** depois — no seu celular, no
+   computador e na conta da sua esposa.
 
-Pronto. O que você mudar num aparelho aparece nos outros em segundos.
+Pronto. O que um mudar aparece para o outro em segundos, e o painel mostra
+**Contas que usam estes dados**, para vocês conferirem que as duas estão
+ligadas.
+
+Se cada conta já tinha dados da versão antiga: a primeira que entrar leva os
+dela para a empresa; o que estava na outra continua guardado na pasta antiga
+dela e pode ser trazido com **Backup › Exportar** e **Backup › Importar**.
 
 ### Sair da nuvem
 No mesmo painel, **"Usar só neste aparelho, sem nuvem"**. Nada é apagado, e o
@@ -96,7 +120,8 @@ No modo local, abra **"Usar outro projeto do Firebase"** e cole o
 ## Como os dados ficam guardados
 
 ```
-users/{seu-id}/
+orgs/empresa/
+  members/{uid}          contas que usam o app (só o e‑mail, para o painel)
   meta/settings          ajustes (tarifa, valor da hora, taxas, dados do orçamento)
   printers/{id}          impressoras
   filaments/{id}         filamentos (com marca e link de compra)
@@ -116,6 +141,10 @@ abrir rápido e funcionar sem internet.
 **Vai passar do plano gratuito?** É muito difícil. O Spark dá 50 mil leituras e
 20 mil escritas por dia e 1 GiB de armazenamento. Um catálogo de algumas
 centenas de produtos com fotos usa uma fração disso.
+
+**E os dados que eu já tinha na nuvem, da versão anterior?** Na primeira
+entrada, se a pasta da empresa ainda estiver vazia, o app copia sozinho o que
+estava em `users/{uid}` para lá. A pasta antiga não é apagada.
 
 **E se eu já tinha dados no aparelho antes de conectar?** Se a nuvem estiver
 vazia, o app sobe tudo automaticamente. Se a nuvem já tiver dados, ela manda — e
