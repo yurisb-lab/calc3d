@@ -1224,6 +1224,25 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
             <p class="note">Sem o arquivo à mão, digite gramas e tempo logo abaixo. O cálculo é o mesmo.</p>
           </div>
         </details>
+        <details class="fold" id="gc-handy" style="margin:0 0 14px">
+          <summary>Imprimo pelo celular, no Bambu Handy</summary>
+          <div class="body">
+            <p class="note">O <b>Handy não exporta arquivo</b>: ele manda a impressão direto para a impressora e guarda o fatiamento na nuvem. Não existe .gcode dele para arrastar aqui — mas os números você tem.</p>
+            <p class="note"><b>O caminho curto:</b> na tela de preparar a impressão (e depois na tarefa em andamento e no histórico) o Handy mostra o <b>peso em gramas</b> e o <b>tempo previsto</b>. Digite os dois nos campos logo abaixo: a conta sai igualzinha.</p>
+            <p class="note"><b>Se o modelo veio do MakerWorld:</b> baixe o <b>perfil de impressão</b> — o .3mf já fatiado, não o .stl nem o 3MF só do modelo. Ele cai em Downloads e aí sim o app lê gramas, tempo e cores sozinho.</p>
+            <p class="note"><b>No computador:</b> abra o projeto no Bambu Studio, fatie e use <b>Exportar placa fatiada</b> (.gcode.3mf). Mande para o celular pelo WhatsApp ou Drive e arraste aqui.</p>
+            <p class="note"><b>Multicolor:</b> o peso que o Handy mostra é o da mesa inteira, purga incluída. Copiando também a linha de cada material (<b>PLA 21g</b>, <b>PLA 11g</b>), o app já separa as cores sozinho.</p>
+          </div>
+        </details>
+        <details class="fold" id="gc-paste" style="margin:0 0 14px">
+          <summary>Colar os números do Handy ou do fatiador</summary>
+          <div class="body">
+            <p class="note">Sem arquivo, dá para copiar o que a tela mostra e colar aqui: peso, tempo e material, na ordem que vier. O app acha o que interessa e preenche os campos.</p>
+            <textarea id="gc-text" placeholder="Mesa&#10;1.9h&#10;0.4mm&#10;32g&#10;PLA 21g&#10;PLA 11g"></textarea>
+            <div class="btnrow" style="margin-top:10px"><button type="button" class="btn" id="btn-gc-text">Ler o texto colado</button></div>
+            <p class="note" style="margin-top:10px">Serve também para o cabeçalho do G-code copiado do fatiador. O peso maior é entendido como o total da mesa e a diferença para a soma das cores vira purga.</p>
+          </div>
+        </details>
         <div class="row">
           <div class="field" id="fld-grams">
             <label for="f-grams">Gramas<button type="button" class="help" data-h="gramas" aria-label="O que é isso?">?</button></label>
@@ -2302,7 +2321,7 @@ var HELP = {
   vidautil:{t:'Vida útil', d:'Quantas horas de impressão a máquina deve durar antes da troca. Referência: 3.000 a 10.000 h. Conservador e comum: 4.000 a 5.000 h.', e:''},
   multicolor:{t:'Multicolor / AMS', d:'Peça de uma cor só: deixe em "1 filamento". Com AMS, CFS ou MMU, marque "Multicolor" e informe as gramas de CADA cor. A troca de cor gasta filamento fora da peça — a torre de purga entra em gramas, não em porcentagem, porque em peça pequena ela pesa mais que a própria peça.', e:'Corpo branco 18 g\nDetalhe vermelho 4 g\nPurga 26 g → 48 g no rolo'},
   purga:{t:'Torre de purga e troca de cor', d:'O filamento que o fatiador joga fora a cada troca: torre de purga, prime tower e o que sai no lixo do AMS. Pegue o número do próprio fatiador — no Bambu e no Orca ele aparece como "flush" ou na estimativa de peso da mesa. Já entra no custo e dá baixa no estoque.', e:'4 trocas × 6,5 g = 26 g de purga'},
-  importar:{t:'Importar do fatiador', d:'Arraste o arquivo que o fatiador gerou. Prusa, Orca, Bambu e Cura escrevem gramas, tempo e cores em texto no cabeçalho do G-code — o app lê e preenche os campos. Some o erro de digitação. Como o arquivo já conta purga, brim e suporte, o desperdício é zerado para não cobrar duas vezes. No celular, o arquivo precisa estar baixado no aparelho: se o seletor não mostrar, abra o menu dele e vá em Downloads ou Drive.', e:'; filament used [g] = 18.4, 4.1\n; estimated printing time = 2h 30m'},
+  importar:{t:'Importar do fatiador', d:'Arraste o arquivo que o fatiador gerou. Prusa, Orca, Bambu e Cura escrevem gramas, tempo e cores em texto no cabeçalho do G-code — o app lê e preenche os campos. Some o erro de digitação. Como o arquivo já conta purga, brim e suporte, o desperdício é zerado para não cobrar duas vezes. No celular, o arquivo precisa estar baixado no aparelho: se o seletor não mostrar, abra o menu dele e vá em Downloads ou Drive. O Bambu Handy não exporta arquivo fatiado: nele, copie o peso, o tempo e os materiais da tela e cole em \"Colar os números\" — ou digite nos campos.', e:'; filament used [g] = 18.4, 4.1\n; estimated printing time = 2h 30m'},
   faixas:{t:'Preço por faixa de quantidade', d:'O preparo é por lote: fatiar, limpar a mesa e ligar custa igual para 1 ou para 50 peças. Diluído, o preço unitário cai com o volume. Esta tabela sai pronta do seu próprio cálculo — é argumento de venda para o cliente subir o pedido, e a margem continua a mesma.', e:'1 un — R$ 49,90 cada\n10 un — R$ 45,10 cada (−10%)\n50 un — R$ 43,20 cada (−13%)'},
   qpreco:{t:'Preço que vão pagar', d:'O valor por peça que o cliente ofereceu ou que você pensou em cobrar. O app compara com o custo real e diz na hora se sobra ou se falta. Deixe vazio para ver só o custo e o preço mínimo.', e:''},
   qminimo:{t:'Preço mínimo', d:'O preço em que o lucro é exatamente zero: paga filamento, energia, desgaste da máquina, custo fixo, reserva de falhas e a taxa de recebimento. Um centavo abaixo disso é prejuízo — e ele ainda não paga a sua mão de obra.', e:''},
@@ -3747,32 +3766,45 @@ function parseSliceInfo(xml){
       if(g > 0) items.push({g:g, mm:(parseFloat(val('used_m')) || 0)*1000, type:val('type'),
                             color:gcHex(val('color')), derived:false, slot:parseInt(val('id'),10) || items.length+1});
     }
-    if(!items.length || best) return;
     var meta = function(k){ var v = new RegExp('key\\s*=\\s*"' + k + '"\\s+value\\s*=\\s*"([^"]*)"', 'i').exec(pl); return v ? v[1] : ''; };
-    best = {items:items, seconds:gcTime(meta('prediction')), weight:parseFloat(meta('weight')) || 0};
+    var weight = parseFloat(meta('weight')) || 0, seconds = gcTime(meta('prediction'));
+    if(items.length){ if(!best || best.whole) best = {items:items, seconds:seconds, weight:weight}; return; }
+    /* perfil baixado do MakerWorld às vezes traz só o peso e o tempo da mesa,
+       sem a linha de cada filamento: um peso certo vale mais que um erro. Só
+       vale como segunda opção — mesa com as cores discriminadas vem antes. */
+    if(best || !(weight > 0 || seconds > 0)) return;
+    if(weight > 0) items.push({g:weight, mm:0, type:'', color:'', derived:false, slot:1, whole:true});
+    best = {items:items, seconds:seconds, weight:weight, whole:true};
   });
   if(!best) return null;
   res.items = best.items;
   res.seconds = best.seconds;
   var sum = best.items.reduce(function(a,x){ return a + x.g; }, 0);
   if(best.weight > sum + 0.05) res.purge = best.weight - sum;
-  if(plates.length > 1) res.notes.push('O arquivo tem ' + plates.length + ' mesas; li a primeira com peças.');
+  if(best.whole && best.items.length)
+    res.notes.push('O arquivo trouxe só o peso total da mesa, sem a divisão por cor: confira o filamento escolhido.');
+  if(plates.length > 1) res.notes.push('O arquivo tem ' + plates.length + ' mesas; li a primeira com ' + (best.whole ? 'peso.' : 'peças.'));
   return res;
 }
 function parse3mf(buf){
   var list = zipList(buf);
   if(!list) return Promise.reject(new Error('Não consegui abrir este 3MF.'));
-  var info = null, gc = null;
+  var info = null, gc = null, bambu = false;
   list.forEach(function(e){
     var n = e.name.toLowerCase();
     if(/slice_info\.config$/.test(n)) info = e;
     else if(/\.gcode$/.test(n) && (!gc || e.usize > gc.usize)) gc = e;
+    else if(/(project_settings|model_settings)\.config$/.test(n)) bambu = true;
   });
   var fromGcode = function(){
     if(!gc) return null;
     return zipData(buf, gc).then(function(b){ return parseGcodeText(gcBytesText(b)); });
   };
-  var missing = new Error('Este 3MF é um projeto do fatiador, não uma fatia: ele não traz gramas nem tempo. Fatie e exporte o G-code (ou o 3MF já fatiado do Bambu/Orca).');
+  /* projeto do Bambu/MakerWorld é o caso de quem só imprime pelo celular: o
+     Handy não exporta fatia nenhuma, então o recado tem que dizer o que fazer */
+  var missing = new Error(bambu
+    ? 'Este 3MF é o projeto do Bambu/MakerWorld, não a fatia: traz o modelo, mas não gramas nem tempo. O Bambu Handy não exporta arquivo fatiado — copie da tela dele o peso, o tempo e os materiais e cole em "Colar os números do Handy ou do fatiador", logo abaixo.'
+    : 'Este 3MF é um projeto do fatiador, não uma fatia: ele não traz gramas nem tempo. Fatie e exporte o G-code (ou o 3MF já fatiado do Bambu/Orca).');
   if(info){
     return zipData(buf, info).then(function(b){
       var r = parseSliceInfo(gcBytesText(b));
@@ -3781,6 +3813,69 @@ function parse3mf(buf){
     });
   }
   return fromGcode() || Promise.reject(missing);
+}
+
+/* ---- colar os números na mão (Bambu Handy e afins) ---- */
+/* O Handy não exporta arquivo nenhum, mas deixa copiar o que está na tela:
+   "Mesa / 1.9h / 0.4mm / 32g / PLA 21g / PLA 11g". Ler esse texto solto é o
+   caminho de quem só imprime pelo celular — e poupa digitar campo por campo.
+   A ordem não importa: o que tem "g" é peso, o que tem "h" ou "min" é tempo. */
+var PASTE_MAT = 'PLA\\+?|PETG|PET|ABS|ASA|TPU|TPE|PAHT|PA[0-9]*|NYLON|PC|PVA|HIPS|PPS|PP';
+function pasteSeconds(t){
+  var s = 0, at = -1;
+  var d = /(\d+)\s*d(?:ias?|ays?)?\b/i.exec(t);
+  if(d){ s += (+d[1]) * 86400; at = d.index + d[0].length; }
+  var h = /(\d+(?:[.,]\d+)?)\s*h(?:oras?|rs?|ours?)?\b/i.exec(t);
+  if(h){ s += parseFloat(h[1].replace(',', '.')) * 3600; at = h.index + h[0].length; }
+  /* "1.9h" já traz os minutos na fração; "1h 54min" não. O "mm" do bico não
+     entra: o \b depois do m não fecha no meio de "mm". */
+  if(!(h && /[.,]/.test(h[1]))){
+    var mi = /(\d+)\s*m(?:in(?:utos?|utes?)?)?\b/i.exec(at >= 0 ? t.slice(at) : t);
+    if(mi) s += (+mi[1]) * 60;
+  }
+  return Math.round(s);
+}
+function parsePasted(txt){
+  var t = String(txt || '');
+  /* colou o cabeçalho inteiro do G-code? então quem lê é o leitor de sempre */
+  if(/^\s*;/m.test(t)){
+    var gc = parseGcodeText(t);
+    if(gc.items.length || gc.seconds > 0){ gc.source = gc.source + ' (texto colado)'; return gc; }
+  }
+  var res = {source:'texto colado', name:'', seconds:pasteSeconds(t), items:[], purge:0, notes:[]};
+  var mk = function(g, type){ return {g:g, mm:0, type:type || '', color:'', derived:false, slot:0}; };
+  var items = [], loose = [], mat = '', m;
+  var re = new RegExp('(\\d+(?:[.,]\\d+)?)\\s*(kg|g)\\b|\\b(' + PASTE_MAT + ')\\b', 'gi');
+  while((m = re.exec(t))){
+    if(m[3]){ mat = m[3].toUpperCase(); continue; }
+    var v = parseFloat(m[1].replace(',', '.')) * (/k/i.test(m[2]) ? 1000 : 1);
+    if(!(v > 0)) continue;
+    if(mat){ items.push(mk(v, mat)); mat = ''; }
+    else loose.push(v);
+  }
+  var sum = items.reduce(function(a, x){ return a + x.g; }, 0);
+  var big = loose.length ? Math.max.apply(null, loose) : 0;
+  if(items.length){
+    /* o peso da mesa costuma vir antes das cores; sobrando, a diferença é purga */
+    if(big > sum + 0.05) res.purge = big - sum;
+  } else if(loose.length === 1){
+    items.push(mk(loose[0], ''));
+  } else if(loose.length > 1){
+    var rest = loose.slice();
+    rest.splice(rest.indexOf(big), 1);
+    var restSum = rest.reduce(function(a, x){ return a + x; }, 0);
+    if(Math.abs(restSum - big) < 0.55){
+      /* as partes somam o total: são as cores da mesa, sem nome de material */
+      items = rest.map(function(g){ return mk(g, ''); });
+    } else {
+      items.push(mk(big, ''));
+      res.notes.push('O texto trazia vários pesos; usei ' + dec(big, 1) + ' g como o total da mesa.');
+    }
+  }
+  items.forEach(function(it, i){ it.slot = i + 1; });
+  res.items = items;
+  if(items.length) res.notes.push('Números lidos de um texto colado, não do arquivo: confira antes de fechar o preço.');
+  return res;
 }
 
 /* ---- casar o que veio do fatiador com o que está cadastrado ---- */
@@ -3855,11 +3950,11 @@ function applySliced(res, fileName){
   if(items.length > 1) li.push('Multicolor ligado com <b>' + items.length + ' cores</b>' +
       (res.purge > 0 ? ' e <b>' + dec(res.purge,1) + ' g</b> de purga (' + dec(totalG > 0 ? res.purge/totalG*100 : 0,0) + '% do peso)' : '') + '.');
   if(res.purge > 0 && items.length === 1) li.push('A purga de ' + dec(res.purge,1) + ' g entrou nas gramas.');
-  if(hadWaste) li.push('Desperdício zerado: o arquivo já conta brim, suporte e purga.');
-  if(derived) li.push('O arquivo só trazia o comprimento — o peso foi calculado pela densidade do material.');
+  if(hadWaste) li.push('Desperdício zerado: esses números já contam brim, suporte e purga.');
+  if(derived) li.push('Veio só o comprimento — o peso foi calculado pela densidade do material.');
   if(lost.length) li.push('Não achei filamento cadastrado com a cor/material de ' + lost.length +
       (lost.length === 1 ? ' item' : ' itens') + ': confira a seleção.');
-  if(!(res.seconds > 0)) li.push('O arquivo não trazia o tempo — preencha horas e minutos na mão.');
+  if(!(res.seconds > 0)) li.push('Não veio o tempo — preencha horas e minutos na mão.');
   (res.notes || []).forEach(function(t){ li.push(esc(t)); });
   li.push('Os valores são da <b>mesa toda</b>: confira a quantidade de peças.');
 
@@ -6237,6 +6332,20 @@ function bindImport(){
     var t = drop.querySelector('.t');
     if(t) t.textContent = 'Toque para escolher o arquivo fatiado';
   }
+  var ta = $('gc-text'), tbtn = $('btn-gc-text');
+  if(ta && tbtn){
+    var readText = function(){
+      var res = parsePasted(ta.value);
+      if(!res || (!res.items.length && !(res.seconds > 0))){
+        gcErr('Não achei peso nem tempo no texto colado. Ele precisa ter algo como "32g" e "1.9h" — ou digite gramas e tempo nos campos abaixo.');
+        return;
+      }
+      applySliced(res, '');
+    };
+    tbtn.addEventListener('click', readText);
+    /* colar já é o pedido: ninguém quer tocar em mais um botão depois */
+    ta.addEventListener('paste', function(){ setTimeout(readText, 0); });
+  }
   drop.addEventListener('click', function(){ inp.click(); });
   drop.addEventListener('keydown', function(e){
     if(e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar'){ e.preventDefault(); inp.click(); }
@@ -6692,7 +6801,7 @@ var TOUR = [
 
   {view:'calc', sel:'#gc-drop',
    t:'Comece pelo arquivo fatiado',
-   d:'Arraste aqui o <b>.gcode</b> ou <b>.3mf</b> do Prusa, Orca, Bambu ou Cura. O app lê gramas, tempo e cores sozinho e preenche os campos. Sem erro de digitação.'},
+   d:'Arraste aqui o <b>.gcode</b> ou <b>.3mf</b> do Prusa, Orca, Bambu ou Cura. O app lê gramas, tempo e cores sozinho e preenche os campos. Sem erro de digitação. Imprime pelo Bambu Handy, que não exporta arquivo? Cole os números da tela dele em <b>Colar os números</b>.'},
 
   {view:'calc', sel:'#fld-grams',
    t:'Ou digite na mão',
