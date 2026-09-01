@@ -66,7 +66,6 @@
   --btn-pri-bg:#141E29;
   --btn-pri-line:#141E29;
   --btn-pri-fg:#FFFFFF;
-  --tabbar:rgba(255,255,255,.88);
   --tip:#1F2B38;
   /* painel de destaque: faixa do preço e resumo de compras */
   --panel-a:#1F2B38;
@@ -99,6 +98,10 @@
   --r-xs:9px;
   --pad:16px;
   --topbar-h:60px;
+  /* menu lateral: largura no computador e no gaveteiro do celular */
+  --rail-w:250px;
+  --rail-bg:#141E29;
+  --rail-line:rgba(255,255,255,.09);
 }
 
 [data-theme="dark"]{
@@ -135,7 +138,8 @@
   --btn-pri-bg:#E9EDF1;
   --btn-pri-line:#E9EDF1;
   --btn-pri-fg:#141E29;
-  --tabbar:rgba(15,21,28,.88);
+  --rail-bg:#0F151C;
+  --rail-line:rgba(255,255,255,.07);
   --tip:#242D38;
   --panel-a:#27323E;
   --panel-b:#182029;
@@ -176,7 +180,7 @@ body{
   font-size:15px;
   line-height:1.45;
   min-height:100dvh;
-  padding-bottom:calc(74px + env(safe-area-inset-bottom));
+  padding-bottom:calc(28px + env(safe-area-inset-bottom));
   -webkit-font-smoothing:antialiased;
   transition:background-color .2s ease,color .2s ease;
 }
@@ -192,11 +196,15 @@ body{
   transition:box-shadow .2s ease;
 }
 .topbar.scrolled{box-shadow:0 6px 20px -6px rgba(0,0,0,.45)}
-.brand{display:flex;align-items:center;gap:10px;min-width:0;flex:1}
-.brand-txt{display:flex;align-items:baseline;gap:8px;min-width:0}
-.brand b{font-size:16px;font-weight:700;letter-spacing:-.02em;white-space:nowrap}
-.brand .brand-sub{font-size:11px;color:var(--on-chrome-2);letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
-@media (max-width:400px){.brand .brand-sub{display:none}}
+.brand-txt{display:flex;align-items:baseline;gap:8px;min-width:0;overflow:hidden}
+.brand-txt b{font-size:16px;font-weight:700;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brand-sub{
+  flex:none;font-size:11px;color:var(--on-chrome-2);
+  letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;
+}
+/* a topbar do celular carrega hamburguer + logo + nome + selo de sincronização
+   + tema. O subtítulo é a primeira coisa a sair quando o espaço acaba. */
+@media (max-width:520px){.brand-sub{display:none}}
 
 /* ---------- marca L.Y.K.E 3D ----------
    O logo é colorido e desenhado para fundo claro: o azul-marinho do bico, do
@@ -208,7 +216,7 @@ body{
   background:#FFFFFF;border-radius:10px;
 }
 .lykeplate img{display:block;width:100%;height:100%;object-fit:contain}
-.brand .lykeplate{width:36px;height:36px;padding:2px}
+.menubtn .lykeplate{width:34px;height:34px;padding:2px}
 
 /* assinatura no fim dos Ajustes */
 .brandcard{
@@ -218,13 +226,35 @@ body{
 .brandcard .lykeplate{padding:15px 19px;border-radius:14px;box-shadow:var(--sh-1)}
 .brandcard .lykeplate img{width:172px;height:auto}
 .brandcard .cap{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3)}
-.topnav{display:none;gap:2px}
-.topnav button{
-  position:relative;background:none;border:0;color:var(--on-chrome-3);font:inherit;font-size:13px;font-weight:500;
-  padding:8px 13px;border-radius:9px;cursor:pointer;transition:color .15s,background .15s;
+/* ---------- botao-marca: o hamburguer E a logo, no canto superior esquerdo ----------
+   A logo sozinha nao se le como "menu": vai sempre acompanhada das tres
+   barras, que e o unico desenho que todo mundo ja sabe tocar. No computador o
+   menu fica sempre aberto na lateral, entao este botao some. */
+.menubtn{
+  display:flex;align-items:center;gap:10px;flex:1;min-width:0;
+  background:none;border:0;padding:4px 8px 4px 4px;margin-left:-4px;
+  border-radius:12px;color:inherit;font:inherit;cursor:pointer;text-align:left;
+  transition:background .15s;
 }
-.topnav button:hover{color:var(--on-chrome);background:rgba(255,255,255,.06)}
-.topnav button[aria-current="true"]{background:rgba(255,255,255,.13);color:var(--on-chrome);font-weight:600}
+.menubtn:hover{background:rgba(255,255,255,.07)}
+.menubtn:active{background:rgba(255,255,255,.12)}
+.burger{flex:none;width:20px;height:14px;position:relative}
+.burger i{
+  position:absolute;left:0;right:0;height:2px;border-radius:2px;
+  background:var(--on-chrome);transition:transform .22s ease,opacity .18s ease;
+}
+.burger i:nth-child(1){top:0}
+.burger i:nth-child(2){top:6px}
+.burger i:nth-child(3){top:12px}
+body.menu-open .burger i:nth-child(1){transform:translateY(6px) rotate(45deg)}
+body.menu-open .burger i:nth-child(2){opacity:0}
+body.menu-open .burger i:nth-child(3){transform:translateY(-6px) rotate(-45deg)}
+
+/* nome da tela em que voce esta — no computador substitui a marca na topbar,
+   que ja aparece no menu lateral */
+.pagehead{display:none;flex-direction:column;min-width:0;flex:1}
+.pagehead .ph-t{font-size:16px;font-weight:700;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pagehead .ph-s{font-size:11px;color:var(--on-chrome-2);letter-spacing:.07em;text-transform:uppercase;white-space:nowrap}
 
 /* botão de tema */
 .themebtn{
@@ -254,8 +284,8 @@ h2.section::before{
   background:var(--hot);opacity:.75;
 }
 h2.section:first-child{margin-top:4px}
-.viewintro + .subnav + div > h2.section:first-child,
 .cadhint + h2.section{margin-top:6px}
+.viewintro + h2.section{margin-top:2px}
 
 .card{
   background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
@@ -479,36 +509,155 @@ h2.section .amt{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size
 .fx .f{display:block;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--ink3);margin-top:3px}
 .fx .vl{flex:none;font-family:'IBM Plex Mono',monospace;font-weight:600}
 
-/* ---------- tabbar ---------- */
-.tabbar{
-  position:fixed;left:0;right:0;bottom:0;z-index:50;
-  background:var(--tabbar);backdrop-filter:blur(16px) saturate(160%);-webkit-backdrop-filter:blur(16px) saturate(160%);
-  border-top:1px solid var(--line);
-  box-shadow:0 -6px 20px -8px rgba(16,24,40,.18);
-  display:flex;padding-bottom:env(safe-area-inset-bottom);
+/* ============================================================
+   MENU LATERAL
+   No computador ele fica aberto o tempo todo, encostado na esquerda; no
+   celular e a mesma lista, que entra deslizando pelo botao-marca. Um so
+   desenho para os dois — o que voce aprende no celular esta no mesmo lugar
+   no computador.
+
+   As telas vem agrupadas por PERGUNTA, nao por tipo de dado:
+     Calcular  — "quanto eu cobro?"
+     Negocio   — "como esta indo?"
+     Cadastros — "de onde saem os numeros?"
+     Ajustes   — "como o app se comporta?"
+   Tudo o que antes vivia escondido numa aba de dentro (impressoras,
+   filamentos, categorias, clientes, os tres blocos de Ajustes) agora e um
+   item de primeiro nivel: da para chegar em qualquer funcao com um toque.
+   ============================================================ */
+.rail{
+  position:fixed;z-index:60;top:0;bottom:0;left:0;width:var(--rail-w);
+  background:var(--rail-bg);color:var(--on-chrome);
+  border-right:1px solid var(--rail-line);
+  display:flex;flex-direction:column;
+  padding:calc(12px + env(safe-area-inset-top)) 0 calc(8px + env(safe-area-inset-bottom));
+  transform:translateX(-100%);visibility:hidden;
+  transition:transform .26s cubic-bezier(.32,.72,0,1),visibility .26s;
+  overscroll-behavior:contain;
 }
-[data-theme="dark"] .tabbar{box-shadow:0 -6px 22px -8px rgba(0,0,0,.6)}
-.tabbar button{
-  position:relative;flex:1;min-width:0;border:0;background:none;font:inherit;cursor:pointer;
-  display:flex;flex-direction:column;align-items:center;gap:3px;
-  padding:9px 1px 8px;color:var(--ink3);font-size:9px;font-weight:600;letter-spacing:-.01em;min-height:56px;
-  white-space:nowrap;overflow:hidden;transition:color .15s;
+body.menu-open .rail{transform:none;visibility:visible;box-shadow:var(--sh-4)}
+/* com a gaveta aberta, o dedo que arrasta tem de mexer no menu — nao na
+   pagina atras dele */
+body.menu-open{overflow:hidden}
+
+/* topo do menu: a marca (que tambem volta para a tela inicial) e o X */
+.rail-top{display:flex;align-items:center;gap:10px;padding:0 14px 12px;flex:none}
+.rail-brand{
+  display:flex;align-items:center;gap:10px;flex:1;min-width:0;
+  background:none;border:0;padding:4px;margin:-4px;border-radius:10px;
+  color:inherit;font:inherit;cursor:pointer;text-align:left;transition:background .15s;
 }
-.tabbar button::before{
-  content:"";position:absolute;top:0;left:50%;transform:translateX(-50%) scaleX(0);
-  width:26px;height:2.5px;border-radius:0 0 3px 3px;background:var(--hot);
-  transition:transform .2s ease;
+.rail-brand:hover{background:rgba(255,255,255,.07)}
+.rail-brand b{font-size:15px;font-weight:700;letter-spacing:-.02em;white-space:nowrap}
+.rail-brand .s{display:block;font-size:10px;color:var(--on-chrome-2);letter-spacing:.08em;text-transform:uppercase}
+.rail-brand .lykeplate{width:34px;height:34px;padding:2px}
+.rail-x{
+  flex:none;width:34px;height:34px;padding:0;display:inline-flex;align-items:center;justify-content:center;
+  border:1px solid var(--rail-line);background:rgba(255,255,255,.06);border-radius:10px;
+  color:var(--on-chrome-3);cursor:pointer;transition:background .15s,color .15s;
 }
-@media (max-width:409px){.tabbar button{font-size:8px;padding-left:0;padding-right:0;gap:2px}.tabbar button svg{width:18px;height:18px}}
-.tabbar button svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:transform .18s}
-.tabbar button[aria-current="true"]{color:var(--hot)}
-.tabbar button[aria-current="true"]::before{transform:translateX(-50%) scaleX(1)}
-.tabbar button[aria-current="true"] svg{transform:translateY(-1px)}
+.rail-x:hover{background:rgba(255,255,255,.13);color:var(--on-chrome)}
+.rail-x svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
+
+/* busca: a saida para quem nao sabe em que grupo a funcao mora */
+.rail-search{
+  flex:none;margin:0 14px 12px;padding:9px 11px;
+  display:flex;align-items:center;gap:9px;
+  background:rgba(255,255,255,.06);border:1px solid var(--rail-line);border-radius:10px;
+  color:var(--on-chrome-2);font:inherit;font-size:13px;cursor:pointer;text-align:left;
+  transition:background .15s,color .15s;
+}
+.rail-search .t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rail-search:hover{background:rgba(255,255,255,.12);color:var(--on-chrome-3)}
+.rail-search svg{width:15px;height:15px;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
+.rail-search .k{
+  margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:10.5px;
+  border:1px solid var(--rail-line);border-radius:5px;padding:1px 5px;color:var(--on-chrome-2);
+}
+@media (max-width:1023px){.rail-search .k{display:none}}
+
+.rail-nav{flex:1;min-height:0;overflow-y:auto;padding:0 10px 8px;-webkit-overflow-scrolling:touch}
+.rail-grp{margin-bottom:6px}
+.rail-grp>.h{
+  padding:10px 8px 5px;font-size:10px;font-weight:700;letter-spacing:.11em;
+  text-transform:uppercase;color:var(--on-chrome-2);
+}
+.rail-nav button{
+  position:relative;width:100%;display:flex;align-items:center;gap:11px;
+  border:0;background:none;font:inherit;font-size:14px;font-weight:500;
+  color:var(--on-chrome-3);padding:10px 10px;border-radius:10px;cursor:pointer;
+  text-align:left;min-height:42px;transition:background .14s,color .14s;
+}
+.rail-nav button:hover{background:rgba(255,255,255,.07);color:var(--on-chrome)}
+.rail-nav button svg{
+  width:19px;height:19px;flex:none;stroke:currentColor;fill:none;
+  stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;
+}
+.rail-nav button .t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* contador do grupo: diz de cara quanta coisa tem la dentro */
+.rail-nav button .n{
+  flex:none;min-width:20px;padding:0 6px;border-radius:20px;
+  background:rgba(255,255,255,.10);color:var(--on-chrome-2);
+  font-size:10.5px;font-weight:700;line-height:17px;text-align:center;
+  font-variant-numeric:tabular-nums;
+}
+.rail-nav button[aria-current="true"]{background:rgba(255,255,255,.13);color:var(--on-chrome);font-weight:600}
+.rail-nav button[aria-current="true"]::before{
+  content:"";position:absolute;left:0;top:9px;bottom:9px;width:3px;
+  border-radius:0 3px 3px 0;background:var(--hot-panel,var(--hot));
+}
+[data-theme="dark"] .rail-nav button[aria-current="true"]::before{background:var(--hot)}
+.rail-nav button[aria-current="true"] .n{background:var(--hot);color:#fff}
+
+/* rodape do menu: o atalho que ninguem achava, agora visivel */
+.rail-foot{flex:none;padding:8px 14px 0;border-top:1px solid var(--rail-line);margin-top:4px}
+.rail-foot button{
+  width:100%;display:flex;align-items:center;gap:9px;
+  background:none;border:0;padding:9px 0;color:var(--on-chrome-2);
+  font:inherit;font-size:12.5px;cursor:pointer;transition:color .15s;
+}
+.rail-foot button:hover{color:var(--on-chrome)}
+.rail-foot button svg{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+/* cortina atras da gaveta */
+.scrim{
+  position:fixed;inset:0;z-index:55;background:rgba(10,14,19,.52);
+  backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);
+  opacity:0;visibility:hidden;transition:opacity .26s,visibility .26s;
+}
+body.menu-open .scrim{opacity:1;visibility:visible}
+@media (min-width:1024px){body.menu-open .scrim{opacity:0;visibility:hidden}}
+
+/* ---------- busca de telas e acoes ---------- */
+#palette{position:fixed;inset:0;z-index:130;display:flex;align-items:flex-start;justify-content:center;padding:12vh 16px 16px}
+#palette::before{content:"";position:absolute;inset:0;background:rgba(10,14,19,.5);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+.pal-card{
+  position:relative;width:100%;max-width:520px;max-height:70vh;display:flex;flex-direction:column;
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+  box-shadow:var(--sh-4);overflow:hidden;
+}
+.pal-top{display:flex;align-items:center;gap:10px;padding:13px 15px;border-bottom:1px solid var(--line);flex:none}
+.pal-top svg{width:17px;height:17px;flex:none;stroke:var(--ink3);fill:none;stroke-width:2;stroke-linecap:round}
+#pal-input{flex:1;min-width:0;border:0;background:none;box-shadow:none;padding:0;height:auto;min-height:0;font:inherit;font-size:15.5px;color:var(--ink);outline:none}
+#pal-input::placeholder{color:var(--ink3)}
+#pal-list{flex:1;min-height:0;overflow-y:auto;padding:6px}
+.pal-grp{padding:9px 10px 4px;font-size:10px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:var(--ink3)}
+#pal-list button{
+  width:100%;display:flex;align-items:center;gap:11px;border:0;background:none;font:inherit;
+  padding:9px 10px;border-radius:var(--r-xs);cursor:pointer;text-align:left;color:var(--ink);min-height:42px;
+}
+#pal-list button svg{width:18px;height:18px;flex:none;stroke:var(--ink2);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+#pal-list button .t{flex:1;min-width:0}
+#pal-list button .t b{display:block;font-size:14px;font-weight:600}
+#pal-list button .t i{display:block;font-style:normal;font-size:11.5px;color:var(--ink3)}
+#pal-list button[data-on="1"]{background:var(--hot-soft)}
+#pal-list button[data-on="1"] svg{stroke:var(--hot)}
+.pal-empty{padding:26px 16px;text-align:center;font-size:13px;color:var(--ink3)}
 
 /* ---------- print ---------- */
 #print{display:none}
 @media print{
-  html,body{background:#fff !important;color:#000 !important;background-image:none !important}
+  html,body{background:#fff !important;color:#000 !important;background-image:none !important;padding:0 !important}
   body>*{display:none !important}
   #print{display:block !important;padding:0;color:#000;font-size:12pt}
   @page{margin:18mm}
@@ -705,7 +854,7 @@ h2.section .amt{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size
 .syncdot.on{background:var(--teal);box-shadow:0 0 0 3px rgba(14,145,132,.16)}
 .syncdot.off{background:var(--amber);box-shadow:0 0 0 3px rgba(201,147,12,.16)}
 .syncdot.err{background:var(--red);box-shadow:0 0 0 3px rgba(206,59,59,.16)}
-.syncrow .st{font-size:13.5px;color:var(--ink2);flex:1;min-width:0}
+.syncrow .st{font-size:13.5px;color:var(--ink2);flex:1;min-width:0;overflow-wrap:anywhere}
 .syncbadge{
   display:none;align-items:center;gap:6px;flex:none;
   font-size:11px;font-weight:600;color:var(--on-chrome-3);padding:7px 11px;border-radius:9px;
@@ -717,7 +866,7 @@ h2.section .amt{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size
 #sync-body:not(:empty){margin-top:14px}
 textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;line-height:1.5;resize:vertical}
 .note{font-size:12.5px;color:var(--ink2);margin:12px 0 0;line-height:1.6}
-.note code,.ol code{font-family:'IBM Plex Mono',monospace;font-size:11.5px;background:var(--surface3);color:var(--ink);padding:1px 5px;border-radius:4px}
+.note code,.ol code{font-family:'IBM Plex Mono',monospace;font-size:11.5px;background:var(--surface3);color:var(--ink);padding:1px 5px;border-radius:4px;overflow-wrap:anywhere}
 .orgwho{font-size:13px;color:var(--ink2);padding-left:18px;margin:8px 0 0;line-height:1.7}
 .ol{font-size:13px;color:var(--ink2);padding-left:20px;margin:6px 0 0;line-height:1.7}
 .ol li{margin-bottom:5px}
@@ -840,19 +989,12 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
 .strip .big.set{color:var(--on-panel)}
 .tagset{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;background:var(--hot);color:#fff;border-radius:5px;padding:2px 6px;margin-left:7px;vertical-align:2px}
 
-/* segmented sub-nav */
+/* trilho segmentado usado dentro de uma tela (ordenação do catálogo).
+   As abas de navegação que existiam aqui viraram itens do menu lateral: aba
+   que ninguém encontra é aba que não existe. */
 .subnav{margin-bottom:16px}
-/* três abas com contador não cabem em 360 px sem apertar a fonte e proibir a
-   quebra de linha: sem isso o número desce para uma segunda linha */
 .subnav button{white-space:nowrap;font-size:12.5px;padding-left:4px;padding-right:4px}
 @media (max-width:400px){.subnav button{font-size:11.5px}}
-/* Cadastros tem QUATRO abas e as quatro não cabem numa linha de celular sem
-   deixar a fonte ilegível. Em vez de esconder a última numa rolagem lateral —
-   aba que ninguém encontra é aba que não existe — elas quebram em 2x2. */
-@media (max-width:560px){
-  #seg-cad{flex-wrap:wrap}
-  #seg-cad button{flex:1 1 calc(50% - 3px)}
-}
 .subnav button .n{
   display:inline-block;margin-left:4px;min-width:16px;padding:0 4px;
   border-radius:20px;background:var(--surface3);color:var(--ink3);
@@ -1041,25 +1183,51 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
 .stackempty .s{font-size:12px;color:var(--ink3);line-height:1.55;max-width:34ch}
 .strip.idle .big{color:var(--on-panel-2)}
 
-/* ---------- desktop ---------- */
-@media (min-width:1024px){
-  body{padding-bottom:24px}
-  /* no computador o cartão pode respirar mais que no celular */
+/* ============================================================
+   RESPONSIVO — tres tamanhos, tres decisoes diferentes
+
+   celular   (< 640)   uma coluna, menu em gaveta, resultado numa faixa fixa
+   tablet    (640-1023) uma coluna mais larga, campos lado a lado, menu em gaveta
+   computador (>= 1024) menu sempre aberto na lateral + duas colunas
+   ============================================================ */
+
+/* ---------- tablet ---------- */
+@media (min-width:640px){
   :root{--pad:18px}
-  .topnav{display:flex}
-  .tabbar{display:none}
-  main{display:grid;grid-template-columns:minmax(0,1fr) 396px;gap:24px;align-items:start;padding:24px;max-width:1160px}
-  /* tela de coluna única não vira uma faixa de formulário de 900 px: linha
-     longa demais cansa a leitura e faz o app parecer um celular esticado */
-  main.single{display:block;max-width:820px}
+  /* o conteudo para de esticar: linha de 900 px cansa de ler e faz o app
+     parecer um celular inflado */
+  main{max-width:760px;margin:0 auto}
+  .row-2up{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .toolbar{flex-wrap:nowrap}
+}
+
+/* ---------- computador ---------- */
+@media (min-width:1024px){
+  body{padding-bottom:28px;padding-left:var(--rail-w)}
+  /* o nome da tela ja esta na topbar: na pagina ele seria a mesma palavra
+     duas vezes, uma embaixo da outra */
+  h2.section.ptitle{display:none}
+  h2.section.ptitle + .viewintro{margin-top:4px}
+  /* o menu deixa de ser gaveta: fica encostado e sempre visivel */
+  .rail{transform:none;visibility:visible;box-shadow:none}
+  .rail-x{display:none}
+  .menubtn{display:none}
+  .pagehead{display:flex}
+  .topbar{padding-left:var(--pad);padding-right:var(--pad)}
+  main{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:24px;align-items:start;padding:24px;max-width:1220px}
+  main.single{display:block;max-width:800px}
   main>.strip{display:none}
   #col-a{min-width:0}
   #col-b{position:sticky;top:calc(var(--topbar-h) + 24px)}
   .strip{position:static;box-shadow:var(--sh-3)}
   .stack{min-height:280px}
 }
-@media (min-width:640px) and (max-width:1023px){
-  .row-2up{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* ---------- computador largo ----------
+   Acima de 1440 px a coluna do resultado pode crescer sem que a coluna do
+   formulario passe do limite confortavel de leitura. */
+@media (min-width:1440px){
+  main{grid-template-columns:minmax(0,1fr) 420px;gap:32px;max-width:1360px}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none !important;animation:none !important}}
 </style>
@@ -1096,12 +1264,43 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
 </head>
 <body>
 
+<!-- ============ MENU LATERAL ============
+     Aberto o tempo todo no computador, em gaveta no celular. Uma lista so,
+     agrupada por pergunta, com TODAS as telas do app — inclusive as que antes
+     viviam escondidas dentro de uma aba de uma aba. -->
+<aside class="rail" id="rail" aria-label="Menu principal">
+  <div class="rail-top">
+    <button type="button" class="rail-brand" id="rail-home">
+      <span class="lykeplate"><img src="lyke-marca.png" width="32" height="32" alt=""></span>
+      <span><b>Calculadora 3D</b><span class="s">L.Y.K.E 3D</span></span>
+    </button>
+    <button type="button" class="rail-x" id="rail-close" aria-label="Fechar menu">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
+    </button>
+  </div>
+  <button type="button" class="rail-search" id="rail-search">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="16.2" y1="16.2" x2="21" y2="21"/></svg>
+    <span class="t">Buscar tela ou ação</span><span class="k">Ctrl K</span>
+  </button>
+  <nav class="rail-nav" id="rail-nav"></nav>
+  <div class="rail-foot">
+    <button type="button" id="rail-tour">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.2a2.5 2.5 0 114 2.1c-.9.6-1.6 1-1.6 2"/><line x1="12" y1="16.8" x2="12" y2="16.81"/></svg>
+      Rever o tutorial
+    </button>
+  </div>
+</aside>
+<div class="scrim" id="scrim"></div>
+
 <header class="topbar" id="topbar">
-  <div class="brand">
+  <!-- o botao-marca: hamburguer + logo, exatamente onde a mao ja procura -->
+  <button type="button" class="menubtn" id="menu-btn" aria-label="Abrir menu" aria-expanded="false" aria-controls="rail">
+    <span class="burger" aria-hidden="true"><i></i><i></i><i></i></span>
     <span class="lykeplate"><img src="lyke-marca.png" width="32" height="32" alt="L.Y.K.E 3D"></span>
     <span class="brand-txt"><b>Calculadora 3D</b><span class="brand-sub">preço de venda</span></span>
-  </div>
-  <nav class="topnav" id="topnav"></nav>
+  </button>
+  <!-- no computador o menu ja mostra a marca: aqui fica o nome da tela atual -->
+  <div class="pagehead" id="pagehead"><span class="ph-t"></span><span class="ph-s"></span></div>
   <button type="button" class="syncbadge" id="sync-badge"></button>
   <button type="button" class="themebtn" id="theme-btn" aria-label="Alternar tema claro e escuro" title="Alternar tema">
     <svg class="ico-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.3A8.5 8.5 0 019.7 3.5a8.5 8.5 0 1010.8 10.8z"/></svg>
@@ -1121,7 +1320,7 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
     <!-- Modo emergência: a pergunta é só "estou perdendo dinheiro nisso?".
          Três campos, um veredicto. Sem orçamento, sem insumos, sem catálogo. -->
     <section class="view" id="v-quick" hidden>
-      <h2 class="section">Cálculo rápido</h2>
+      <h2 class="section ptitle">Cálculo rápido</h2>
       <p class="viewintro">Para responder na hora, com o cliente na frente: gramas, tempo e o preço oferecido. O app diz se dá lucro ou se você está pagando para trabalhar.</p>
 
       <div class="verdict" id="q-verdict"></div>
@@ -1405,7 +1604,7 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
 
     <!-- ============ PRODUTOS ============ -->
     <section class="view" id="v-products" hidden>
-      <h2 class="section">Catálogo de produtos</h2>
+      <h2 class="section ptitle">Catálogo de produtos</h2>
       <div class="toolbar">
         <input id="p-search" type="search" placeholder="Buscar produto ou categoria...">
         <button type="button" class="btn primary" id="btn-add-product">+ Novo</button>
@@ -1554,7 +1753,7 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
 
     <!-- ============ COMPRAS / NOTAS ============ -->
     <section class="view" id="v-buys" hidden>
-      <h2 class="section">Compras e notas fiscais</h2>
+      <h2 class="section ptitle">Compras e notas fiscais</h2>
       <div class="sumbar">
         <div><span class="k" id="buy-k1">Este mês</span><span class="v mono" id="buy-v1">—</span></div>
         <div><span class="k">No período</span><span class="v mono" id="buy-v2">—</span></div>
@@ -1641,7 +1840,7 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
 
     <!-- ============ SALVOS ============ -->
     <section class="view" id="v-saved" hidden>
-      <h2 class="section">Pedidos e orçamentos</h2>
+      <h2 class="section ptitle">Pedidos e orçamentos</h2>
       <div class="sumbar">
         <div><span class="k" id="job-k1">Em aberto</span><span class="v" id="job-v1">R$ 0,00</span></div>
         <div><span class="k">Recebido este mês</span><span class="v" id="job-v2">R$ 0,00</span></div>
@@ -1656,7 +1855,7 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
 
     <!-- ============ PAINEL DO MES ============ -->
     <section class="view" id="v-dash" hidden>
-      <h2 class="section">Painel do mês</h2>
+      <h2 class="section ptitle">Painel do mês</h2>
       <div class="dashhead">
         <button type="button" class="btn" id="dash-prev" aria-label="Mês anterior">‹</button>
         <div class="field"><select id="dash-month" aria-label="Mês do painel"></select></div>
@@ -1668,16 +1867,8 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
 
     <!-- ============ CADASTROS ============ -->
     <section class="view" id="v-cadastros" hidden>
-      <h2 class="section">Cadastros</h2>
-      <p class="viewintro">É daqui que a calculadora tira os seus números — e é aqui que fica a sua agenda de clientes. Cadastre uma vez e todo cálculo já sai certo.</p>
-      <div class="seg subnav" id="seg-cad">
-        <button type="button" data-v="printers" aria-pressed="true">Impressoras <span class="n" id="cad-n-p">0</span></button>
-        <button type="button" data-v="filaments" aria-pressed="false">Filamentos <span class="n" id="cad-n-f">0</span></button>
-        <button type="button" data-v="cats" aria-pressed="false">Categorias <span class="n" id="cad-n-c">0</span></button>
-        <button type="button" data-v="clients" aria-pressed="false">Clientes <span class="n" id="cad-n-cl">0</span></button>
-      </div>
-
       <div id="cad-printers">
+        <h2 class="section ptitle">Impressoras</h2>
         <div class="toolbar">
           <input id="cad-p-search" type="search" placeholder="Buscar impressora...">
           <button type="button" class="btn primary" id="btn-add-printer">+ Nova</button>
@@ -1687,6 +1878,7 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
       </div>
 
       <div id="cad-filaments" hidden>
+        <h2 class="section ptitle">Filamentos</h2>
         <div class="toolbar">
           <input id="cad-f-search" type="search" placeholder="Buscar filamento, material ou marca...">
           <button type="button" class="btn primary" id="btn-add-filament">+ Novo</button>
@@ -1696,6 +1888,7 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
       </div>
 
       <div id="cad-cats" hidden>
+        <h2 class="section ptitle">Categorias</h2>
         <div class="toolbar">
           <input id="cad-c-search" type="search" placeholder="Buscar categoria...">
           <button type="button" class="btn primary" id="btn-add-cat">+ Nova</button>
@@ -1707,6 +1900,7 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
       </div>
 
       <div id="cad-clients" hidden>
+        <h2 class="section ptitle">Clientes</h2>
         <div class="toolbar">
           <input id="cad-cl-search" type="search" placeholder="Buscar cliente, WhatsApp ou documento...">
           <button type="button" class="btn primary" id="btn-add-client">+ Novo</button>
@@ -1773,17 +1967,9 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
 
     <!-- ============ AJUSTES ============ -->
     <section class="view" id="v-settings" hidden>
-      <h2 class="section">Ajustes</h2>
-      <p class="viewintro">Os números do seu negócio, o jeito do app e os seus dados — cada coisa em uma aba.</p>
-      <div class="seg subnav" id="seg-set">
-        <button type="button" data-v="biz" aria-pressed="true">Meu negócio</button>
-        <button type="button" data-v="app" aria-pressed="false">Aplicativo</button>
-        <button type="button" data-v="data" aria-pressed="false">Meus dados</button>
-      </div>
-
       <div id="set-biz">
-        <p class="cadhint">Estes valores entram em <b>todo</b> cálculo. Vale a pena preencher com calma uma vez só.</p>
-        <h2 class="section">Seus números</h2>
+        <h2 class="section ptitle">Meus números</h2>
+        <p class="viewintro">Tarifa de energia, quanto vale a sua hora, o custo fixo do mês e a taxa da maquininha. Estes valores entram em <b>todo</b> cálculo — vale preencher com calma uma vez só.</p>
         <div class="card">
           <div class="field">
             <label for="s-kwh">Tarifa de energia <span class="hint">R$ por kWh</span><button type="button" class="help" data-h="kwh" aria-label="O que é isso?">?</button></label>
@@ -1846,6 +2032,8 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
       </div>
 
       <div id="set-app" hidden>
+        <h2 class="section ptitle">Aplicativo</h2>
+        <p class="viewintro">O jeito do app neste aparelho: tema, tutorial e instalação na tela de início.</p>
         <h2 class="section">Aparência</h2>
         <div class="card">
           <div class="field" style="margin-bottom:0">
@@ -1877,7 +2065,8 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
       </div>
 
       <div id="set-data" hidden>
-        <p class="cadhint">Seus dados ficam neste aparelho. Sincronize para vê-los no celular, no computador e nas outras contas da empresa, e exporte de vez em quando como cópia de segurança.</p>
+        <h2 class="section ptitle">Meus dados</h2>
+        <p class="viewintro">Seus dados ficam neste aparelho. Sincronize para vê-los no celular, no computador e nas outras contas da empresa, e exporte de vez em quando como cópia de segurança.</p>
         <h2 class="section">Sincronização entre aparelhos e contas</h2>
         <div class="card">
           <div class="syncrow"><span class="syncdot" id="sync-dot"></span><span class="st" id="sync-status">Modo local.</span></div>
@@ -1940,9 +2129,20 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
   </div>
 </main>
 
-<nav class="tabbar" id="tabbar"></nav>
-
 <div id="print"></div>
+
+<!-- ============ BUSCA DE TELAS E ACOES ============
+     A rede de seguranca da navegacao: quem nao sabe em que grupo a funcao
+     mora digita o nome dela e chega la. Ctrl+K, ou a busca no topo do menu. -->
+<div id="palette" hidden role="dialog" aria-modal="true" aria-label="Buscar tela ou ação">
+  <div class="pal-card">
+    <div class="pal-top">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="16.2" y1="16.2" x2="21" y2="21"/></svg>
+      <input id="pal-input" type="text" autocomplete="off" spellcheck="false" placeholder="Buscar tela ou ação...">
+    </div>
+    <div id="pal-list"></div>
+  </div>
+</div>
 <div id="tip" role="tooltip" aria-hidden="true"></div>
 
 <!-- ============ TUTORIAL ============ -->
@@ -2448,19 +2648,100 @@ function bindHelp(){
   document.addEventListener('keydown', function(e){ if(e.key === 'Escape') hideTip(); });
 }
 
-/* ============ navegação ============ */
-var TABS = [
-  {id:'quick',     label:'Rápido',    icon:'<path d="M13 2.5L4.5 13.4h6L11 21.5l8.5-10.9h-6z"/>'},
-  {id:'calc',      label:'Calcular',  icon:'<rect x="4" y="2.5" width="16" height="19" rx="2.5"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="12" x2="8" y2="12.01"/><line x1="12" y1="12" x2="12" y2="12.01"/><line x1="16" y1="12" x2="16" y2="12.01"/><line x1="8" y1="17" x2="12" y2="17"/>'},
-  {id:'products',  label:'Produtos',  icon:'<path d="M12 2.8l8.2 4.6v9.2L12 21.2 3.8 16.6V7.4z"/><path d="M3.8 7.4L12 12l8.2-4.6"/><line x1="12" y1="12" x2="12" y2="21.2"/>'},
-  {id:'buys',      label:'Compras',   icon:'<path d="M6 2.5h12v19l-3-2-3 2-3-2-3 2z"/><line x1="9.5" y1="8" x2="14.5" y2="8"/><line x1="9.5" y1="12" x2="14.5" y2="12"/>'},
-  {id:'saved',     label:'Salvos',    icon:'<path d="M6 3h12v18l-6-4.5L6 21z"/>'},
-  {id:'dash',      label:'Painel',    icon:'<line x1="4" y1="20.5" x2="20" y2="20.5"/><rect x="5" y="11" width="3.6" height="7"/><rect x="10.2" y="6.5" width="3.6" height="11.5"/><rect x="15.4" y="13.5" width="3.6" height="4.5"/>'},
-  {id:'cadastros', label:'Cadastros', icon:'<path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="7" rx="2"/><path d="M7 16v5h10v-5"/>'},
-  {id:'settings',  label:'Ajustes',   icon:'<line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="17" x2="20" y2="17"/><circle cx="9" cy="7" r="2.5"/><circle cx="15" cy="17" r="2.5"/>'}
+/* ============ navegação ============
+   O app tem treze telas. Antes, oito delas brigavam por espaço numa barra de
+   nove pixels no rodapé e as outras cinco só existiam dentro de uma aba de uma
+   aba — impressoras, filamentos, categorias, clientes e os três blocos de
+   Ajustes. Quem não sabia que "Cadastros" guardava impressoras não achava
+   impressoras.
+
+   Agora é uma lista só, no menu lateral, agrupada pela PERGUNTA que a pessoa
+   tem na cabeça — e toda tela é um item de primeiro nível. Nada de aba dentro
+   de aba: se existe, está escrito no menu. */
+
+var ICO = {
+  calc:'<rect x="4" y="2.5" width="16" height="19" rx="2.5"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="12" x2="8" y2="12.01"/><line x1="12" y1="12" x2="12" y2="12.01"/><line x1="16" y1="12" x2="16" y2="12.01"/><line x1="8" y1="17" x2="12" y2="17"/>',
+  quick:'<path d="M13 2.5L4.5 13.4h6L11 21.5l8.5-10.9h-6z"/>',
+  saved:'<path d="M6 3h12v18l-6-4.5L6 21z"/>',
+  dash:'<line x1="4" y1="20.5" x2="20" y2="20.5"/><rect x="5" y="11" width="3.6" height="7"/><rect x="10.2" y="6.5" width="3.6" height="11.5"/><rect x="15.4" y="13.5" width="3.6" height="4.5"/>',
+  products:'<path d="M12 2.8l8.2 4.6v9.2L12 21.2 3.8 16.6V7.4z"/><path d="M3.8 7.4L12 12l8.2-4.6"/><line x1="12" y1="12" x2="12" y2="21.2"/>',
+  buys:'<path d="M6 2.5h12v19l-3-2-3 2-3-2-3 2z"/><line x1="9.5" y1="8" x2="14.5" y2="8"/><line x1="9.5" y1="12" x2="14.5" y2="12"/>',
+  clients:'<circle cx="12" cy="8" r="3.6"/><path d="M4.6 20.4a7.4 7.4 0 0114.8 0"/>',
+  printers:'<path d="M7 8.5V3h10v5.5"/><rect x="3.5" y="8.5" width="17" height="7" rx="2"/><path d="M7 15.5V21h10v-5.5"/>',
+  filaments:'<circle cx="12" cy="12" r="8.6"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="3.4" x2="12" y2="9"/>',
+  cats:'<path d="M3.2 6.4A2.2 2.2 0 015.4 4.2h3.4l1.8 2.4h8A2.2 2.2 0 0120.8 8.8v8.8a2.2 2.2 0 01-2.2 2.2H5.4a2.2 2.2 0 01-2.2-2.2z"/>',
+  biz:'<line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="17" x2="20" y2="17"/><circle cx="9" cy="7" r="2.5"/><circle cx="15" cy="17" r="2.5"/>',
+  app:'<rect x="6" y="2.5" width="12" height="19" rx="2.6"/><line x1="10.4" y1="18.4" x2="13.6" y2="18.4"/>',
+  data:'<ellipse cx="12" cy="6" rx="7.6" ry="3"/><path d="M4.4 6v12c0 1.66 3.4 3 7.6 3s7.6-1.34 7.6-3V6"/><path d="M4.4 12c0 1.66 3.4 3 7.6 3s7.6-1.34 7.6-3"/>',
+  add:'<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+  down:'<path d="M12 3.5v11"/><path d="M7.6 10.4L12 14.8l4.4-4.4"/><path d="M4.5 17v3.5h15V17"/>',
+  up:'<path d="M12 14.8v-11"/><path d="M7.6 7.9L12 3.5l4.4 4.4"/><path d="M4.5 17v3.5h15V17"/>',
+  pdf:'<path d="M6 2.5h8l4 4v15H6z"/><path d="M14 2.5v4h4"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/>',
+  help:'<circle cx="12" cy="12" r="9"/><path d="M9.6 9.2a2.5 2.5 0 114 2.1c-.9.6-1.6 1-1.6 2"/><line x1="12" y1="16.8" x2="12" y2="16.81"/>',
+  theme:'<path d="M20.5 14.3A8.5 8.5 0 019.7 3.5a8.5 8.5 0 1010.8 10.8z"/>',
+  broom:'<path d="M4 20.5l5.5-5.5"/><path d="M9 12.5l6.5-6.5 3.5 3.5-6.5 6.5z"/><path d="M12.5 16l-4.5-4.5"/>'
+};
+
+/* Cada item guarda o titulo que aparece na topbar e as palavras pelas quais a
+   busca deve encontra-lo — inclusive o nome ANTIGO da tela, para quem ja
+   conhecia o app. */
+var NAV = [
+  {g:'Calcular', items:[
+    {id:'calc',      t:'Calculadora',    s:'preço de venda',        kw:'preco orcamento peca gramas horas margem markup gcode'},
+    {id:'quick',     t:'Cálculo rápido', s:'dá lucro ou prejuízo?', kw:'rapido emergencia veredicto lucro prejuizo cliente na frente'},
+    {id:'saved',     t:'Orçamentos',     s:'pedidos salvos',        kw:'salvos pedidos historico recebido em aberto propostas'}
+  ]},
+  {g:'Negócio', items:[
+    {id:'dash',      t:'Painel do mês',  s:'como o mês está indo',  kw:'painel dashboard faturamento resumo mes graficos'},
+    {id:'products',  t:'Produtos',       s:'seu catálogo',          kw:'catalogo pecas itens produto'},
+    {id:'buys',      t:'Compras',        s:'material que entrou',   kw:'compras gastos material nota entrada despesa'},
+    {id:'clients',   t:'Clientes',       s:'sua agenda',            kw:'clientes agenda contatos whatsapp telefone'}
+  ]},
+  {g:'Cadastros', items:[
+    {id:'printers',  t:'Impressoras',    s:'custo por hora',        kw:'impressora maquina equipamento depreciacao manutencao'},
+    {id:'filaments', t:'Filamentos',     s:'preço por grama',       kw:'filamento rolo bobina pla petg abs estoque material'},
+    {id:'cats',      t:'Categorias',     s:'grupos do catálogo',    kw:'categoria grupo etiqueta tag'}
+  ]},
+  {g:'Ajustes', items:[
+    {id:'biz',       t:'Meus números',   s:'entram em todo cálculo', kw:'energia kwh tarifa hora custo fixo taxa maquininha negocio'},
+    {id:'app',       t:'Aplicativo',     s:'tema, tutorial, instalar', kw:'app tema escuro claro instalar tutorial idioma sincronizar'},
+    {id:'data',      t:'Meus dados',     s:'backup e conta',        kw:'dados backup exportar importar apagar conta login sincronizacao'}
+  ]}
 ];
-var NAVOF = {productdetail:'products', buydetail:'buys', clientdetail:'cadastros'};
-var current = 'calc';
+
+/* id do menu -> secao do DOM (+ aba interna, quando a secao guarda mais de uma) */
+var ROUTE = {
+  calc:      {v:'calc'},
+  quick:     {v:'quick'},
+  saved:     {v:'saved'},
+  dash:      {v:'dash'},
+  products:  {v:'products'},
+  buys:      {v:'buys'},
+  clients:   {v:'cadastros', cad:'clients'},
+  printers:  {v:'cadastros', cad:'printers'},
+  filaments: {v:'cadastros', cad:'filaments'},
+  cats:      {v:'cadastros', cad:'cats'},
+  biz:       {v:'settings',  set:'biz'},
+  app:       {v:'settings',  set:'app'},
+  data:      {v:'settings',  set:'data'},
+  /* telas de detalhe: nao tem item proprio, acendem o item de onde vieram */
+  productdetail:{v:'productdetail', nav:'products', t:'Produto',  s:'catálogo'},
+  buydetail:    {v:'buydetail',     nav:'buys',     t:'Compra',   s:'compras'},
+  clientdetail: {v:'clientdetail',  nav:'clients',  t:'Cliente',  s:'agenda'}
+};
+/* nomes antigos ainda usados por atalhos no meio do texto e pelo tutorial:
+   caem na aba que estiver escolhida, em vez de voltar sempre para a primeira */
+var ALIAS = {
+  cadastros: function(){ return ROUTE[cadTab] ? cadTab : 'printers'; },
+  settings:  function(){ return ROUTE[setTab] ? setTab  : 'biz'; }
+};
+
+var NAVITEM = {};
+NAV.forEach(function(g){ g.items.forEach(function(it){ NAVITEM[it.id] = it; }); });
+
+var current = 'calc';       /* item do menu que esta aceso */
+var currentView = 'calc';   /* secao do DOM que esta visivel */
+
 /* atalhos escritos no meio do texto: levam para a tela certa e, se for o caso,
    já param na aba de dentro */
 function bindGoLinks(){
@@ -2469,41 +2750,207 @@ function bindGoLinks(){
     if(!b) return;
     var cad = b.getAttribute('data-cad');
     if(cad) cadTab = cad;
+    var set = b.getAttribute('data-set');
+    if(set) setTab = set;
     go(b.getAttribute('data-go'));
   });
 }
+
+/* ---------- gaveta do celular ---------- */
+function wide(){ return window.matchMedia('(min-width:1024px)').matches; }
+function openMenu(){
+  if(wide()) return;
+  document.body.classList.add('menu-open');
+  $('menu-btn').setAttribute('aria-expanded','true');
+  var f = $('rail-nav').querySelector('button[aria-current="true"]') || $('rail-nav').querySelector('button');
+  if(f) f.focus();
+}
+function closeMenu(){
+  if(!document.body.classList.contains('menu-open')) return;
+  document.body.classList.remove('menu-open');
+  $('menu-btn').setAttribute('aria-expanded','false');
+}
+function toggleMenu(){ document.body.classList.contains('menu-open') ? closeMenu() : openMenu(); }
+
 function buildNav(){
-  $('tabbar').innerHTML = TABS.map(function(t){
-    return '<button type="button" data-t="'+t.id+'"><svg viewBox="0 0 24 24">'+t.icon+'</svg>'+t.label+'</button>';
-  }).join('');
-  $('topnav').innerHTML = TABS.map(function(t){
-    return '<button type="button" data-t="'+t.id+'">'+t.label+'</button>';
+  $('rail-nav').innerHTML = NAV.map(function(g){
+    return '<div class="rail-grp"><div class="h">'+esc(g.g)+'</div>'+ g.items.map(function(it){
+      return '<button type="button" data-t="'+it.id+'">'+
+             '<svg viewBox="0 0 24 24" aria-hidden="true">'+ICO[it.id]+'</svg>'+
+             '<span class="t">'+esc(it.t)+'</span>'+
+             '<span class="n" id="n-'+it.id+'" hidden>0</span></button>';
+    }).join('') + '</div>';
   }).join('');
   each(qsa(document,'[data-t]'), function(b){
     b.addEventListener('click', function(){ go(b.getAttribute('data-t')); });
   });
-}
-function go(id){
-  current = id;
-  each(qsa($('col-a'), '.view'), function(v){ v.hidden = (v.id !== 'v-'+id); });
-  var nav = NAVOF[id] || id;
-  each(qsa(document,'[data-t]'), function(b){
-    b.setAttribute('aria-current', b.getAttribute('data-t') === nav ? 'true' : 'false');
+  $('menu-btn').addEventListener('click', toggleMenu);
+  $('rail-close').addEventListener('click', closeMenu);
+  $('scrim').addEventListener('click', closeMenu);
+  $('rail-home').addEventListener('click', function(){ go('calc'); });
+  $('rail-tour').addEventListener('click', function(){ closeMenu(); go('calc'); tourStart(); });
+  $('rail-search').addEventListener('click', function(){ closeMenu(); openPalette(); });
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape' && document.body.classList.contains('menu-open')){ closeMenu(); $('menu-btn').focus(); }
   });
-  var showResult = (id === 'calc');
+  /* voltar do celular para o computador com a gaveta aberta deixava a cortina
+     por cima do app: o menu ja esta encostado, entao o estado morre aqui */
+  window.addEventListener('resize', function(){ if(wide()) closeMenu(); });
+}
+
+/* contadores do menu: quanta coisa tem em cada tela, sem precisar entrar */
+function paintNavCounts(){
+  if(typeof S === 'undefined' || !S) return;
+  var m = {saved:(S.jobs||[]).length, products:(S.products||[]).length, buys:(S.buys||[]).length,
+           clients:(S.clients||[]).length, printers:(S.printers||[]).length,
+           filaments:(S.filaments||[]).length, cats:(S.categories||[]).length};
+  Object.keys(m).forEach(function(k){
+    var el = $('n-'+k); if(!el) return;
+    el.textContent = m[k];
+    el.hidden = !m[k];   /* zero nao vira um "0" cinza pendurado no menu */
+  });
+}
+
+function go(id, opt){
+  if(ALIAS[id]) id = ALIAS[id]();
+  var r = ROUTE[id];
+  if(!r){ id = 'calc'; r = ROUTE.calc; }
+  if(r.cad) cadTab = r.cad;
+  if(r.set) setTab = r.set;
+
+  current = id; currentView = r.v;
+  each(qsa($('col-a'), '.view'), function(v){ v.hidden = (v.id !== 'v-'+r.v); });
+
+  var navid = r.nav || id;
+  each(qsa(document,'[data-t]'), function(b){
+    b.setAttribute('aria-current', b.getAttribute('data-t') === navid ? 'true' : 'false');
+  });
+
+  /* no computador a topbar diz em que tela voce esta — a marca ja fica no menu */
+  var it = NAVITEM[id] || {};
+  $('pagehead').querySelector('.ph-t').textContent = r.t || it.t || '';
+  $('pagehead').querySelector('.ph-s').textContent = r.s || it.s || '';
+  document.title = (r.t || it.t || 'Calculadora 3D') + ' — Calculadora 3D';
+
+  var showResult = (r.v === 'calc');
   $('col-b').style.display = showResult ? '' : 'none';
   $('strip').style.display = showResult ? '' : 'none';
   $('main').classList.toggle('single', !showResult);
+
+  closeMenu();
   hideTip();
-  window.scrollTo(0,0);
-  if(id === 'quick') renderQuick();
-  if(id === 'saved') renderSaved();
-  if(id === 'products'){ renderCatFilter(); renderProducts(); renderCats(); }
-  if(id === 'buys'){ renderBuyFilter(); renderBuys(); }
-  if(id === 'cadastros'){ showCad(cadTab); renderPrinters(); renderFilaments(); renderCats(); renderClients(); }
-  if(id === 'clientdetail') renderClientDetail();
-  if(id === 'dash') renderDash();
-  if(id === 'settings') showSet(setTab);
+  if(!(opt && opt.keepScroll)) window.scrollTo(0,0);
+
+  if(r.v === 'quick') renderQuick();
+  if(r.v === 'saved') renderSaved();
+  if(r.v === 'products'){ renderCatFilter(); renderProducts(); renderCats(); }
+  if(r.v === 'buys'){ renderBuyFilter(); renderBuys(); }
+  if(r.v === 'cadastros'){ showCad(cadTab); renderPrinters(); renderFilaments(); renderCats(); renderClients(); }
+  if(r.v === 'clientdetail') renderClientDetail();
+  if(r.v === 'dash') renderDash();
+  if(r.v === 'settings') showSet(setTab);
+  paintNavCounts();
+}
+
+/* ============ busca de telas e ações ============
+   A rede de segurança da navegação. Menu bom é menu que você lê; busca boa é
+   para quando você sabe O QUE quer e não ONDE isso mora. Por isso ela indexa
+   também as AÇÕES — "nova impressora", "exportar meus dados" — que antes só
+   existiam como um botão dentro de uma tela que você precisava adivinhar. */
+var PALACT = [
+  {t:'Nova impressora',        s:'Cadastros › Impressoras', ic:'add',   go:'printers',  click:'btn-add-printer',  kw:'adicionar maquina equipamento'},
+  {t:'Novo filamento',         s:'Cadastros › Filamentos',  ic:'add',   go:'filaments', click:'btn-add-filament', kw:'adicionar rolo bobina material'},
+  {t:'Nova categoria',         s:'Cadastros › Categorias',  ic:'add',   go:'cats',      click:'btn-add-cat',      kw:'adicionar grupo'},
+  {t:'Novo cliente',           s:'Negócio › Clientes',      ic:'add',   go:'clients',   click:'btn-add-client',   kw:'adicionar contato agenda'},
+  {t:'Novo produto',           s:'Negócio › Produtos',      ic:'add',   go:'products',  click:'btn-add-product',  kw:'adicionar catalogo item'},
+  {t:'Nova compra',            s:'Negócio › Compras',       ic:'add',   go:'buys',      click:'btn-add-buy',      kw:'adicionar gasto nota material'},
+  {t:'Salvar este orçamento',  s:'Calculadora',             ic:'saved', go:'calc',      click:'btn-save',         kw:'guardar pedido proposta'},
+  {t:'Gerar PDF do orçamento', s:'Calculadora',             ic:'pdf',   go:'calc',      click:'btn-pdf',          kw:'imprimir proposta papel'},
+  {t:'Limpar o cálculo',       s:'Calculadora',             ic:'broom', go:'calc',      click:'btn-clear',        kw:'zerar apagar recomecar'},
+  {t:'Exportar meus dados',    s:'Ajustes › Meus dados',    ic:'down',  go:'data',      click:'btn-export',       kw:'backup copia seguranca arquivo'},
+  {t:'Importar dados',         s:'Ajustes › Meus dados',    ic:'up',    go:'data',      click:'btn-import',       kw:'restaurar backup arquivo'},
+  {t:'Instalar o app',         s:'Ajustes › Aplicativo',    ic:'app',   go:'app',       click:'btn-install',      kw:'pwa tela de inicio atalho celular'},
+  {t:'Rever o tutorial',       s:'Ajustes › Aplicativo',    ic:'help',  tour:true,      kw:'ajuda passeio como usar comecar'},
+  {t:'Alternar tema',          s:'Claro e escuro',          ic:'theme', click:'theme-btn', kw:'dark mode noite claro escuro'}
+];
+var palHits = [], palSel = 0;
+/* "orcamento" tem de achar "Orçamento": ninguem para para pensar em acento no
+   meio de uma busca, ainda menos no teclado do celular */
+function palNorm(x){
+  x = String(x==null?'':x).toLowerCase();
+  return x.normalize ? x.normalize('NFD').replace(/[\u0300-\u036f]/g,'') : x;
+}
+
+function palRows(q){
+  q = (q||'').toLowerCase().trim();
+  var out = [];
+  function ok(hay){ if(!q) return true; return palNorm(hay).indexOf(palNorm(q)) > -1; }
+  NAV.forEach(function(g){
+    g.items.forEach(function(it){
+      if(ok(g.g+' '+it.t+' '+it.s+' '+it.kw)) out.push({kind:'Telas', t:it.t, s:g.g+' › '+it.s, ic:it.id, go:it.id});
+    });
+  });
+  PALACT.forEach(function(a){
+    /* acao cujo botao nem existe neste aparelho (instalar, por exemplo) nao
+       aparece na busca: prometer o que nao acontece e pior que nao oferecer */
+    if(a.click && (!$(a.click) || $(a.click).hidden)) return;
+    if(ok(a.t+' '+a.s+' '+a.kw)) out.push({kind:'Ações', t:a.t, s:a.s, ic:a.ic, go:a.go, click:a.click, tour:a.tour});
+  });
+  return out;
+}
+function renderPalette(){
+  var q = $('pal-input').value;
+  palHits = palRows(q);
+  if(palSel >= palHits.length) palSel = 0;
+  if(!palHits.length){
+    $('pal-list').innerHTML = '<p class="pal-empty">Nada com esse nome. Tente "filamento", "backup" ou "cliente".</p>';
+    return;
+  }
+  var last = '', h = '';
+  palHits.forEach(function(r, i){
+    if(r.kind !== last){ h += '<div class="pal-grp">'+esc(r.kind)+'</div>'; last = r.kind; }
+    h += '<button type="button" data-i="'+i+'" data-on="'+(i===palSel?'1':'0')+'">'+
+         '<svg viewBox="0 0 24 24" aria-hidden="true">'+(ICO[r.ic]||ICO.calc)+'</svg>'+
+         '<span class="t"><b>'+esc(r.t)+'</b><i>'+esc(r.s)+'</i></span></button>';
+  });
+  $('pal-list').innerHTML = h;
+  each(qsa($('pal-list'),'button'), function(b){
+    b.addEventListener('click', function(){ runPal(+b.getAttribute('data-i')); });
+  });
+}
+function runPal(i){
+  var r = palHits[i];
+  if(!r) return;
+  closePalette();
+  if(r.go) go(r.go);
+  if(r.tour){ go('calc'); tourStart(); return; }
+  if(r.click){
+    /* a tela precisa estar montada antes do clique: um quadro de folga basta */
+    requestAnimationFrame(function(){ var b = $(r.click); if(b) b.click(); });
+  }
+}
+function openPalette(){
+  $('palette').hidden = false;
+  $('pal-input').value = ''; palSel = 0;
+  renderPalette();
+  $('pal-input').focus();
+}
+function closePalette(){ $('palette').hidden = true; }
+function bindPalette(){
+  $('pal-input').addEventListener('input', function(){ palSel = 0; renderPalette(); });
+  $('palette').addEventListener('mousedown', function(e){ if(e.target === $('palette')) closePalette(); });
+  $('pal-input').addEventListener('keydown', function(e){
+    if(e.key === 'ArrowDown'){ e.preventDefault(); palSel = Math.min(palSel+1, palHits.length-1); renderPalette(); }
+    else if(e.key === 'ArrowUp'){ e.preventDefault(); palSel = Math.max(palSel-1, 0); renderPalette(); }
+    else if(e.key === 'Enter'){ e.preventDefault(); runPal(palSel); }
+    else if(e.key === 'Escape'){ e.preventDefault(); closePalette(); }
+  });
+  document.addEventListener('keydown', function(e){
+    if((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')){
+      e.preventDefault();
+      $('palette').hidden ? openPalette() : closePalette();
+    }
+  });
 }
 
 /* ============ selects ============ */
@@ -4196,12 +4643,9 @@ function hitsQuery(q, parts){
   return parts.join(' ').toLowerCase().indexOf(q) > -1;
 }
 var CHEV = '<span class="chev" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></span>';
-/* contadores da subnav: dizem de cara quanta coisa tem em cada aba */
-function paintCadCounts(){
-  var m = {'cad-n-p':S.printers.length, 'cad-n-f':S.filaments.length, 'cad-n-c':S.categories.length,
-           'cad-n-cl':(S.clients||[]).length};
-  Object.keys(m).forEach(function(id){ if($(id)) $(id).textContent = m[id]; });
-}
+/* Os contadores saíram da subnav e foram para o menu lateral, onde aparecem
+   sem que você precise entrar na tela para descobrir se tem algo lá dentro. */
+function paintCadCounts(){ paintNavCounts(); }
 function renderPrinters(){
   var el = $('printer-list');
   paintCadCounts();
@@ -5659,7 +6103,6 @@ function setSeg(id,v){
 var cadTab = 'printers';
 function showCad(v){
   cadTab = (v === 'filaments' || v === 'cats' || v === 'clients') ? v : 'printers';
-  setSeg('seg-cad', cadTab);
   $('cad-printers').hidden  = (cadTab !== 'printers');
   $('cad-filaments').hidden = (cadTab !== 'filaments');
   $('cad-cats').hidden      = (cadTab !== 'cats');
@@ -5691,7 +6134,6 @@ function clearCadSearch(id, reset){
 var setTab = 'biz';
 function showSet(v){
   setTab = (v === 'app' || v === 'data') ? v : 'biz';
-  setSeg('seg-set', setTab);
   $('set-biz').hidden  = (setTab !== 'biz');
   $('set-app').hidden  = (setTab !== 'app');
   $('set-data').hidden = (setTab !== 'data');
@@ -6339,9 +6781,6 @@ function bindCalc(){
   each(qsa($('seg-mode'),'button'), function(b){
     b.addEventListener('click', function(){ mode = b.getAttribute('data-v'); setSeg('seg-mode',mode); syncMarginLabel(); render(); });
   });
-  each(qsa($('seg-cad'),'button'), function(b){
-    b.addEventListener('click', function(){ showCad(b.getAttribute('data-v')); });
-  });
   bindSearch('cad-p-search', function(v){ printerQuery = v; renderPrinters(); });
   bindSearch('cad-f-search', function(v){ filamentQuery = v; renderFilaments(); });
   bindSearch('cad-c-search', function(v){ catQuery = v; renderCats(); });
@@ -6900,11 +7339,8 @@ function bindSettings(){
     fr.readAsText(file);
   });
 
-  each(qsa($('seg-set'),'button'), function(b){
-    b.addEventListener('click', function(){ showSet(b.getAttribute('data-v')); });
-  });
-  /* o selo de sincronização no topo é um atalho: tem que cair na aba certa */
-  $('sync-badge').addEventListener('click', function(){ setTab = 'data'; go('settings'); });
+  /* o selo de sincronização no topo é um atalho para a tela dos seus dados */
+  $('sync-badge').addEventListener('click', function(){ go('data'); });
 
   if(!hasLS){
     $('storage-warn').innerHTML = '<div class="alert">Este navegador está bloqueando o armazenamento local, então os dados somem ao fechar a aba. Publicado no GitHub Pages funciona normalmente.</div>';
@@ -7019,17 +7455,17 @@ var TOUR = [
   {t:'Bem-vindo à Calculadora 3D',
    d:'Ela pega as <b>gramas</b> e as <b>horas</b> que o fatiador mostrou e devolve o preço certo da peça — com filamento, energia, máquina, sua mão de obra e o seu lucro já dentro da conta.<br><br>São dois minutos de passeio. Dá para pular e voltar depois.'},
 
-  {sel:['#topnav','#tabbar'],
+  {sel:'#rail-nav', menu:true,
    t:'O menu do app',
-   d:'São oito telas. <b>Calcular</b> é onde você passa a maior parte do tempo; as outras guardam os seus dados e mostram como o mês está indo.'},
+   d:'Toda tela do app está nesta lista, agrupada pelo que você quer fazer: <b>Calcular</b> o preço, olhar o <b>Negócio</b>, mexer nos <b>Cadastros</b> ou nos <b>Ajustes</b>.<br><br>No celular ele abre pelo botão da logo, no canto de cima à esquerda. Não achou alguma coisa? <b>Buscar tela ou ação</b>, ali no topo do menu.'},
 
   {view:'quick', sel:'#v-quick .verdict',
    t:'Rápido: para emergência',
    d:'Cliente na sua frente e um preço na mesa? Aqui são <b>três campos</b> — gramas, tempo e o valor oferecido — e um veredicto: dá lucro, empata ou é prejuízo. Serve para não dizer sim a um preço ruim; o preço de verdade sai na tela ao lado.'},
 
-  {view:'cadastros', cad:'printers', sel:'#seg-cad',
+  {view:'cadastros', cad:'printers', sel:'#printer-list',
    t:'Comece pelos Cadastros',
-   d:'Aqui ficam as três coisas que a calculadora usa: <b>impressoras</b>, <b>filamentos</b> e <b>categorias</b>. Preencha uma vez e todo cálculo já sai com os seus números.'},
+   d:'No menu, o grupo <b>Cadastros</b> tem as três coisas de que a calculadora precisa: <b>impressoras</b>, <b>filamentos</b> e <b>categorias</b>. Preencha uma vez e todo cálculo já sai com os seus números.'},
 
   {view:'cadastros', cad:'printers', sel:'#printer-list',
    t:'Impressoras',
@@ -7044,7 +7480,7 @@ var TOUR = [
    d:'Servem para agrupar o seu catálogo — chaveiros, vasos, peças sob encomenda. Depois você filtra os produtos por elas.'},
 
   {view:'settings', set:'biz', sel:'#set-biz',
-   t:'Ajustes › Meu negócio',
+   t:'Ajustes › Meus números',
    d:'Tarifa de energia, quanto vale a sua hora, o custo fixo do mês e a taxa da maquininha. <b>Estes quatro números entram em todo cálculo</b> — vale preencher com calma.'},
 
   {view:'calc', sel:'#gc-drop',
@@ -7109,7 +7545,7 @@ var TOUR = [
 
   {view:'settings', set:'app', sel:'#btn-tour',
    t:'Este tutorial fica guardado aqui',
-   d:'Sempre que quiser rever, é <b>Ajustes › Aplicativo › Tutorial do app</b>. Nesta mesma aba você troca o tema e instala o app no aparelho.'},
+   d:'Sempre que quiser rever, é <b>Ajustes › Aplicativo</b> — ou <b>Rever o tutorial</b>, lá no pé do menu. Nesta mesma tela você troca o tema e instala o app no aparelho.'},
 
   {view:'calc',
    t:'Pronto para começar',
@@ -7171,9 +7607,13 @@ function tourGo(i){
   tourI = i;
   if(st.cad) cadTab = st.cad;
   if(st.set) setTab = st.set;
-  if(st.view && current !== st.view) go(st.view);
+  if(st.view && currentView !== st.view) go(st.view);
   else if(st.view === 'cadastros') showCad(cadTab);
   else if(st.view === 'settings') showSet(setTab);
+  /* o passo que explica o menu precisa do menu na tela: no celular ele mora
+     numa gaveta, entao a gaveta abre junto. Nos outros passos ela sai da
+     frente. */
+  if(st.menu) openMenu(); else closeMenu();
 
   $('tour-title').textContent = st.t;
   $('tour-text').innerHTML = st.d;
@@ -7296,6 +7736,7 @@ bindSettings();
 bindInstall();
 bindTheme();
 bindScrollShadow();
+bindPalette();
 bindTour();
 refreshShadow();
 boot(false);
