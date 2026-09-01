@@ -5091,6 +5091,18 @@ function cadMsg(pfx, html){
   }, 6000);
 }
 function withIndex(arr){ return arr.map(function(x,i){ return {x:x, i:i}; }); }
+/* O item editado é achado pelo ID, nunca pela posição. Quando a nuvem devolve
+   uma coleção ela vem noutra ordem e com objetos NOVOS: o índice guardado no
+   desenho passava a apontar para outro cadastro — ou para um objeto que já
+   tinha saído do S, e aí tudo que fosse digitado depois se perdia em silêncio.
+   O id do cadastro fica no cartão, e daí sai sempre o objeto que está valendo. */
+function collById(coll, id){
+  return (S[coll]||[]).filter(function(x){ return x.id === id; })[0] || null;
+}
+function cardItem(coll, el){
+  var card = el && el.closest ? el.closest('.item') : null;
+  return card ? collById(coll, card.getAttribute('data-id')) : null;
+}
 function hitsQuery(q, parts){
   if(!q) return true;
   return parts.join(' ').toLowerCase().indexOf(q) > -1;
@@ -5108,7 +5120,7 @@ function renderPrinters(){
   });
   el.innerHTML = list.map(function(o){
     var p = o.x, i = o.i, op = cadIsOpen('p', p);
-    return '<div class="item'+(op?' open':'')+'"><div class="head" data-open="p'+i+'" role="button" tabindex="0" aria-expanded="'+(op?'true':'false')+'">'+
+    return '<div class="item'+(op?' open':'')+'" data-id="'+esc(p.id)+'"><div class="head" data-open="p'+i+'" role="button" tabindex="0" aria-expanded="'+(op?'true':'false')+'">'+
       '<span class="nm">'+esc(p.name||'Sem nome')+'</span>'+
       '<span class="meta">'+brl(machineHour(p))+'/h</span>'+CHEV+'</div>'+
       '<div class="body" id="body-p'+i+'"'+(op?'':' hidden')+'>'+
@@ -5127,7 +5139,7 @@ function renderPrinters(){
       'Nenhuma impressora cadastrada',
       'Cadastre a sua impressora para o app saber o custo de cada hora de máquina.',
       'btn-add-printer', 'Adicionar impressora', 'a impressora');
-  wireList(el, S.printers, renderPrinters, 'p');
+  wireList(el, 'printers', renderPrinters, 'p');
 }
 /* Tela vazia é onde o usuário mais se perde. Todas seguem o mesmo desenho:
    o que está faltando, por que isso importa e o botão que resolve. Vazio por
@@ -5283,7 +5295,7 @@ function renderFilaments(){
   el.innerHTML = list.map(function(o){
     var f = o.x, i = o.i, op = cadIsOpen('f', f);
     var u = safeUrl(f.url);
-    return '<div class="item'+(op?' open':'')+'"><div class="head" data-open="f'+i+'" role="button" tabindex="0" aria-expanded="'+(op?'true':'false')+'">'+
+    return '<div class="item'+(op?' open':'')+'" data-id="'+esc(f.id)+'"><div class="head" data-open="f'+i+'" role="button" tabindex="0" aria-expanded="'+(op?'true':'false')+'">'+
       '<span class="swatch" style="background:'+esc(safeColor(f.color,'#ccc'))+'"></span>'+
       '<span class="nm">'+esc(f.name||'Sem nome')+'</span>'+
       '<span class="'+filMetaClass(f)+'">'+esc(filMeta(f))+'</span>'+CHEV+'</div>'+
@@ -5313,10 +5325,10 @@ function renderFilaments(){
       'Nenhum filamento cadastrado',
       'Cadastre um rolo com preço e peso para o app achar o preço por grama.',
       'btn-add-filament', 'Adicionar filamento', ' filamento');
-  wireList(el, S.filaments, renderFilaments, 'f');
+  wireList(el, 'filaments', renderFilaments, 'f');
   each(qsa(el,'[data-fill-f]'), function(b){
     b.addEventListener('click', function(){
-      var f = S.filaments[+b.getAttribute('data-fill-f')];
+      var f = cardItem('filaments', b);
       if(!f) return;
       setStock(f, num(f.spoolWeight) > 0 ? num(f.spoolWeight) : 1000);
       persist();
@@ -5335,7 +5347,7 @@ function renderFilaments(){
       box.hidden = !show;
       b.setAttribute('aria-expanded', show ? 'true' : 'false');
       if(show){
-        var f = S.filaments[i];
+        var f = cardItem('filaments', b);
         if(f) filBuyReset(i, f);
         var v = $('fbv'+i);
         if(v){ v.focus(); v.select(); }
@@ -5347,7 +5359,7 @@ function renderFilaments(){
   each(qsa(el,'[data-buyf]'), function(inp){
     inp.addEventListener('input', function(){
       var i = +inp.getAttribute('data-buyf');
-      filBuyNoteRefresh(i, S.filaments[i]);
+      filBuyNoteRefresh(i, cardItem('filaments', inp));
     });
   });
   each(qsa(el,'[data-buyno-f]'), function(b){
@@ -5360,7 +5372,7 @@ function renderFilaments(){
   });
   each(qsa(el,'[data-buyok-f]'), function(b){
     b.addEventListener('click', function(){
-      var i = +b.getAttribute('data-buyok-f'), f = S.filaments[i];
+      var i = +b.getAttribute('data-buyok-f'), f = cardItem('filaments', b);
       if(!f) return;
       var rolls = Math.max(1, Math.round(num($('fbq'+i).value)) || 1);
       var total = num($('fbv'+i).value);
@@ -5386,7 +5398,7 @@ function renderFilaments(){
   });
 }
 var TXTKEYS = {name:1, material:1, color:1, override:1, brand:1, url:1, stockG:1};
-function wireList(el, arr, rerender, pfx){
+function wireList(el, coll, rerender, pfx){
   each(qsa(el,'[data-open]'), function(h){
     var toggle = function(){
       var key = h.getAttribute('data-open');
@@ -5396,7 +5408,7 @@ function wireList(el, arr, rerender, pfx){
       h.setAttribute('aria-expanded', b.hidden ? 'false' : 'true');
       var it = h.closest('.item');
       if(it) it.classList.toggle('open', !b.hidden);
-      cadSetOpen(pfx, arr[+key.slice(1)], !b.hidden);
+      cadSetOpen(pfx, cardItem(coll, h), !b.hidden);
     };
     h.addEventListener('click', toggle);
     h.addEventListener('keydown', function(e){
@@ -5406,7 +5418,7 @@ function wireList(el, arr, rerender, pfx){
   each(qsa(el,'[data-list]'), function(inp){
     inp.addEventListener('input', function(){
       var idx = +inp.getAttribute('data-list');
-      var it = arr[idx];
+      var it = cardItem(coll, inp);
       if(!it) return;
       var k = inp.getAttribute('data-key');
       it[k] = TXTKEYS[k] ? inp.value : num(inp.value);
@@ -5453,10 +5465,10 @@ function wireList(el, arr, rerender, pfx){
   });
   each(qsa(el,'[data-save-'+pfx+']'), function(b){
     b.addEventListener('click', function(){
-      var i = +b.getAttribute('data-save-'+pfx), it = arr[i];
+      var it = cardItem(coll, b), card = b.closest('.item');
       if(!it) return;
       if(!String(it.name == null ? '' : it.name).trim()){
-        var inp = el.querySelector('[data-list="'+i+'"][data-key="name"]');
+        var inp = card && card.querySelector('[data-key="name"]');
         if(inp){ inp.focus(); inp.select(); }
         cadMsg(pfx, '<div class="alert bad">Dê um apelido antes de salvar: é por ele que você acha este cadastro na lista e na calculadora.</div>');
         return;
@@ -5472,9 +5484,11 @@ function wireList(el, arr, rerender, pfx){
   });
   each(qsa(el,'[data-del-'+pfx+']'), function(b){
     b.addEventListener('click', function(){
+      var arr = S[coll]||[], it = cardItem(coll, b), i = arr.indexOf(it);
+      if(i < 0) return;
       if(arr.length <= 1){ alert('Mantenha pelo menos um cadastro.'); return; }
       if(!confirm('Excluir este cadastro?')) return;
-      arr.splice(+b.getAttribute('data-del-'+pfx),1);
+      arr.splice(i,1);
       persist(); rerender(); fillSelects(); render();
     });
   });
@@ -5492,11 +5506,13 @@ function renderCats(){
   });
   var card = $('cad-cats-card');
   el.innerHTML = list.map(function(o){
-    var c = o.x, i = o.i;
+    /* o id vai no proprio campo: a lista pode voltar da nuvem noutra ordem
+       entre um toque e outro, e a posicao apontaria para outra categoria */
+    var c = o.x, id = esc(c.id);
     return '<div class="extra">'+
-      '<input type="text" value="'+esc(c.name)+'" placeholder="Nome da categoria" data-cat="'+i+'" data-ck="name">'+
-      '<input type="color" value="'+esc(safeColor(c.color,'#FF6B2C'))+'" data-cat="'+i+'" data-ck="color" style="flex:none;width:52px;padding:4px">'+
-      '<button type="button" data-catdel="'+i+'" aria-label="Remover">×</button></div>';
+      '<input type="text" value="'+esc(c.name)+'" placeholder="Nome da categoria" data-cat="'+id+'" data-ck="name">'+
+      '<input type="color" value="'+esc(safeColor(c.color,'#FF6B2C'))+'" data-cat="'+id+'" data-ck="color" style="flex:none;width:52px;padding:4px">'+
+      '<button type="button" data-catdel="'+id+'" aria-label="Remover">×</button></div>';
   }).join('') || (catQuery && S.categories.length
       ? emptyFind(catQuery, 'a categoria')
       : emptyBox('Nenhuma categoria ainda',
@@ -5506,7 +5522,7 @@ function renderCats(){
   if(card) card.classList.toggle('bare', !list.length);
   each(qsa(el,'[data-cat]'), function(inp){
     inp.addEventListener('input', function(){
-      var c = S.categories[+inp.getAttribute('data-cat')];
+      var c = catById(inp.getAttribute('data-cat'));
       if(!c) return;
       c[inp.getAttribute('data-ck')] = inp.value;
       c.updatedAt = Date.now();
@@ -5515,12 +5531,12 @@ function renderCats(){
   });
   each(qsa(el,'[data-catdel]'), function(b){
     b.addEventListener('click', function(){
-      var c = S.categories[+b.getAttribute('data-catdel')];
+      var c = catById(b.getAttribute('data-catdel'));
       if(!c) return;
       var used = S.products.filter(function(p){ return p.category === c.id; }).length;
       if(!confirm('Excluir a categoria "'+(c.name||'')+'"?' + (used ? '\n'+used+' produto(s) ficam sem categoria.' : ''))) return;
       S.products.forEach(function(p){ if(p.category === c.id){ p.category = ''; p.updatedAt = Date.now(); } });
-      S.categories.splice(+b.getAttribute('data-catdel'),1);
+      S.categories.splice(S.categories.indexOf(c),1);
       persist(); renderCats(); renderCatFilter(); fillCatSelect(); renderProducts();
     });
   });
@@ -6856,23 +6872,41 @@ function clean(o){
   });
   return r;
 }
+/* Gravação combinada mas ainda não confirmada. Enquanto ela está na fila o que
+   está na tela vale mais que o que a nuvem devolve — foi digitado depois. */
+var PEND = {};
+function pendingSync(coll, id){ return !!PEND[coll+'/'+id]; }
+function schedulePush(coll, id){
+  var k = coll+'/'+id;
+  PEND[k] = 1;
+  later(k, function(){
+    var it = (S[coll]||[]).filter(function(x){ return x.id === id; })[0];
+    if(!online() || !it){ delete PEND[k]; return; }
+    SYNC.F.setDoc(dref(coll,id), clean(it)).then(
+      function(){ delete PEND[k]; syncOk(); },
+      function(e){ delete PEND[k]; syncErr(e); });
+  });
+}
+function scheduleDel(coll, id){
+  var k = coll+'/'+id;
+  PEND[k] = 1;
+  later(k, function(){
+    if(!online()){ delete PEND[k]; return; }
+    SYNC.F.deleteDoc(dref(coll,id)).then(
+      function(){ delete PEND[k]; syncOk(); },
+      function(e){ delete PEND[k]; syncErr(e); });
+  });
+}
 function syncPush(){
   if(!online() || SYNC.applying) return;
   COLLS.forEach(function(coll){
     var prev = shadow[coll] || {}, next = {};
     (S[coll]||[]).forEach(function(it){ next[it.id] = JSON.stringify(it); });
     Object.keys(next).forEach(function(id){
-      if(prev[id] !== next[id]) later(coll+'/'+id, function(){
-        if(!online()) return;
-        var it = (S[coll]||[]).filter(function(x){ return x.id === id; })[0];
-        if(it) SYNC.F.setDoc(dref(coll,id), clean(it)).then(syncOk, syncErr);
-      });
+      if(prev[id] !== next[id]) schedulePush(coll, id);
     });
     Object.keys(prev).forEach(function(id){
-      if(!(id in next)) later(coll+'/'+id, function(){
-        if(!online()) return;
-        SYNC.F.deleteDoc(dref(coll,id)).then(syncOk, syncErr);
-      });
+      if(!(id in next)) scheduleDel(coll, id);
     });
     shadow[coll] = next;
   });
@@ -7061,6 +7095,39 @@ function applyRemote(fn){
     SYNC.lastAt = Date.now();
   }
 }
+/* A nuvem devolve o que ela RECEBEU há pouco, não o que está na tela agora.
+   Trocar a coleção inteira pelo que voltou apagava duas coisas: as teclas dadas
+   depois do envio (o rolo que o usuário estava batizando voltava ao nome
+   antigo) e o cadastro recém-criado que ainda nem tinha subido. Aqui cada item
+   é casado pelo id e vale o mais novo dos dois; nada que ainda esteja na fila
+   de envio é derrubado, e o que está na fila para ser apagado não ressuscita. */
+function mergeRemote(coll, arr, kept){
+  var local = S[coll] || [], loc = {}, seen = {}, out = [];
+  local.forEach(function(it){ if(it && it.id) loc[it.id] = it; });
+  arr.forEach(function(r){
+    if(!r.id) return;
+    seen[r.id] = 1;
+    var l = loc[r.id];
+    if(!l){
+      /* sumiu daqui e tem gravação na fila: é a exclusão que ainda não chegou */
+      if(!pendingSync(coll, r.id)) out.push(r);
+      return;
+    }
+    if(pendingSync(coll, r.id) || num(l.updatedAt) > num(r.updatedAt)){
+      out.push(l);
+      if(kept && JSON.stringify(clean(l)) !== JSON.stringify(clean(r))) kept.push(l.id);
+    } else out.push(r);
+  });
+  local.forEach(function(it){
+    if(!it || !it.id || seen[it.id]) return;
+    /* cadastro que a nuvem ainda não conhece não pode sumir da tela */
+    if(pendingSync(coll, it.id) || !(shadow[coll] && shadow[coll][it.id])){
+      out.push(it);
+      if(kept) kept.push(it.id);
+    }
+  });
+  return out;
+}
 function attach(){
   var F = SYNC.F, db = SYNC.db, org = SYNC.org;
   if(!org) return;
@@ -7112,10 +7179,17 @@ function attach(){
       /* cache vazio nunca apaga o que já está na tela */
       if(fromCache && !arr.length && (S[coll]||[]).length) return;
       if(firstServer && hadLocal && arr.length) keepLocalBackup();
+      var kept = [];
       applyRemote(function(){
-        S[coll] = arr;
+        /* na PRIMEIRA resposta do servidor a nuvem manda inteira — é a regra
+           que o FIREBASE.md promete, e o que estava neste aparelho acabou de ir
+           para o backup logo acima. Da segunda em diante vale o merge. */
+        S[coll] = firstServer ? arr : mergeRemote(coll, arr, kept);
         migrate(false);
       });
+      /* o que ficou por ser mais novo ainda precisa subir: sem isto ele só iria
+         na próxima vez que o usuário mexesse no cadastro */
+      kept.forEach(function(id){ schedulePush(coll, id); });
       refreshAfterSync(coll);
     }, syncErr));
   });

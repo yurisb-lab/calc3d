@@ -147,9 +147,14 @@ entrada, se a pasta da empresa ainda estiver vazia, o app copia sozinho o que
 estava em `users/{uid}` para lá. A pasta antiga não é apagada.
 
 **E se eu já tinha dados no aparelho antes de conectar?** Se a nuvem estiver
-vazia, o app sobe tudo automaticamente. Se a nuvem já tiver dados, ela manda — e
-os dados locais ficam guardados; use **Enviar dados deste aparelho** em Ajustes
-› Sincronização para juntá‑los.
+vazia, o app sobe tudo automaticamente. Se a nuvem já tiver dados, ela manda na
+primeira conexão — e os dados locais ficam guardados; use **Enviar dados deste
+aparelho** em Ajustes › Sincronização para juntá‑los.
+
+**Se eu mexer num cadastro nos dois aparelhos ao mesmo tempo?** Ganha a versão
+mais nova, cadastro por cadastro. Depois da primeira conexão a nuvem não
+substitui mais a lista inteira: o que você acabou de digitar e o que ainda nem
+subiu continuam valendo, e o aparelho reenvia o que ficou.
 
 **Como troco o projeto do Firebase de vez?** Edite `BUILTIN_CFG` no topo do
 bloco de sincronização, dentro do `index.html`.

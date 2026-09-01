@@ -638,3 +638,34 @@ Resina/SLA, `.bgcode` binário do Prusa, ler a miniatura embutida no G-code para
 virar foto do produto, frete por CEP, comparador de marketplaces, anexar o PDF
 no `navigator.share` e cadastro de clientes com histórico próprio. A leitura de
 `.gcode` e a torre de purga **saíram** desta lista.
+
+## 24. Correção: cadastro que não salvava
+
+O cadastro de filamento aceitava o que era digitado, dizia **"salvo"** e depois
+voltava ao valor antigo. Produtos e clientes não tinham o problema porque a
+ficha deles procura o registro pelo **id** a cada tecla.
+
+A causa era a chegada da nuvem no meio da digitação. Quando o Firestore devolve
+uma coleção, o app trocava a lista inteira por objetos novos, numa ordem nova.
+A lista de cadastros na tela guardava a **posição** de cada rolo, então, depois
+da troca, tudo que fosse digitado ia parar num objeto que já tinha saído do
+app — e o botão Salvar gravava o estado sem as alterações.
+
+O que mudou:
+
+- **Cada cartão da lista carrega o id do cadastro.** Digitar, salvar, excluir,
+  repor estoque e registrar compra agora agem sobre o rolo certo mesmo que a
+  nuvem tenha reordenado a coleção entre um toque e outro. Vale também para
+  impressoras e categorias, que tinham o mesmo desenho.
+- **A nuvem não sobrescreve mais o que acabou de ser digitado.** Cada item que
+  volta é casado pelo id e vale o mais novo dos dois (`updatedAt`); o que ainda
+  está na fila de envio não é derrubado, e a exclusão que ainda não subiu não
+  ressuscita.
+- **Cadastro recém-criado não some.** Antes, um item criado entre o envio e a
+  resposta da nuvem era apagado por ela; agora, o que a nuvem ainda não conhece
+  fica na tela e sobe em seguida.
+- Item mantido por ser mais novo é reenviado na hora, para os dois aparelhos
+  terminarem iguais.
+
+A regra da **primeira** resposta do servidor continua a mesma: a nuvem manda, e
+o que estava no aparelho vai para o backup local.
