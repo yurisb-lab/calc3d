@@ -949,6 +949,8 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
 .gcok .src{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);margin-bottom:4px}
 .gcok ul{margin:6px 0 0;padding-left:18px}
 .gcok li{margin-bottom:2px}
+.orline{display:flex;align-items:center;gap:10px;margin:0 0 12px;color:var(--ink3);font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+.orline::before,.orline::after{content:"";flex:1;height:1px;background:var(--line)}
 
 /* ---------- multicolor / AMS ---------- */
 #mat-box{margin-top:14px}
@@ -1414,6 +1416,7 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
         <button type="button" data-v="profit" aria-pressed="false">Lucro</button>
       </div>
       <div class="filterbar" id="cat-filter"></div>
+      <div id="p-msg"></div>
       <div class="pgrid" id="product-grid"></div>
       <div id="product-empty"></div>
 
@@ -1474,7 +1477,7 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
         <div id="pd-params"></div>
       </div>
 
-      <h2 class="section">Atualizar pelo fatiador</h2>
+      <h2 class="section">Números do fatiador</h2>
       <div class="card">
         <div class="drop" id="pd-gc-drop" role="button" tabindex="0">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4"/><path d="M8 8l4-4 4 4"/><path d="M4 15v3a2 2 0 002 2h12a2 2 0 002-2v-3"/></svg>
@@ -1484,7 +1487,7 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
         <p class="suphint" style="margin:-4px 0 12px">Ou toque na área acima para escolher o arquivo.<button type="button" class="help" data-h="importar" aria-label="O que é isso?">?</button></p>
         <input type="file" id="pd-gc-file" hidden>
         <div id="pd-gc-msg"></div>
-        <details class="fold" id="pd-gc-paste" style="margin:0">
+        <details class="fold" id="pd-gc-paste" style="margin:0 0 16px">
           <summary>Colar os números do Handy ou do fatiador</summary>
           <div class="body">
             <p class="note">O Bambu Handy não exporta arquivo. Copie da tela dele o peso, o tempo e os materiais e cole aqui — o produto é atualizado do mesmo jeito.</p>
@@ -1492,12 +1495,58 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
             <div class="btnrow" style="margin-top:10px"><button type="button" class="btn" id="btn-pd-gc-text">Ler o texto colado</button></div>
           </div>
         </details>
+
+        <!-- sem arquivo e sem copiar e colar: os dois números que o Bambu Studio
+             mostra na barra de fatiamento, digitados aqui mesmo na ficha -->
+        <div class="orline"><span>ou digite na mão</span></div>
+        <p class="note">Depois de fatiar, o <b>Bambu Studio</b> mostra no rodapé o <b>peso total</b> em gramas e o <b>tempo estimado</b> — os mesmos números que o Handy mostra antes de mandar imprimir. Digite os dois aqui e o produto sai com gramas, tempo, custo e preço prontos, sem passar pela calculadora.</p>
+        <div class="row">
+          <div class="field">
+            <label for="pd-m-grams">Peso total <span class="hint">g</span><button type="button" class="help" data-h="gramas" aria-label="O que é isso?">?</button></label>
+            <input id="pd-m-grams" type="text" inputmode="decimal" placeholder="82">
+          </div>
+          <div class="field">
+            <label for="pd-m-h">Horas</label>
+            <input id="pd-m-h" type="text" inputmode="decimal" placeholder="9">
+          </div>
+          <div class="field">
+            <label for="pd-m-m">Minutos</label>
+            <input id="pd-m-m" type="text" inputmode="decimal" placeholder="0">
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label for="pd-m-printer">Impressora</label>
+            <select id="pd-m-printer"></select>
+          </div>
+          <div class="field">
+            <label for="pd-m-filament">Filamento</label>
+            <select id="pd-m-filament"></select>
+          </div>
+        </div>
+        <div class="field">
+          <label for="pd-m-qty">Quantidade de peças</label>
+          <input id="pd-m-qty" type="text" inputmode="decimal" value="1">
+        </div>
+        <div class="field" style="margin-bottom:0">
+          <label>Os valores acima são para<button type="button" class="help" data-h="escopo" aria-label="O que é isso?">?</button></label>
+          <div class="seg" id="seg-pd-scope">
+            <button type="button" data-v="unit" aria-pressed="true">1 peça</button>
+            <button type="button" data-v="plate" aria-pressed="false">A mesa toda</button>
+          </div>
+        </div>
+        <div class="btnrow" style="margin-top:14px">
+          <button type="button" class="btn" id="btn-pd-manual">Usar estes números no produto</button>
+        </div>
       </div>
 
       <div class="btnrow" style="margin-top:16px">
-        <button type="button" class="btn primary" id="btn-pd-calc">Abrir na calculadora</button>
+        <button type="button" class="btn primary" id="btn-pd-save">Salvar produto</button>
+        <button type="button" class="btn" id="btn-pd-calc">Abrir na calculadora</button>
       </div>
-      <div class="btnrow">
+      <div id="pd-save-msg" style="margin-top:10px"></div>
+      <p class="note" style="margin:8px 0 0">O app já vai salvando sozinho a cada tecla — o botão confirma e leva você de volta ao catálogo.</p>
+      <div class="btnrow" style="margin-top:14px">
         <button type="button" class="btn" id="btn-pd-dup">Duplicar</button>
         <button type="button" class="btn danger" id="btn-pd-del">Excluir</button>
       </div>
@@ -2469,6 +2518,8 @@ function fillSelects(){
   fillSelect($('f-filament'), S.filaments);
   fillSelect($('q-printer'),  S.printers);
   fillSelect($('q-filament'), S.filaments);
+  fillSelect($('pd-m-printer'),  S.printers);
+  fillSelect($('pd-m-filament'), S.filaments);
 }
 function curPrinter(){ return S.printers.filter(function(x){return x.id===$('f-printer').value;})[0] || S.printers[0] || {watts:0,price:0,life:1,maint:0,hoursYear:1,override:''}; }
 function curFilament(){ return S.filaments.filter(function(x){return x.id===$('f-filament').value;})[0] || S.filaments[0] || {spoolPrice:0,spoolWeight:1000}; }
@@ -4724,6 +4775,7 @@ function newProduct(){
 }
 function openProduct(id){
   pdId = id;
+  if($('pd-save-msg')) $('pd-save-msg').innerHTML = '';
   var p = S.products.filter(function(x){return x.id===id;})[0];
   if(!p){ go('products'); return; }
   go('productdetail');
@@ -4745,6 +4797,7 @@ function renderProductDetail(){
 
   renderMoneyBox(p, productMoney(p));
   renderParams(p);
+  pdManualFill(p);
 }
 function renderParams(p){
   var src = hostOf(p.stlUrl);
@@ -4772,7 +4825,7 @@ function renderParams(p){
     '<div class="kv"><span>Mão de obra</span><span class="v">'+dec(num(p.prep),0)+' min lote + '+dec(num(p.finish),0)+' min peça</span></div>'+
     ((p.extras||[]).length ? '<div class="kv"><span>Insumos</span><span class="v">'+brl(extrasTotal(p.extras))+'</span></div>' : '')+
     (src ? '<div class="kv"><span>Modelo</span><span class="v"><a class="srcpill" href="'+esc(safeUrl(p.stlUrl))+'" target="_blank" rel="noopener noreferrer">'+esc(src)+'</a></span></div>' : '')+
-    '<p class="note">Para atualizar estes números, mande o arquivo fatiado (ou cole os do Handy) logo abaixo — ou toque em <b>Abrir na calculadora</b>, ajuste e salve de novo.</p>';
+    '<p class="note">Para atualizar estes números, mande o arquivo fatiado, cole os do Handy ou <b>digite na mão</b> o peso e o tempo do Bambu Studio logo abaixo — ou toque em <b>Abrir na calculadora</b>, ajuste e salve de novo.</p>';
 }
 function renderGallery(elId, target, after){
   var el = $(elId);
@@ -4858,6 +4911,107 @@ function applySlicedToProduct(res, fileName, box){
   fillProductFromCalc(p);
   persist();
   openProduct(p.id);                 /* volta para a ficha, já atualizada */
+}
+
+/* ---- digitar na mão o que o Bambu Studio mostra ---- */
+/* Nem todo mundo tem o arquivo à mão: no Handy ele nem existe, e no Studio o
+   peso e o tempo estão ali na tela, prontos para copiar. Estes dois números
+   entram pelo mesmo caminho do arquivo — passam pela calculadora e voltam com
+   custo e preço refeitos — para o produto nunca ter duas verdades. */
+var pdScope = 'unit';
+var PD_MAN = ['pd-m-grams','pd-m-h','pd-m-m','pd-m-qty','pd-m-printer','pd-m-filament'];
+function pdManualFill(p){
+  var a = document.activeElement;
+  /* sincronização com a nuvem redesenha a ficha a qualquer momento: quem está
+     digitando os números não pode ver o campo voltar sozinho ao que estava */
+  if(a && PD_MAN.indexOf(a.id) > -1) return;
+  function set(id, v){ var el = $(id); if(el) el.value = v; }
+  set('pd-m-grams', num(p.grams) > 0 ? dec(num(p.grams), 1) : '');
+  var hrs = num(p.hours);
+  set('pd-m-h', hrs > 0 ? String(Math.floor(hrs)) : '');
+  set('pd-m-m', hrs > 0 ? String(Math.round((hrs - Math.floor(hrs)) * 60)) : '');
+  set('pd-m-qty', String(Math.max(1, Math.round(num(p.qty)) || 1)));
+  var pr = $('pd-m-printer'), fl = $('pd-m-filament');
+  if(pr && p.printer  && S.printers.some(function(x){ return x.id === p.printer; }))  pr.value = p.printer;
+  var fid = p.filament || ((p.mats || [])[0] || {}).f;
+  if(fl && fid && S.filaments.some(function(x){ return x.id === fid; })) fl.value = fid;
+  pdScope = p.scope === 'plate' ? 'plate' : 'unit';
+  setSeg('seg-pd-scope', pdScope);
+}
+function pdApplyManual(){
+  var box = 'pd-gc-msg';
+  var p = S.products.filter(function(x){ return x.id === pdId; })[0];
+  if(!p){ gcErr('Abra um produto antes de digitar os números.', box); return; }
+  var g = num($('pd-m-grams').value);
+  var hrs = num($('pd-m-h').value) + num($('pd-m-m').value) / 60;
+  if(!(g > 0) && !(hrs > 0)){
+    gcErr('Digite pelo menos o peso ou o tempo que o fatiador mostrou.', box);
+    return;
+  }
+  var had = num(p.grams) > 0 || num(p.hours) > 0;
+  if(had && !confirm('Substituir as gramas, o tempo e as cores salvas de "' + (p.name || 'sem nome') + '" por estes números?')) return;
+
+  var wasMulti = !!p.multi && (p.mats || []).length > 1;
+  var qty = Math.max(1, Math.round(num($('pd-m-qty').value)) || 1);
+
+  loadProduct(p);                 /* o produto vai inteiro para a calculadora */
+  /* um peso só não separa cor: quem quiser multicolor manda o arquivo ou cola as linhas */
+  multi = false; mats = []; purgeStr = '';
+  $('f-purge').value = '';
+  setSeg('seg-multi', 'one'); renderMats();
+  $('f-grams').value = g > 0 ? dec(g, 1) : '';
+  $('f-h').value = Math.floor(hrs) || 0;
+  $('f-m').value = Math.round((hrs - Math.floor(hrs)) * 60) || 0;
+  $('f-qty').value = qty;
+  scope = pdScope; setSeg('seg-scope', scope);
+  if($('pd-m-printer').value)  $('f-printer').value  = $('pd-m-printer').value;
+  if($('pd-m-filament').value) $('f-filament').value = $('pd-m-filament').value;
+  /* o fatiador já contou brim, suporte e purga no peso da tela */
+  var hadWaste = g > 0 && num($('f-waste').value) > 0;
+  if(g > 0) $('f-waste').value = 0;
+  render();
+
+  fillProductFromCalc(p);
+  persist();
+  openProduct(p.id);              /* volta para a ficha, já com preço refeito */
+
+  var li = [];
+  li.push(scope === 'plate'
+    ? 'Contados como a <b>mesa toda</b>, com ' + qty + (qty > 1 ? ' peças' : ' peça') + '.'
+    : 'Contados como <b>1 peça</b>.');
+  if(!(g > 0)) li.push('Sem o peso, só o tempo entrou: o filamento continua fora do custo.');
+  if(!(hrs > 0)) li.push('Sem o tempo, a máquina e a energia ficam fora do custo — preencha as horas.');
+  if(hadWaste) li.push('Desperdício zerado: o peso do fatiador já conta brim, suporte e purga.');
+  if(wasMulti) li.push('O multicolor saiu: um peso só não separa as cores. Para tê-las de volta, mande o arquivo fatiado ou cole as linhas de cada material.');
+  li.push('Custo e preço sugerido foram refeitos com estes números.');
+  gcMsgHtml('<div class="gcok"><span class="src">Digitado do fatiador</span>' +
+    (g > 0 ? '<b>' + dec(g, 1) + ' g</b>' : '') +
+    (g > 0 && hrs > 0 ? ' · ' : '') +
+    (hrs > 0 ? '<b>' + dec(Math.floor(hrs), 0) + ' h ' + dec(Math.round(hrs * 60) % 60, 0) + ' min</b>' : '') +
+    '<ul><li>' + li.join('</li><li>') + '</li></ul></div>', box);
+}
+
+/* ---- salvar a ficha ---- */
+/* Os campos já gravam a cada tecla, mas ninguém confia no que não confirmou:
+   o botão fecha a ficha, avisa que foi salvo e devolve a lista. */
+function pdCommitFields(p){
+  p.name    = $('pd-name').value;
+  p.note    = $('pd-note').value;
+  p.stlUrl  = $('pd-stl').value;
+  p.priceSet = num($('pd-price').value);
+  p.category = $('pd-cat').value;
+  p.updatedAt = Date.now();
+}
+var pMsgT = null;
+function productMsg(html){
+  var el = $('p-msg');
+  if(!el) return;
+  el.innerHTML = html;
+  if(pMsgT) clearTimeout(pMsgT);
+  if(html) pMsgT = setTimeout(function(){
+    var e2 = $('p-msg');
+    if(e2) e2.innerHTML = '';
+  }, 7000);
 }
 
 /* ============ compras / notas fiscais ============ */
@@ -6514,9 +6668,33 @@ function bindProducts(){
       this.value = '';
     });
   });
+  each(qsa($('seg-pd-scope'),'button'), function(b){
+    b.addEventListener('click', function(){
+      pdScope = b.getAttribute('data-v');
+      setSeg('seg-pd-scope', pdScope);
+    });
+  });
+  $('btn-pd-manual').addEventListener('click', pdApplyManual);
+  $('btn-pd-save').addEventListener('click', function(){
+    var p = S.products.filter(function(x){return x.id===pdId;})[0];
+    if(!p) return;
+    pdCommitFields(p);
+    if(!String(p.name).trim()){
+      $('pd-save-msg').innerHTML = '<div class="alert bad" style="margin-bottom:0">Dê um nome ao produto antes de salvar.</div>';
+      $('pd-name').focus();
+      return;
+    }
+    persist();
+    $('pd-save-msg').innerHTML = '';
+    productMsg('<div class="gcok"><b>' + esc(p.name) + '</b> salvo no catálogo.' +
+      (num(p.grams) > 0 || num(p.hours) > 0 ? '' :
+        ' Ainda sem gramas e tempo — abra a ficha e digite os números do fatiador para o preço sair.') +
+      '</div>');
+    go('products');
+  });
   $('btn-pd-calc').addEventListener('click', function(){
     var p = S.products.filter(function(x){return x.id===pdId;})[0];
-    if(p) loadProduct(p);
+    if(p){ pdCommitFields(p); persist(); loadProduct(p); }
   });
   $('btn-pd-dup').addEventListener('click', function(){
     var p = S.products.filter(function(x){return x.id===pdId;})[0];
