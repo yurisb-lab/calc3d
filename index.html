@@ -50,6 +50,8 @@
   /* o coral puro da marca, para uso sobre o painel escuro */
   --hot-panel:#EB6775;
   --teal:#0E9184;
+  /* o verde do lucro sobre o painel escuro — irmão do --hot-panel */
+  --teal-panel:#0E9184;
   --amber:#C9930C;
   --red:#CE3B3B;
   --blue:#3068CE;
@@ -63,10 +65,19 @@
   --on-chrome-2:#93A0AE;
   --on-chrome-3:#C2CAD3;
   --chrome-line:rgba(255,255,255,.10);
+  /* preenchimentos sobre o cromo: repouso, hover e ativo. São token porque a
+     paleta Papel tem cromo CLARO — lá eles viram véus pretos, não brancos. */
+  --chrome-f1:rgba(255,255,255,.07);
+  --chrome-f2:rgba(255,255,255,.11);
+  --chrome-f3:rgba(255,255,255,.13);
+  --chrome-shadow:rgba(0,0,0,.45);
+  /* aro da placa da marca: só aparece quando o cromo é claro */
+  --plate-ring:transparent;
   --btn-pri-bg:#141E29;
   --btn-pri-line:#141E29;
   --btn-pri-fg:#FFFFFF;
   --tip:#1F2B38;
+  --on-tip:#EDF0F3;
   /* painel de destaque: faixa do preço e resumo de compras */
   --panel-a:#1F2B38;
   --panel-b:#141E29;
@@ -124,6 +135,7 @@
   --hot:#EB6775;
   --hot-soft:rgba(235,103,117,.16);
   --teal:#2CC3B0;
+  --teal-panel:#2CC3B0;
   --amber:#EFC44F;
   --red:#F2726F;
   --blue:#5E9BF0;
@@ -141,6 +153,7 @@
   --rail-bg:#0F151C;
   --rail-line:rgba(255,255,255,.07);
   --tip:#242D38;
+  --on-tip:#EDF0F3;
   --panel-a:#27323E;
   --panel-b:#182029;
   --panel-line:rgba(255,255,255,.09);
@@ -162,6 +175,303 @@
   --sh-in:inset 0 1px 2px rgba(0,0,0,.45);
   --sh-lip:inset 0 1px 0 rgba(255,255,255,.045);
   --ring:0 0 0 3px rgba(235,103,117,.26);
+}
+
+
+/* ============================================================
+   PALETAS ALTERNATIVAS — escolha de cada aparelho, não da conta.
+   O padrão (sem data-palette) é o sistema original acima.
+   Cada paleta redefine só os tokens; nenhum componente sabe que
+   elas existem. As regras de escuro têm dois atributos de
+   propósito: assim vencem o bloco claro da mesma paleta.
+   ============================================================ */
+
+/* ---------- PAPEL: claro ---------- */
+[data-palette="papel"]{
+  /* superficies */
+  color-scheme:light;
+  --bg:#F0EEE7;
+  --bg-grad:radial-gradient(1200px 600px at 50% -10%,#F8F7F4 0%,#F0EEE7 60%);
+  --surface:#FFFFFF;
+  --surface2:#F7F6F1;
+  --surface3:#EBE8DE;
+  --field:#FBF9F6;
+  /* tinta e tracos */
+  --ink:#201C10;
+  --ink2:#676253;
+  --ink3:#787365;
+  --line:#E1DED3;
+  --line2:#CDC8BA;
+  /* acentos */
+  --hot:#C63B4C;
+  --hot-soft:rgba(198,59,76,0.13);
+  --hot-panel:#B61D3A;
+  --teal-panel:#086A58;
+  --teal:#0C8270;
+  --amber:#966C0D;
+  --red:#CB413A;
+  --blue:#2871DA;
+  --violet:#8959CE;
+  /* cromo: topbar, menu, tooltip, botao primario */
+  --chrome:#FFFFFF;
+  --chrome-2:#EBE8DE;
+  --on-chrome:#201C10;
+  --on-chrome-2:#787466;
+  --on-chrome-3:#433F32;
+  --chrome-line:#E1DED3;
+  --chrome-f1:rgba(0,0,0,0.045);
+  --chrome-f2:rgba(0,0,0,0.075);
+  --chrome-f3:rgba(0,0,0,0.1);
+  --chrome-shadow:rgba(0,0,0,0.16);
+  --plate-ring:rgba(0,0,0,0.1);
+  --btn-pri-bg:#201C10;
+  --btn-pri-line:#201C10;
+  --btn-pri-fg:#FFFFFF;
+  --tip:#201C10;
+  --on-tip:#FFFFFF;
+  --rail-bg:#FFFFFF;
+  --rail-line:#E1DED3;
+  /* painel de destaque: faixa de preco e resumo de compras */
+  --panel-a:#FFEAE9;
+  --panel-b:#FFDCDB;
+  --panel-line:#F8C5C4;
+  --on-panel:#442727;
+  --on-panel-2:#825D5C;
+  --on-panel-3:#5D3D3C;
+  /* trilho segmentado */
+  --seg-track:#EBE8DE;
+  --seg-on:#FFFFFF;
+  /* estados coloridos */
+  --ok-bg:#E7F2F1;
+  --ok-line:#ACD4CE;
+  --ok-ink:#007B6A;
+  --warn-bg:#F4F0E7;
+  --warn-line:#DBCDAD;
+  --warn-ink:#906600;
+  --err-bg:#FAECEB;
+  --err-line:#EDBEBC;
+  --err-ink:#C53B35;
+  --acc-bg:#F9EBED;
+  --acc-line:#ECBCC2;
+  --acc-ink:#C4394B;
+  /* foco */
+  --ring:0 0 0 3px rgba(198,59,76,0.2);
+}
+
+/* ---------- PAPEL: escuro ---------- */
+[data-palette="papel"][data-theme="dark"]{
+  /* superficies */
+  color-scheme:dark;
+  --bg:#0F0D07;
+  --bg-grad:radial-gradient(1200px 600px at 50% -10%,#14110A 0%,#0F0D07 60%);
+  --surface:#1E1B12;
+  --surface2:#262318;
+  --surface3:#373224;
+  --field:#16140D;
+  /* tinta e tracos */
+  --ink:#EEECE7;
+  --ink2:#ADA897;
+  --ink3:#8C8775;
+  --line:#302C20;
+  --line2:#484231;
+  /* acentos */
+  --hot:#F56F78;
+  --hot-soft:rgba(245,111,120,0.16);
+  --hot-panel:#FD8188;
+  --teal-panel:#21CBAB;
+  --teal:#1EBDA3;
+  --amber:#E3A51F;
+  --red:#F46F64;
+  --blue:#5F9EFB;
+  --violet:#AF83F5;
+  /* cromo: topbar, menu, tooltip, botao primario */
+  --chrome:#1E1B12;
+  --chrome-2:#373224;
+  --on-chrome:#EEECE7;
+  --on-chrome-2:#888372;
+  --on-chrome-3:#C5C2B8;
+  --chrome-line:#302C20;
+  --chrome-f1:rgba(255,255,255,0.07);
+  --chrome-f2:rgba(255,255,255,0.11);
+  --chrome-f3:rgba(255,255,255,0.13);
+  --chrome-shadow:rgba(0,0,0,0.45);
+  --plate-ring:transparent;
+  --btn-pri-bg:#EEECE7;
+  --btn-pri-line:#EEECE7;
+  --btn-pri-fg:#0F0D07;
+  --tip:#1E1B12;
+  --on-tip:#EEECE7;
+  --rail-bg:#1E1B12;
+  --rail-line:#302C20;
+  /* painel de destaque: faixa de preco e resumo de compras */
+  --panel-a:#472323;
+  --panel-b:#341818;
+  --panel-line:#5D3334;
+  --on-panel:#F3E6E2;
+  --on-panel-2:#B39792;
+  --on-panel-3:#D9C6C2;
+  /* trilho segmentado */
+  --seg-track:#373224;
+  --seg-on:#1E1B12;
+  /* estados coloridos */
+  --ok-bg:rgba(30,189,163,0.11);
+  --ok-line:rgba(30,189,163,0.27);
+  --ok-ink:#1EBDA3;
+  --warn-bg:rgba(227,165,31,0.11);
+  --warn-line:rgba(227,165,31,0.27);
+  --warn-ink:#E3A51F;
+  --err-bg:rgba(244,111,100,0.11);
+  --err-line:rgba(244,111,100,0.27);
+  --err-ink:#F46F64;
+  --acc-bg:rgba(245,111,120,0.11);
+  --acc-line:rgba(245,111,120,0.27);
+  --acc-ink:#F56F78;
+  /* foco */
+  --ring:0 0 0 3px rgba(245,111,120,0.26);
+}
+
+/* ---------- BOSQUE: claro ---------- */
+[data-palette="bosque"]{
+  /* superficies */
+  color-scheme:light;
+  --bg:#EAF0EB;
+  --bg-grad:radial-gradient(1200px 600px at 50% -10%,#F6F8F6 0%,#EAF0EB 60%);
+  --surface:#FFFFFF;
+  --surface2:#F3F7F4;
+  --surface3:#E2EAE4;
+  --field:#F7FAF8;
+  /* tinta e tracos */
+  --ink:#151F17;
+  --ink2:#58665B;
+  --ink3:#6A766D;
+  --line:#D7E1D9;
+  --line2:#BFCDC2;
+  /* acentos */
+  --hot:#137D41;
+  --hot-soft:rgba(19,125,65,0.13);
+  --hot-panel:#BFEEC4;
+  --teal-panel:#E5BB4D;
+  --teal:#0E8082;
+  --amber:#976C0D;
+  --red:#CB413A;
+  --blue:#2971DA;
+  --violet:#8959CE;
+  /* cromo: topbar, menu, tooltip, botao primario */
+  --chrome:#0C2F18;
+  --chrome-2:#25472F;
+  --on-chrome:#FFFFFF;
+  --on-chrome-2:#90A495;
+  --on-chrome-3:#D3DBD5;
+  --chrome-line:#24422D;
+  --chrome-f1:rgba(255,255,255,0.07);
+  --chrome-f2:rgba(255,255,255,0.11);
+  --chrome-f3:rgba(255,255,255,0.13);
+  --chrome-shadow:rgba(0,0,0,0.45);
+  --plate-ring:transparent;
+  --btn-pri-bg:#0C2F18;
+  --btn-pri-line:#0C2F18;
+  --btn-pri-fg:#FFFFFF;
+  --tip:#0C2F18;
+  --on-tip:#FFFFFF;
+  --rail-bg:#0C2F18;
+  --rail-line:#24422D;
+  /* painel de destaque: faixa de preco e resumo de compras */
+  --panel-a:#1B4026;
+  --panel-b:#092914;
+  --panel-line:#2E5138;
+  --on-panel:#FFFFFF;
+  --on-panel-2:#90A495;
+  --on-panel-3:#D3DBD5;
+  /* trilho segmentado */
+  --seg-track:#E2EAE4;
+  --seg-on:#FFFFFF;
+  /* estados coloridos */
+  --ok-bg:#E7F2F2;
+  --ok-line:#ADD4D4;
+  --ok-ink:#007A7D;
+  --warn-bg:#F5F0E7;
+  --warn-line:#DCCDAD;
+  --warn-ink:#916600;
+  --err-bg:#FAECEB;
+  --err-line:#EDBEBC;
+  --err-ink:#C53B35;
+  --acc-bg:#E7F2EC;
+  --acc-line:#AFD3BE;
+  --acc-ink:#137D41;
+  /* foco */
+  --ring:0 0 0 3px rgba(19,125,65,0.2);
+}
+
+/* ---------- BOSQUE: escuro ---------- */
+[data-palette="bosque"][data-theme="dark"]{
+  /* superficies */
+  color-scheme:dark;
+  --bg:#090E0A;
+  --bg-grad:radial-gradient(1200px 600px at 50% -10%,#0D120E 0%,#090E0A 60%);
+  --surface:#151D17;
+  --surface2:#1C261E;
+  --surface3:#29362C;
+  --field:#0F1611;
+  /* tinta e tracos */
+  --ink:#E9EEEA;
+  --ink2:#9DACA0;
+  --ink3:#7C8B7F;
+  --line:#243027;
+  --line2:#37473B;
+  /* acentos */
+  --hot:#5ABC7A;
+  --hot-soft:rgba(90,188,122,0.16);
+  --hot-panel:#B7EABD;
+  --teal-panel:#E5BB4D;
+  --teal:#1EBABB;
+  --amber:#E3A51F;
+  --red:#F46F64;
+  --blue:#5F9EFB;
+  --violet:#AF83F5;
+  /* cromo: topbar, menu, tooltip, botao primario */
+  --chrome:#0A1B0F;
+  --chrome-2:#1D3423;
+  --on-chrome:#E9EEEA;
+  --on-chrome-2:#859889;
+  --on-chrome-3:#C1CCC3;
+  --chrome-line:#1D3022;
+  --chrome-f1:rgba(255,255,255,0.07);
+  --chrome-f2:rgba(255,255,255,0.11);
+  --chrome-f3:rgba(255,255,255,0.13);
+  --chrome-shadow:rgba(0,0,0,0.45);
+  --plate-ring:transparent;
+  --btn-pri-bg:#53B674;
+  --btn-pri-line:#53B674;
+  --btn-pri-fg:#051309;
+  --tip:#0A1B0F;
+  --on-tip:#E9EEEA;
+  --rail-bg:#0A1B0F;
+  --rail-line:#1D3022;
+  /* painel de destaque: faixa de preco e resumo de compras */
+  --panel-a:#14361F;
+  --panel-b:#061F0E;
+  --panel-line:#284831;
+  --on-panel:#EAF0EB;
+  --on-panel-2:#8A9E8F;
+  --on-panel-3:#C4CFC6;
+  /* trilho segmentado */
+  --seg-track:#29362C;
+  --seg-on:#151D17;
+  /* estados coloridos */
+  --ok-bg:rgba(30,186,187,0.11);
+  --ok-line:rgba(30,186,187,0.27);
+  --ok-ink:#1EBABB;
+  --warn-bg:rgba(227,165,31,0.11);
+  --warn-line:rgba(227,165,31,0.27);
+  --warn-ink:#E3A51F;
+  --err-bg:rgba(244,111,100,0.11);
+  --err-line:rgba(244,111,100,0.27);
+  --err-ink:#F46F64;
+  --acc-bg:rgba(90,188,122,0.11);
+  --acc-line:rgba(90,188,122,0.27);
+  --acc-ink:#5ABC7A;
+  /* foco */
+  --ring:0 0 0 3px rgba(90,188,122,0.26);
 }
 
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -195,7 +505,7 @@ body{
   border-bottom:1px solid var(--chrome-line);
   transition:box-shadow .2s ease;
 }
-.topbar.scrolled{box-shadow:0 6px 20px -6px rgba(0,0,0,.45)}
+.topbar.scrolled{box-shadow:0 6px 20px -6px var(--chrome-shadow)}
 .brand-txt{display:flex;align-items:baseline;gap:8px;min-width:0;overflow:hidden}
 .brand-txt b{font-size:16px;font-weight:700;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .brand-sub{
@@ -214,6 +524,8 @@ body{
 .lykeplate{
   flex:none;display:block;
   background:#FFFFFF;border-radius:10px;
+  /* no cromo claro a placa branca sumiria: o aro a devolve */
+  box-shadow:0 0 0 1px var(--plate-ring);
 }
 .lykeplate img{display:block;width:100%;height:100%;object-fit:contain}
 .menubtn .lykeplate{width:34px;height:34px;padding:2px}
@@ -236,8 +548,8 @@ body{
   border-radius:12px;color:inherit;font:inherit;cursor:pointer;text-align:left;
   transition:background .15s;
 }
-.menubtn:hover{background:rgba(255,255,255,.07)}
-.menubtn:active{background:rgba(255,255,255,.12)}
+.menubtn:hover{background:var(--chrome-f1)}
+.menubtn:active{background:var(--chrome-f2)}
 .burger{flex:none;width:20px;height:14px;position:relative}
 .burger i{
   position:absolute;left:0;right:0;height:2px;border-radius:2px;
@@ -256,15 +568,52 @@ body.menu-open .burger i:nth-child(3){transform:translateY(-6px) rotate(-45deg)}
 .pagehead .ph-t{font-size:16px;font-weight:700;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pagehead .ph-s{font-size:11px;color:var(--on-chrome-2);letter-spacing:.07em;text-transform:uppercase;white-space:nowrap}
 
+/* ---------- seletor de paleta ----------
+   Três amostras do app inteiro, não três bolinhas de cor: o que muda entre as
+   paletas é o cromo e o fundo, e é isso que a miniatura mostra. As cores aqui
+   são literais de propósito — cada botão precisa exibir uma paleta que NÃO é a
+   que está valendo, então não podem sair de token. */
+.palpick{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.palpick button{
+  border:1px solid var(--line);background:var(--surface);border-radius:var(--r-sm);
+  padding:8px 8px 9px;cursor:pointer;font:inherit;text-align:center;
+  display:flex;flex-direction:column;align-items:center;gap:7px;
+  box-shadow:var(--sh-1);transition:border-color .15s,box-shadow .15s,transform .12s;
+}
+.palpick button:hover{border-color:var(--line2);box-shadow:var(--sh-2)}
+.palpick button:active{transform:translateY(1px)}
+.palpick button[aria-pressed="true"]{border-color:var(--hot);box-shadow:var(--ring)}
+.palpick .nm{font-size:12.5px;font-weight:600;color:var(--ink2)}
+.palpick button[aria-pressed="true"] .nm{color:var(--ink);font-weight:700}
+/* miniatura: barra de cromo em cima, menu à esquerda, cartão e acento */
+.palpick .pv{
+  width:100%;aspect-ratio:16/10;border-radius:7px;overflow:hidden;
+  border:1px solid var(--line);display:flex;flex-direction:column;
+  background:var(--pv-bg);
+}
+.palpick .pv .bar{height:22%;background:var(--pv-chrome);border-bottom:1px solid var(--pv-line)}
+.palpick .pv .lo{flex:1;display:flex;min-height:0}
+.palpick .pv .sd{width:24%;background:var(--pv-chrome);border-right:1px solid var(--pv-line)}
+.palpick .pv .bd{flex:1;padding:11% 9%;display:flex;flex-direction:column;gap:9%}
+.palpick .pv .pn{height:34%;border-radius:2px;background:var(--pv-hot)}
+.palpick .pv .cd{flex:1;border-radius:2px;background:var(--pv-surface);border:1px solid var(--pv-line)}
+
+.palpick .p-orig  {--pv-bg:#EAEDF1;--pv-chrome:#141E29;--pv-surface:#FFFFFF;--pv-hot:#EB6775;--pv-line:rgba(0,0,0,.10)}
+.palpick .p-papel {--pv-bg:#F0EEE7;--pv-chrome:#FFFFFF;--pv-surface:#FFFFFF;--pv-hot:#FFDCDB;--pv-line:rgba(0,0,0,.12)}
+.palpick .p-bosque{--pv-bg:#EAF0EB;--pv-chrome:#0C2F18;--pv-surface:#FFFFFF;--pv-hot:#1B4026;--pv-line:rgba(0,0,0,.10)}
+[data-theme="dark"] .palpick .p-orig  {--pv-bg:#0A0E13;--pv-chrome:#0F151C;--pv-surface:#151B22;--pv-hot:#27323E;--pv-line:rgba(255,255,255,.10)}
+[data-theme="dark"] .palpick .p-papel {--pv-bg:#0F0D07;--pv-chrome:#1E1B12;--pv-surface:#1E1B12;--pv-hot:#4A2724;--pv-line:rgba(255,255,255,.10)}
+[data-theme="dark"] .palpick .p-bosque{--pv-bg:#090E0A;--pv-chrome:#0A1B0F;--pv-surface:#151D17;--pv-hot:#1B3D26;--pv-line:rgba(255,255,255,.10)}
+
 /* botão de tema */
 .themebtn{
   flex:none;width:34px;height:34px;padding:0;
   display:inline-flex;align-items:center;justify-content:center;
-  border:1px solid var(--chrome-line);background:rgba(255,255,255,.06);
+  border:1px solid var(--chrome-line);background:var(--chrome-f1);
   border-radius:10px;color:var(--on-chrome-3);cursor:pointer;
   transition:background .15s,color .15s,transform .15s;
 }
-.themebtn:hover{background:rgba(255,255,255,.13);color:var(--on-chrome)}
+.themebtn:hover{background:var(--chrome-f3);color:var(--on-chrome)}
 .themebtn:active{transform:scale(.94)}
 .themebtn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 .themebtn .ico-sun{display:none}
@@ -378,7 +727,7 @@ select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns=
 .strip .lbl{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--on-panel-2);display:block}
 .strip .big{font-size:27px;font-weight:600;letter-spacing:-.025em;color:var(--hot-panel);display:block;line-height:1.15}
 .strip .sub{font-size:13px;color:var(--on-panel-3);text-align:right}
-.strip .sub b{color:var(--teal);font-weight:600}
+.strip .sub b{color:var(--teal-panel);font-weight:600}
 
 /* ---------- collapsible ---------- */
 details.fold{
@@ -547,28 +896,28 @@ body.menu-open{overflow:hidden}
   background:none;border:0;padding:4px;margin:-4px;border-radius:10px;
   color:inherit;font:inherit;cursor:pointer;text-align:left;transition:background .15s;
 }
-.rail-brand:hover{background:rgba(255,255,255,.07)}
+.rail-brand:hover{background:var(--chrome-f1)}
 .rail-brand b{font-size:15px;font-weight:700;letter-spacing:-.02em;white-space:nowrap}
 .rail-brand .s{display:block;font-size:10px;color:var(--on-chrome-2);letter-spacing:.08em;text-transform:uppercase}
 .rail-brand .lykeplate{width:34px;height:34px;padding:2px}
 .rail-x{
   flex:none;width:34px;height:34px;padding:0;display:inline-flex;align-items:center;justify-content:center;
-  border:1px solid var(--rail-line);background:rgba(255,255,255,.06);border-radius:10px;
+  border:1px solid var(--rail-line);background:var(--chrome-f1);border-radius:10px;
   color:var(--on-chrome-3);cursor:pointer;transition:background .15s,color .15s;
 }
-.rail-x:hover{background:rgba(255,255,255,.13);color:var(--on-chrome)}
+.rail-x:hover{background:var(--chrome-f3);color:var(--on-chrome)}
 .rail-x svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
 
 /* busca: a saida para quem nao sabe em que grupo a funcao mora */
 .rail-search{
   flex:none;margin:0 14px 12px;padding:9px 11px;
   display:flex;align-items:center;gap:9px;
-  background:rgba(255,255,255,.06);border:1px solid var(--rail-line);border-radius:10px;
+  background:var(--chrome-f1);border:1px solid var(--rail-line);border-radius:10px;
   color:var(--on-chrome-2);font:inherit;font-size:13px;cursor:pointer;text-align:left;
   transition:background .15s,color .15s;
 }
 .rail-search .t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.rail-search:hover{background:rgba(255,255,255,.12);color:var(--on-chrome-3)}
+.rail-search:hover{background:var(--chrome-f2);color:var(--on-chrome-3)}
 .rail-search svg{width:15px;height:15px;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
 .rail-search .k{
   margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:10.5px;
@@ -588,7 +937,7 @@ body.menu-open{overflow:hidden}
   color:var(--on-chrome-3);padding:10px 10px;border-radius:10px;cursor:pointer;
   text-align:left;min-height:42px;transition:background .14s,color .14s;
 }
-.rail-nav button:hover{background:rgba(255,255,255,.07);color:var(--on-chrome)}
+.rail-nav button:hover{background:var(--chrome-f1);color:var(--on-chrome)}
 .rail-nav button svg{
   width:19px;height:19px;flex:none;stroke:currentColor;fill:none;
   stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;
@@ -597,11 +946,11 @@ body.menu-open{overflow:hidden}
 /* contador do grupo: diz de cara quanta coisa tem la dentro */
 .rail-nav button .n{
   flex:none;min-width:20px;padding:0 6px;border-radius:20px;
-  background:rgba(255,255,255,.10);color:var(--on-chrome-2);
+  background:var(--chrome-f2);color:var(--on-chrome-2);
   font-size:10.5px;font-weight:700;line-height:17px;text-align:center;
   font-variant-numeric:tabular-nums;
 }
-.rail-nav button[aria-current="true"]{background:rgba(255,255,255,.13);color:var(--on-chrome);font-weight:600}
+.rail-nav button[aria-current="true"]{background:var(--chrome-f3);color:var(--on-chrome);font-weight:600}
 .rail-nav button[aria-current="true"]::before{
   content:"";position:absolute;left:0;top:9px;bottom:9px;width:3px;
   border-radius:0 3px 3px 0;background:var(--hot-panel,var(--hot));
@@ -858,9 +1207,9 @@ body.menu-open .scrim{opacity:1;visibility:visible}
 .syncbadge{
   display:none;align-items:center;gap:6px;flex:none;
   font-size:11px;font-weight:600;color:var(--on-chrome-3);padding:7px 11px;border-radius:9px;
-  background:rgba(255,255,255,.08);border:1px solid var(--chrome-line);font-family:inherit;cursor:pointer;min-height:auto;
+  background:var(--chrome-f1);border:1px solid var(--chrome-line);font-family:inherit;cursor:pointer;min-height:auto;
 }
-.syncbadge:hover{background:rgba(255,255,255,.14);color:var(--on-chrome)}
+.syncbadge:hover{background:var(--chrome-f3);color:var(--on-chrome)}
 .syncbadge.show{display:inline-flex}
 .syncbadge .syncdot{width:8px;height:8px;box-shadow:none}
 #sync-body:not(:empty){margin-top:14px}
@@ -937,7 +1286,7 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
 
 #tip{
   position:absolute;z-index:120;max-width:290px;
-  background:var(--tip);color:#EDF0F3;border-radius:12px;
+  background:var(--tip);color:var(--on-tip);border-radius:12px;
   padding:11px 13px;font-size:13px;line-height:1.5;
   box-shadow:var(--sh-4);border:1px solid var(--chrome-line);
   opacity:0;visibility:hidden;transform:translateY(4px);transition:opacity .14s,transform .14s;
@@ -1232,29 +1581,59 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
 @media (prefers-reduced-motion:reduce){*{transition:none !important;animation:none !important}}
 </style>
 <script>
-/* tema aplicado antes da primeira pintura, sem piscar */
+/* Tema E paleta aplicados antes da primeira pintura, sem piscar.
+   Os dois são preferência DESTE APARELHO: moram no localStorage e nunca
+   entram no estado sincronizado, então cada celular, tablet ou computador
+   guarda a sua escolha sem mexer na de ninguém. */
 (function(){
   var KEY = 'calc3d-theme';
-  var pref = 'auto';
+  var PKEY = 'calc3d-palette';
+  /* a cor da barra do sistema operacional, por paleta e por tema */
+  var BAR = {
+    ''      : {light:'#141E29', dark:'#0F151C'},
+    papel   : {light:'#FFFFFF', dark:'#1E1B12'},
+    bosque  : {light:'#0C2F18', dark:'#0A1B0F'}
+  };
+  var PALETTES = ['', 'papel', 'bosque'];
+
+  var pref = 'auto', pal = '';
   try { pref = localStorage.getItem(KEY) || 'auto'; } catch(e){}
+  try {
+    pal = localStorage.getItem(PKEY) || '';
+    if(PALETTES.indexOf(pal) < 0) pal = '';
+  } catch(e){}
+
   var mq = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : {matches:false};
+  var root = document.documentElement;
+
   function apply(){
     var t = (pref === 'dark' || pref === 'light') ? pref : (mq.matches ? 'dark' : 'light');
-    document.documentElement.setAttribute('data-theme', t);
+    root.setAttribute('data-theme', t);
+    if(pal) root.setAttribute('data-palette', pal);
+    else root.removeAttribute('data-palette');
     var m = document.querySelector('meta[name="theme-color"]');
-    if(m) m.setAttribute('content', t === 'dark' ? '#0F151C' : '#141E29');
+    if(m) m.setAttribute('content', (BAR[pal] || BAR[''])[t]);
     return t;
   }
+
   window.__theme = {
     pref: function(){ return pref; },
-    resolved: function(){ return document.documentElement.getAttribute('data-theme'); },
+    resolved: function(){ return root.getAttribute('data-theme'); },
     set: function(v){
       pref = (v === 'dark' || v === 'light') ? v : 'auto';
       try { localStorage.setItem(KEY, pref); } catch(e){}
       return apply();
     },
+    palette: function(){ return pal; },
+    setPalette: function(v){
+      pal = PALETTES.indexOf(v) >= 0 ? v : '';
+      try { localStorage.setItem(PKEY, pal); } catch(e){}
+      apply();
+      return pal;
+    },
     onchange: null
   };
+
   function watch(){ if(pref === 'auto'){ apply(); if(window.__theme.onchange) window.__theme.onchange(); } }
   if(mq.addEventListener) mq.addEventListener('change', watch);
   else if(mq.addListener) mq.addListener(watch);
@@ -2036,6 +2415,24 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
         <p class="viewintro">O jeito do app neste aparelho: tema, tutorial e instalação na tela de início.</p>
         <h2 class="section">Aparência</h2>
         <div class="card">
+          <div class="field">
+            <label>Cores <span class="hint">— preferência deste aparelho</span></label>
+            <div class="palpick" id="pal-pick" role="group" aria-label="Paleta de cores">
+              <button type="button" data-p="" aria-pressed="true">
+                <span class="pv p-orig" aria-hidden="true"><span class="bar"></span><span class="lo"><span class="sd"></span><span class="bd"><span class="pn"></span><span class="cd"></span></span></span></span>
+                <span class="nm">Original</span>
+              </button>
+              <button type="button" data-p="papel" aria-pressed="false">
+                <span class="pv p-papel" aria-hidden="true"><span class="bar"></span><span class="lo"><span class="sd"></span><span class="bd"><span class="pn"></span><span class="cd"></span></span></span></span>
+                <span class="nm">Papel</span>
+              </button>
+              <button type="button" data-p="bosque" aria-pressed="false">
+                <span class="pv p-bosque" aria-hidden="true"><span class="bar"></span><span class="lo"><span class="sd"></span><span class="bd"><span class="pn"></span><span class="cd"></span></span></span></span>
+                <span class="nm">Bosque</span>
+              </button>
+            </div>
+            <p class="note" id="pal-note"></p>
+          </div>
           <div class="field" style="margin-bottom:0">
             <label>Tema <span class="hint">— preferência deste aparelho</span></label>
             <div class="seg" id="seg-theme">
@@ -2871,7 +3268,8 @@ var PALACT = [
   {t:'Importar dados',         s:'Ajustes › Meus dados',    ic:'up',    go:'data',      click:'btn-import',       kw:'restaurar backup arquivo'},
   {t:'Instalar o app',         s:'Ajustes › Aplicativo',    ic:'app',   go:'app',       click:'btn-install',      kw:'pwa tela de inicio atalho celular'},
   {t:'Rever o tutorial',       s:'Ajustes › Aplicativo',    ic:'help',  tour:true,      kw:'ajuda passeio como usar comecar'},
-  {t:'Alternar tema',          s:'Claro e escuro',          ic:'theme', click:'theme-btn', kw:'dark mode noite claro escuro'}
+  {t:'Alternar tema',          s:'Claro e escuro',          ic:'theme', click:'theme-btn', kw:'dark mode noite claro escuro'},
+  {t:'Trocar as cores do app', s:'Ajustes › Aplicativo',    ic:'theme', go:'app',       kw:'paleta tema visual papel bosque verde original aparencia'}
 ];
 var palHits = [], palSel = 0;
 /* "orcamento" tem de achar "Orçamento": ninguem para para pensar em acento no
@@ -7406,6 +7804,35 @@ function bindInstall(){
   paintInstall();
 }
 
+/* ============ paleta de cores (deste aparelho) ============ */
+var PAL_LABEL = {
+  ''      : 'Grafite e coral — o desenho original do app.',
+  papel   : 'Nada de escuro: topbar e menu claros, faixa de preço em coral lavado.',
+  bosque  : 'O verde da marca no comando; o coral fica só para o que é crítico.'
+};
+function paintPalettePicker(){
+  var T = window.__theme;
+  if(!T || !T.palette) return;
+  var cur = T.palette();
+  each(qsa($('pal-pick'), 'button'), function(b){
+    b.setAttribute('aria-pressed', b.getAttribute('data-p') === cur ? 'true' : 'false');
+  });
+  var note = $('pal-note');
+  if(note) note.textContent = PAL_LABEL[cur] + ' Vale só neste aparelho — não muda para quem mais usa a conta.';
+}
+function bindPalettePicker(){
+  var T = window.__theme;
+  if(!T || !T.setPalette) return;
+  each(qsa($('pal-pick'), 'button'), function(b){
+    b.addEventListener('click', function(){
+      T.setPalette(b.getAttribute('data-p'));
+      paintPalettePicker();
+      paintTheme();
+    });
+  });
+  paintPalettePicker();
+}
+
 /* ============ tema (claro / escuro / automático) ============ */
 var THEME_LABEL = {auto:'Acompanha o sistema do aparelho.', light:'Sempre claro.', dark:'Sempre escuro.'};
 function paintTheme(){
@@ -7735,6 +8162,7 @@ bindDash();
 bindSettings();
 bindInstall();
 bindTheme();
+bindPalettePicker();
 bindScrollShadow();
 bindPalette();
 bindTour();
