@@ -330,7 +330,10 @@ O app sugeria um preço e você perdia esse número ao fechar a tela. Agora:
   do pedido e **foto do comprovante**.
 - Total do mês e total do filtro no topo, busca e exportação em **CSV** para
   fechar o mês na planilha.
-- Atalho **"Registrar compra deste rolo"** dentro do cadastro de filamento.
+- Atalho **"Registrar uma compra deste rolo"** dentro do cadastro de filamento:
+  o formulário (data, rolos, valor, loja) abre na própria ficha do rolo, diz o
+  que vai acontecer antes de confirmar e só leva para a tela de Compras se o
+  usuário quiser anexar a nota.
 
 ### 11.5 Link de compra do filamento
 Cadastro de filamento ganhou **marca/loja** e **link de compra** — quando o
@@ -506,7 +509,8 @@ O cadastro de filamento já tinha o peso do rolo; faltava saber quanto ainda tem
 dentro dele.
 
 - Campos **Estoque** (g restantes) e **Avisar em** (g), com barra de nível e
-  botão **Rolo novo**, que repõe o peso cadastrado.
+  botão **Repor estoque**, que devolve o peso cadastrado sem registrar compra
+  nenhuma.
 - Campo vazio quer dizer *não controlo este rolo*, que é diferente de 0 g, que
   quer dizer *rolo acabado*. Por isso o estoque é texto, como o custo/hora
   manual da impressora.

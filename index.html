@@ -1396,6 +1396,37 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
 .toprow .vl b{display:block;font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600}
 .toprow .vl span{display:block;font-size:11px;color:var(--ink3);font-family:'IBM Plex Mono',monospace}
 
+/* ---------- ficha do cadastro em blocos ---------- */
+/* A ficha do rolo era uma pilha de dez campos sem divisao nenhuma, com dois
+   botoes de compra pendurados no meio. Os blocos dizem o que cada trecho
+   resolve: o que e o rolo, quanto ainda tem dentro dele e onde comprar de novo. */
+.gtitle{
+  margin:20px 0 10px;padding-top:15px;border-top:1px solid var(--line);
+  font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);
+}
+.gtitle:first-child{margin-top:0;padding-top:0;border-top:0}
+.gsub{font-size:12px;color:var(--ink3);margin:8px 0 0;line-height:1.5}
+.gsub b{color:var(--ink2);font-weight:600}
+/* o formulario da compra abre dentro da propria ficha: registrar o rolo que
+   chegou nao pode jogar o usuario para outra tela no meio do cadastro */
+.buybox{
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);
+  padding:13px;margin:10px 0 0;box-shadow:var(--sh-in);
+}
+.buybox[hidden]{display:none}
+.buybox .bxt{margin:0 0 11px;font-size:12px;font-weight:700;color:var(--ink2)}
+.buybox .btnrow{margin-top:12px}
+/* "Cancelar" nao precisa de metade da largura: quem cabe apertado e o botao
+   que confirma, e em tela estreita ele quebrava em duas linhas */
+.buybox .btnrow .btn.ghost{width:auto;flex:none;padding-left:16px;padding-right:16px}
+.buymsg:empty{display:none}
+.buymsg{margin-top:12px}
+.buymsg .gcok{margin-bottom:0}
+.cadmsg:empty{display:none}
+.cadmsg{margin:-4px 0 12px}
+.cadmsg .gcok,.cadmsg .alert{margin-bottom:0}
+.savenote{margin:9px 0 0;font-size:12px;color:var(--ink3);line-height:1.55}
+
 /* ---------- estoque do rolo ---------- */
 .stockbar{height:8px;border-radius:20px;background:var(--surface3);overflow:hidden;box-shadow:var(--sh-in);margin:9px 0 4px}
 .stockbar i{display:block;height:100%;background:var(--teal);border-radius:20px;transition:width .25s}
@@ -2253,6 +2284,7 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
           <button type="button" class="btn primary" id="btn-add-printer">+ Nova</button>
         </div>
         <p class="cadhint">Cada impressora guarda o próprio custo por hora — depreciação da máquina mais manutenção. É o que vira a camada <b>Máquina</b> do preço.</p>
+        <div class="cadmsg" id="printer-msg"></div>
         <div id="printer-list"></div>
       </div>
 
@@ -2262,7 +2294,8 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
           <input id="cad-f-search" type="search" placeholder="Buscar filamento, material ou marca...">
           <button type="button" class="btn primary" id="btn-add-filament">+ Novo</button>
         </div>
-        <p class="cadhint">Preço e peso do rolo viram o preço por grama. Preenchendo o estoque, o app dá baixa sozinho a cada orçamento salvo e avisa quando o rolo está acabando.</p>
+        <p class="cadhint">Toque num rolo para abrir a ficha. Preço e peso viram o preço por grama; preenchendo o estoque, o app dá baixa sozinho a cada orçamento salvo e avisa quando o rolo está acabando.</p>
+        <div class="cadmsg" id="filament-msg"></div>
         <div id="filament-list"></div>
       </div>
 
@@ -5035,6 +5068,28 @@ function pField(lb,hint,id,i,key,val,imode,hkey){
    apaga um item trabalha com a posição dele no array de verdade, não na lista
    filtrada. */
 var printerQuery = '', filamentQuery = '', catQuery = '';
+/* Qual ficha esta aberta, pelo id do item. Sem isto, qualquer redesenho da
+   lista (repor estoque, registrar compra, salvar) fechava a ficha na cara do
+   usuario e ele tinha de procurar de novo onde estava. */
+var cadOpen = {};
+function cadIsOpen(pfx, it){ return !!(it && it.id && cadOpen[pfx + it.id]); }
+function cadSetOpen(pfx, it, on){
+  if(!it || !it.id) return;
+  if(on) cadOpen[pfx + it.id] = 1; else delete cadOpen[pfx + it.id];
+}
+/* recado curto acima da lista: e o retorno visivel do botao Salvar */
+var cadMsgT = {};
+function cadMsgEl(pfx){ return $((pfx === 'p' ? 'printer' : 'filament') + '-msg'); }
+function cadMsg(pfx, html){
+  var el = cadMsgEl(pfx);
+  if(!el) return;
+  el.innerHTML = html;
+  if(cadMsgT[pfx]) clearTimeout(cadMsgT[pfx]);
+  if(html) cadMsgT[pfx] = setTimeout(function(){
+    var e2 = cadMsgEl(pfx);
+    if(e2) e2.innerHTML = '';
+  }, 6000);
+}
 function withIndex(arr){ return arr.map(function(x,i){ return {x:x, i:i}; }); }
 function hitsQuery(q, parts){
   if(!q) return true;
@@ -5052,11 +5107,11 @@ function renderPrinters(){
     return hitsQuery(printerQuery, [o.x.name||'']);
   });
   el.innerHTML = list.map(function(o){
-    var p = o.x, i = o.i;
-    return '<div class="item"><div class="head" data-open="p'+i+'" role="button" tabindex="0" aria-expanded="false">'+
+    var p = o.x, i = o.i, op = cadIsOpen('p', p);
+    return '<div class="item'+(op?' open':'')+'"><div class="head" data-open="p'+i+'" role="button" tabindex="0" aria-expanded="'+(op?'true':'false')+'">'+
       '<span class="nm">'+esc(p.name||'Sem nome')+'</span>'+
       '<span class="meta">'+brl(machineHour(p))+'/h</span>'+CHEV+'</div>'+
-      '<div class="body" id="body-p'+i+'" hidden>'+
+      '<div class="body" id="body-p'+i+'"'+(op?'':' hidden')+'>'+
         pField('Apelido','','pn'+i,i,'name',p.name,false)+
         '<div class="row">'+pField('Potência','W','pw'+i,i,'watts',p.watts,true,'potencia')+
         pField('Valor de compra','R$','pp'+i,i,'price',p.price,true)+'</div>'+
@@ -5065,7 +5120,8 @@ function renderPrinters(){
         pField('Horas de uso por ano','','ph'+i,i,'hoursYear',p.hoursYear,true)+
         pField('Custo/hora manual','deixe vazio para calcular','po'+i,i,'override',p.override,true,'custohora')+
         '<div class="hourbox">'+machineHourHtml(p)+'</div>'+
-        '<button type="button" class="btn danger" data-del-p="'+i+'">Excluir impressora</button>'+
+        saveRowHtml('p', i, 'Salvar impressora')+
+        '<div class="btnrow"><button type="button" class="btn danger" data-del-p="'+i+'">Excluir impressora</button></div>'+
       '</div></div>';
   }).join('') || emptyCad(printerQuery, S.printers.length,
       'Nenhuma impressora cadastrada',
@@ -5101,6 +5157,14 @@ function bindEmptyActions(){
     if(t) t.click();
   });
 }
+/* R$ 0,11/g arredondado esconde a diferenca entre dois rolos: dentro da ficha o
+   preco por grama sai com tres casas, que e a precisao com que ele entra na
+   conta da peca. */
+function perGramStr(f){
+  var w = num(f.spoolWeight);
+  if(w <= 0) return 'falta o peso do rolo';
+  return 'R$ ' + dec(num(f.spoolPrice)/w, 3) + '/g';
+}
 /* rótulo da direita no cabeçalho: preço por grama e, quando o rolo é
    controlado, quanto ainda tem dentro dele */
 function filMeta(f){
@@ -5123,6 +5187,16 @@ function stockMeterHtml(f){
     '<div class="stockline"><span>'+dec(stockG(f),0)+' g de '+dec(cap,0)+' g</span><span>'+
       (st === 'out' ? 'rolo acabado' : (st === 'low' ? 'acabando' : dec(pct,0)+'%'))+'</span></div>';
 }
+/* O cadastro grava a cada tecla, mas ninguem confia numa tela sem botao de
+   salvar: sem ele o usuario fica procurando o que fazer depois de digitar.
+   O botao confirma o que ja esta gravado, forca a gravacao na hora e fecha a
+   ficha — que e o passo que faltava. */
+function saveRowHtml(pfx, i, label){
+  return '<div class="btnrow" style="margin-top:20px">'+
+      '<button type="button" class="btn primary" data-save-'+pfx+'="'+i+'">'+esc(label)+'</button>'+
+    '</div>'+
+    '<p class="savenote">O app grava sozinho a cada tecla — o botão confirma e fecha a ficha.</p>';
+}
 function stockBoxHtml(f, i){
   var cap = num(f.spoolWeight) > 0 ? num(f.spoolWeight) : 1000;
   return '<div class="row">'+
@@ -5130,7 +5204,74 @@ function stockBoxHtml(f, i){
         '<input id="fs'+i+'" type="text" inputmode="decimal" placeholder="vazio = não controlar" value="'+esc(stockStr(f))+'" data-list="'+i+'" data-key="stockG"></div>'+
       pField('Avisar em','g','fl'+i,i,'lowG',f.lowG,true)+'</div>'+
     '<div class="stockmeter">'+stockMeterHtml(f)+'</div>'+
-    '<div class="btnrow" style="margin-top:0"><button type="button" class="btn" data-fill-f="'+i+'">Rolo novo ('+dec(cap,0)+' g)</button></div>';
+    '<div class="btnrow" style="margin-top:0"><button type="button" class="btn" data-fill-f="'+i+'">Repor estoque ('+dec(cap,0)+' g)</button></div>'+
+    '<p class="gsub">Só acerta o número aqui, para quando você abre um rolo novo. Para guardar a nota e o valor pago, use <b>Registrar uma compra</b> logo abaixo.</p>';
+}
+/* O botao antigo criava uma compra em branco e jogava o usuario na tela de
+   Compras, no meio do cadastro do rolo: ele so via aparecer um formulario
+   diferente e nao sabia mais onde estava. Agora a compra e preenchida aqui
+   mesmo, com o resumo do que vai acontecer antes de confirmar, e ir para a
+   tela de Compras vira uma escolha dele. */
+function filBuyNote(f, rolls, total){
+  rolls = Math.max(1, Math.round(num(rolls)) || 1);
+  var cap = num(f.spoolWeight) > 0 ? num(f.spoolWeight) : 1000;
+  var unit = total > 0 ? total/rolls : 0;
+  var li = ['Entra em <b>Compras</b> como ' + rolls + ' rolo' + (rolls > 1 ? 's' : '') +
+    ' de ' + esc(f.name || 'filamento') + (total > 0 ? ' por <b>' + brl(total) + '</b>' : '') + '.'];
+  if(unit > 0 && Math.abs(unit - num(f.spoolPrice)) >= 0.005)
+    li.push('O preço do rolo neste cadastro passa a ser <b>' + brl(unit) + '</b>.');
+  if(stockOn(f)) li.push('O estoque volta para <b>' + dec(cap*rolls,0) + ' g</b>.');
+  else li.push('O estoque continua sem controle: preencha as gramas restantes acima se quiser que o app dê baixa sozinho.');
+  return li.join(' ');
+}
+/* o painel e desenhado junto com a lista, mas so e usado quando o usuario abre:
+   ao abrir ele volta a nascer com o preco, a loja e a data de agora */
+function filBuyReset(i, f){
+  var d = $('fbd'+i), q = $('fbq'+i), v = $('fbv'+i), lj = $('fbs'+i);
+  if(d) d.value = todayISO();
+  if(q) q.value = '1';
+  if(v) v.value = num(f.spoolPrice) > 0 ? dec(num(f.spoolPrice),2) : '';
+  if(lj && !lj.value) lj.value = f.brand || '';
+  filBuyNoteRefresh(i, f);
+}
+function filBuyNoteRefresh(i, f){
+  var n = $('fbn'+i), q = $('fbq'+i), v = $('fbv'+i);
+  if(!n || !f) return;
+  n.innerHTML = filBuyNote(f, q ? num(q.value) : 1, v ? num(v.value) : 0);
+}
+function filBuyPanelHtml(f, i){
+  return '<div class="buybox" id="buybox-f'+i+'" hidden>'+
+      '<p class="bxt">Compra deste rolo</p>'+
+      '<div class="row">'+
+        '<div class="field"><label for="fbd'+i+'">Data</label>'+
+          '<input id="fbd'+i+'" type="date" value="'+esc(todayISO())+'"></div>'+
+        '<div class="field"><label for="fbq'+i+'">Rolos <span class="hint">quantos vieram</span></label>'+
+          '<input id="fbq'+i+'" type="text" inputmode="decimal" value="1" data-buyf="'+i+'"></div>'+
+      '</div>'+
+      '<div class="row">'+
+        '<div class="field"><label for="fbv'+i+'">Valor total <span class="hint">R$</span></label>'+
+          '<input id="fbv'+i+'" type="text" inputmode="decimal" placeholder="0,00" value="'+
+            esc(num(f.spoolPrice) > 0 ? dec(num(f.spoolPrice),2) : '')+'" data-buyf="'+i+'"></div>'+
+        '<div class="field"><label for="fbs'+i+'">Loja / fornecedor</label>'+
+          '<input id="fbs'+i+'" type="text" placeholder="Ex.: 3D Lab" value="'+esc(f.brand||'')+'"></div>'+
+      '</div>'+
+      '<p class="note" id="fbn'+i+'">'+filBuyNote(f, 1, num(f.spoolPrice))+'</p>'+
+      '<div class="btnrow">'+
+        '<button type="button" class="btn primary" data-buyok-f="'+i+'">Registrar compra</button>'+
+        '<button type="button" class="btn ghost" data-buyno-f="'+i+'">Cancelar</button>'+
+      '</div>'+
+    '</div>';
+}
+/* confirmacao dentro da propria ficha, com o atalho para a nota fiscal */
+function filBuyDone(i, b, f){
+  var box = document.querySelector('#body-f'+i+' .buymsg');
+  if(!box) return;
+  box.innerHTML = '<div class="gcok">Compra de <b>'+brl(num(b.amount))+'</b> guardada em Compras'+
+    (stockOn(f) ? ' — e o estoque voltou para <b>'+dec(stockG(f),0)+' g</b>' : '')+'. '+
+    '<button type="button" class="golink" data-openbuy="1">Abrir a compra para anexar a nota</button></div>';
+  var lk = box.querySelector('[data-openbuy]');
+  if(lk) lk.addEventListener('click', function(){ openBuy(b.id); });
+  box.scrollIntoView({block:'nearest'});
 }
 function renderFilaments(){
   var el = $('filament-list');
@@ -5140,25 +5281,32 @@ function renderFilaments(){
     return hitsQuery(filamentQuery, [o.x.name||'', o.x.material||'', o.x.brand||'']);
   });
   el.innerHTML = list.map(function(o){
-    var f = o.x, i = o.i;
+    var f = o.x, i = o.i, op = cadIsOpen('f', f);
     var u = safeUrl(f.url);
-    return '<div class="item"><div class="head" data-open="f'+i+'" role="button" tabindex="0" aria-expanded="false">'+
+    return '<div class="item'+(op?' open':'')+'"><div class="head" data-open="f'+i+'" role="button" tabindex="0" aria-expanded="'+(op?'true':'false')+'">'+
       '<span class="swatch" style="background:'+esc(safeColor(f.color,'#ccc'))+'"></span>'+
       '<span class="nm">'+esc(f.name||'Sem nome')+'</span>'+
       '<span class="'+filMetaClass(f)+'">'+esc(filMeta(f))+'</span>'+CHEV+'</div>'+
-      '<div class="body" id="body-f'+i+'" hidden>'+
-        pField('Apelido','','fn'+i,i,'name',f.name,false)+
-        '<div class="row">'+pField('Material','','fm'+i,i,'material',f.material,false)+
+      '<div class="body" id="body-f'+i+'"'+(op?'':' hidden')+'>'+
+        '<p class="gtitle">O rolo</p>'+
+        pField('Apelido','como ele aparece na calculadora','fn'+i,i,'name',f.name,false)+
+        '<div class="row">'+pField('Material','PLA, PETG, ABS...','fm'+i,i,'material',f.material,false)+
         '<div class="field"><label for="fc'+i+'">Cor</label><input id="fc'+i+'" type="color" value="'+esc(safeColor(f.color,'#FF6B2C'))+'" data-list="'+i+'" data-key="color" style="padding:4px"></div></div>'+
         '<div class="row">'+pField('Preço do rolo','R$','fp'+i,i,'spoolPrice',f.spoolPrice,true)+
         pField('Peso do rolo','g','fw'+i,i,'spoolWeight',f.spoolWeight,true)+'</div>'+
+        '<p class="gsub">Preço por grama: <b class="pergram">'+esc(perGramStr(f))+'</b> — é este número que entra no preço da peça.</p>'+
+        '<p class="gtitle">Estoque</p>'+
         stockBoxHtml(f, i)+
+        '<p class="gtitle">Onde comprar de novo</p>'+
         pField('Marca / loja','','fb'+i,i,'brand',f.brand||'',false)+
         '<div class="field"><label for="fu'+i+'">Link de compra'+helpBtn('filurl')+'</label>'+
           '<div class="linkrow"><div class="field"><input id="fu'+i+'" type="url" inputmode="url" placeholder="https://..." value="'+esc(f.url||'')+'" data-list="'+i+'" data-key="url"></div>'+
           '<a class="go" '+(u ? 'href="'+esc(u)+'" target="_blank" rel="noopener noreferrer"'
                                : 'aria-disabled="true" tabindex="-1"')+' aria-label="Abrir link">'+LINKSVG+'</a></div></div>'+
-        '<div class="btnrow"><button type="button" class="btn" data-buy-f="'+i+'">Registrar compra deste rolo</button></div>'+
+        '<div class="btnrow"><button type="button" class="btn" data-buy-f="'+i+'" aria-expanded="false" aria-controls="buybox-f'+i+'">Registrar uma compra deste rolo</button></div>'+
+        filBuyPanelHtml(f, i)+
+        '<div class="buymsg"></div>'+
+        saveRowHtml('f', i, 'Salvar filamento')+
         '<div class="btnrow"><button type="button" class="btn danger" data-del-f="'+i+'">Excluir filamento</button></div>'+
       '</div></div>';
   }).join('') || emptyCad(filamentQuery, S.filaments.length,
@@ -5171,21 +5319,69 @@ function renderFilaments(){
       var f = S.filaments[+b.getAttribute('data-fill-f')];
       if(!f) return;
       setStock(f, num(f.spoolWeight) > 0 ? num(f.spoolWeight) : 1000);
-      persist(); renderFilaments(); render();
+      persist();
+      /* sem o blur o proprio botao segura o foco e o redesenho fica pendente:
+         a barra de estoque nao se mexia depois do clique */
+      b.blur();
+      renderFilaments(); render();
     });
   });
+  /* abre e fecha o formulario da compra sem sair da ficha */
   each(qsa(el,'[data-buy-f]'), function(b){
     b.addEventListener('click', function(){
-      var f = S.filaments[+b.getAttribute('data-buy-f')];
+      var i = +b.getAttribute('data-buy-f'), box = $('buybox-f'+i);
+      if(!box) return;
+      var show = box.hidden;
+      box.hidden = !show;
+      b.setAttribute('aria-expanded', show ? 'true' : 'false');
+      if(show){
+        var f = S.filaments[i];
+        if(f) filBuyReset(i, f);
+        var v = $('fbv'+i);
+        if(v){ v.focus(); v.select(); }
+        box.scrollIntoView({block:'nearest'});
+      }
+    });
+  });
+  /* o resumo embaixo dos campos vai dizendo o que o botao vai fazer */
+  each(qsa(el,'[data-buyf]'), function(inp){
+    inp.addEventListener('input', function(){
+      var i = +inp.getAttribute('data-buyf');
+      filBuyNoteRefresh(i, S.filaments[i]);
+    });
+  });
+  each(qsa(el,'[data-buyno-f]'), function(b){
+    b.addEventListener('click', function(){
+      var i = +b.getAttribute('data-buyno-f'), box = $('buybox-f'+i);
+      if(box) box.hidden = true;
+      var t = el.querySelector('[data-buy-f="'+i+'"]');
+      if(t){ t.setAttribute('aria-expanded','false'); t.focus(); }
+    });
+  });
+  each(qsa(el,'[data-buyok-f]'), function(b){
+    b.addEventListener('click', function(){
+      var i = +b.getAttribute('data-buyok-f'), f = S.filaments[i];
       if(!f) return;
+      var rolls = Math.max(1, Math.round(num($('fbq'+i).value)) || 1);
+      var total = num($('fbv'+i).value);
+      var cap = num(f.spoolWeight) > 0 ? num(f.spoolWeight) : 1000;
       var nb = newBuy();
       nb.kind = 'filamento';
-      nb.desc = f.name || 'Filamento';
-      nb.supplier = f.brand || '';
+      nb.date = $('fbd'+i).value || todayISO();
+      nb.desc = rolls + 'x ' + (f.name || 'Filamento') + ' (' + dec(cap,0) + ' g)';
+      nb.supplier = $('fbs'+i).value || f.brand || '';
       nb.url = f.url || '';
-      nb.amount = num(f.spoolPrice);
-      S.buys.unshift(nb); persist();
-      openBuy(nb.id);
+      nb.amount = total;
+      S.buys.unshift(nb);
+      /* o rolo que chegou e a verdade mais nova: o preco do cadastro segue a
+         ultima nota, e um rolo comprado enche o estoque de quem controla */
+      if(total > 0) f.spoolPrice = Math.round(total/rolls*100)/100;
+      if(stockOn(f)) setStock(f, cap * rolls);
+      f.updatedAt = Date.now();
+      persistNow();
+      b.blur();
+      renderFilaments(); fillSelects(); render(); paintNavCounts();
+      filBuyDone(i, nb, f);
     });
   });
 }
@@ -5193,12 +5389,14 @@ var TXTKEYS = {name:1, material:1, color:1, override:1, brand:1, url:1, stockG:1
 function wireList(el, arr, rerender, pfx){
   each(qsa(el,'[data-open]'), function(h){
     var toggle = function(){
-      var b = $('body-'+h.getAttribute('data-open'));
+      var key = h.getAttribute('data-open');
+      var b = $('body-'+key);
       if(!b) return;
       b.hidden = !b.hidden;
       h.setAttribute('aria-expanded', b.hidden ? 'false' : 'true');
       var it = h.closest('.item');
       if(it) it.classList.toggle('open', !b.hidden);
+      cadSetOpen(pfx, arr[+key.slice(1)], !b.hidden);
     };
     h.addEventListener('click', toggle);
     h.addEventListener('keydown', function(e){
@@ -5207,7 +5405,8 @@ function wireList(el, arr, rerender, pfx){
   });
   each(qsa(el,'[data-list]'), function(inp){
     inp.addEventListener('input', function(){
-      var it = arr[+inp.getAttribute('data-list')];
+      var idx = +inp.getAttribute('data-list');
+      var it = arr[idx];
       if(!it) return;
       var k = inp.getAttribute('data-key');
       it[k] = TXTKEYS[k] ? inp.value : num(inp.value);
@@ -5225,11 +5424,15 @@ function wireList(el, arr, rerender, pfx){
         var meta = head.querySelector('.meta');
         meta.textContent = filMeta(it);
         meta.className = filMetaClass(it);
+        var pgEl = item.querySelector('.pergram');
+        if(pgEl) pgEl.textContent = perGramStr(it);
+        var bx = $('buybox-f'+idx);
+        if(bx && !bx.hidden) filBuyNoteRefresh(idx, it);
         if(k === 'stockG' || k === 'lowG' || k === 'spoolWeight'){
           var mt = item.querySelector('.stockmeter');
           if(mt) mt.innerHTML = stockMeterHtml(it);
           var fill = item.querySelector('[data-fill-f]');
-          if(fill) fill.textContent = 'Rolo novo (' + dec(num(it.spoolWeight) > 0 ? num(it.spoolWeight) : 1000, 0) + ' g)';
+          if(fill) fill.textContent = 'Repor estoque (' + dec(num(it.spoolWeight) > 0 ? num(it.spoolWeight) : 1000, 0) + ' g)';
         }
       }
       if(k==='color') head.querySelector('.swatch').style.background = inp.value;
@@ -5246,6 +5449,25 @@ function wireList(el, arr, rerender, pfx){
           }
         }
       }
+    });
+  });
+  each(qsa(el,'[data-save-'+pfx+']'), function(b){
+    b.addEventListener('click', function(){
+      var i = +b.getAttribute('data-save-'+pfx), it = arr[i];
+      if(!it) return;
+      if(!String(it.name == null ? '' : it.name).trim()){
+        var inp = el.querySelector('[data-list="'+i+'"][data-key="name"]');
+        if(inp){ inp.focus(); inp.select(); }
+        cadMsg(pfx, '<div class="alert bad">Dê um apelido antes de salvar: é por ele que você acha este cadastro na lista e na calculadora.</div>');
+        return;
+      }
+      /* persist() agrupa a gravacao em 250 ms; aqui o usuario pediu para salvar,
+         entao vai para o disco e para a nuvem na hora */
+      persistNow();
+      cadSetOpen(pfx, it, false);
+      b.blur();
+      rerender();
+      cadMsg(pfx, '<div class="gcok"><b>'+esc(it.name)+'</b> salvo.</div>');
     });
   });
   each(qsa(el,'[data-del-'+pfx+']'), function(b){
@@ -6513,6 +6735,7 @@ function showCad(v){
 function openCadItem(pfx, i, fieldPfx){
   var body = $('body-'+pfx+i);
   if(!body) return;
+  cadSetOpen(pfx, (pfx === 'p' ? S.printers : S.filaments)[i], true);
   body.hidden = false;
   var head = document.querySelector('[data-open="'+pfx+i+'"]');
   if(head){
