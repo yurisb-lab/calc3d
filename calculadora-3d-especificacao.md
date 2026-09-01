@@ -669,3 +669,50 @@ O que mudou:
 
 A regra da **primeira** resposta do servidor continua a mesma: a nuvem manda, e
 o que estava no aparelho vai para o backup local.
+
+---
+
+# Adendo — v6 (setembro/2026)
+
+A v5 montou a tabela de preço por faixa de quantidade em cima de uma suposição
+que a impressora não cumpre: a de que o preparo é gasto **uma vez por pedido**.
+Ele é gasto uma vez por **mesa**. Quem imprime chaveiro, que sai 24 por vez,
+tinha razão no desconto que o app prometia; quem imprime um vaso que ocupa a
+mesa sozinho estava dando desconto de lote sobre um custo que não caiu.
+
+## 25. O que entrou
+
+### 25.1 Cabem por mesa
+Campo novo no cadastro do produto e na calculadora, logo abaixo de
+*1 peça / a mesa toda*: **quantas peças desta cabem juntas na mesa**.
+
+- O app passa a contar **mesas**, não pedidos: `mesas = ⌈quantidade ÷ cabem⌉`,
+  e o preparo é cobrado uma vez por mesa. Com 1 por mesa, 30 peças são 30
+  preparos e o preço unitário **não cai** — a tabela por faixa passa a dizer
+  isso em vez de prometer um desconto que não existe. Com 24 por mesa, o preço
+  cai até encher a mesa e para de cair depois, que é o comportamento real.
+- A **memória de cálculo** abre a conta: `20 min × 3 mesas ÷ 10 peças`.
+- Cada linha da tabela por faixa mostra **quantas mesas** aquela quantidade
+  precisa — é o prazo de produção que o cliente pergunta em seguida.
+- O texto de **Copiar** para o WhatsApp só promete desconto por volume quando
+  existe desconto por volume.
+- Marcar *A mesa toda* preenche o campo sozinho com a quantidade de peças da
+  mesa: a mesa que foi fatiada já respondeu a pergunta. O que o usuário já
+  digitou nunca é sobrescrito.
+- O campo fica **em branco por padrão**, e em branco quer dizer *não controlo*:
+  o lote inteiro volta a contar como um preparo só, exatamente como antes.
+  Nenhum preço muda sozinho.
+
+## 26. Compatibilidade
+
+Produtos, pedidos e orçamentos salvos antes da v6 sobem com o campo vazio e
+mantêm o preço que tinham. O campo sincroniza junto com o documento do produto
+e entra no backup `.json` como os demais.
+
+## 27. Continua fora do escopo
+
+Resina/SLA, `.bgcode` binário do Prusa, miniatura do G-code virando foto do
+produto, frete por CEP, comparador de marketplaces, anexar o PDF no
+`navigator.share` e cadastro de clientes com histórico próprio. Encaixar as
+peças na mesa sozinho (nesting) também fica de fora: quem fatia sabe quantas
+cabem, e adivinhar isso pelo volume erraria mais do que acertaria.
