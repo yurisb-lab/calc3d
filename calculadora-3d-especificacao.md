@@ -775,3 +775,87 @@ produto, frete por CEP, comparador de marketplaces e nesting automático. Lista
 de peças do conjunto (nome e quantidade de cada parte, tipo lista de material)
 também fica de fora: aqui interessa **quantas** peças o produto tem, que é o
 que muda o preço; catalogar quais elas são é outro assunto.
+
+---
+
+# Adendo — v8 (setembro/2026)
+
+Até aqui o app só falava com quem imprime. Todo o resultado do trabalho —
+foto, preço, descrição — vivia dentro de uma tela que só o dono abria, e a
+venda continuava sendo um punhado de fotos soltas mandadas uma a uma no
+WhatsApp, com o preço repetido de cabeça a cada conversa. Faltava a última
+perna: um endereço para mandar ao cliente.
+
+Não é um site, e não vira um. É um **link** — gerado quando você quer, com os
+produtos que você escolher, que sai do ar quando você mandar.
+
+## 31. O que entrou
+
+### 31.1 Link público (Negócio › Link público)
+Tela nova: escolha produtos do catálogo e receba um endereço como
+`.../p.html?v=k7m2pq9xrb` para mandar no WhatsApp ou colar na bio.
+
+- **A vitrine é a página `p.html`**, ao lado do app. Abre sem login, sem
+  instalar nada e sem o SDK do Firebase — lê o Firestore direto pela API REST,
+  porque quem abre é o cliente, no 4G da rua, e não deve pagar 300 KB de
+  biblioteca pela nossa comodidade.
+- **O que o cliente vê:** a logo da L.Y.K.E, o título do link, um recado seu,
+  e cada produto com fotos (galeria que desliza, toque para ampliar), vídeos,
+  descrição, preço e um marcador de **quantidade**.
+- **O pedido volta pronto:** a barra fixa embaixo soma itens e valor, e o botão
+  abre o WhatsApp com a lista escrita — produto, quantidade, unitário, total e
+  o endereço da vitrine. Sem número cadastrado, o botão copia o texto.
+- As quantidades ficam guardadas no aparelho de quem abriu: fechar a página no
+  meio da escolha não perde o que já foi marcado.
+- **Preços podem ficar "sob consulta"**: a pessoa continua marcando as
+  quantidades, só o valor fica para a conversa.
+- Um link também nasce direto da ficha do produto, em **Gerar link público
+  deste produto**.
+
+### 31.2 O bloco "Para o cliente" na ficha do produto
+Onde mora o que a vitrine mostra, separado do que é seu:
+
+- **Descrição do produto** — escrita para vender. As *Observações* de antes
+  passaram a se chamar o que sempre foram: anotação sua, que ninguém mais lê.
+  Quem já escrevia a fala de venda ali (quando era o único campo de texto) não
+  redigita: um toque em *Usar aquele texto aqui* copia — copia, não move, e só
+  quando o usuário pede. Observação nenhuma vira vitrine sozinha.
+- **Vídeos** — uma lista de endereços. YouTube e Vimeo tocam dentro da própria
+  vitrine; Instagram, TikTok e o resto viram um botão que abre fora. Nada é
+  baixado nem hospedado por nós.
+
+### 31.3 A fronteira do que é publicado
+Uma única função (`linkPayload`) decide o que sai do app, e ela publica
+**apenas**: nome, descrição pública, categoria, fotos, vídeos e o seu preço de
+venda. Custo, margem, markup, gramas, tempo, impressora, filamento, fornecedor,
+compras e clientes **não têm caminho** até a vitrine.
+
+## 32. Regras do Firestore
+
+A pasta `pub/{código}` é a única aberta para leitura sem conta — é o que
+permite ao cliente abrir o link. Escrever nela continua exigindo login. As
+regras novas estão no `FIREBASE.md` e **precisam ser publicadas** antes do
+primeiro link; sem elas o app avisa que "o Firestore recusou a publicação".
+
+O código tem 10 letras sorteadas (sem `0/O` e `1/l`, que ninguém lê direito),
+então quem não recebeu o link não chega na página. **Tirar do ar** apaga o
+documento e as fotos publicadas.
+
+## 33. Compatibilidade
+
+Nada muda para quem não gerar link nenhum: a tela nasce vazia e nenhum preço,
+conta ou tela existente foi alterada. Produtos antigos sobem com descrição
+pública vazia e sem vídeos. Os links entram na coleção `links`, sincronizam
+entre os aparelhos como os demais cadastros e viajam no backup `.json`.
+
+A vitrine **não acompanha o catálogo sozinha**: mudou foto, preço ou descrição,
+é preciso tocar em *Atualizar link*. É de propósito — um preço ainda sendo
+mexido não pode chegar ao cliente por conta própria.
+
+## 34. Continua fora do escopo
+
+Resina/SLA, `.bgcode` binário do Prusa, frete por CEP, comparador de
+marketplaces e nesting automático. E, do lado da vitrine: carrinho com
+pagamento, cupom, conta de cliente, estoque reservado, domínio próprio e
+contador de visitas. A venda continua terminando na conversa — o link só evita
+que ela **comece** com vinte fotos soltas e o preço repetido de cabeça.
