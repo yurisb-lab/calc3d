@@ -1474,6 +1474,96 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
 .orline{display:flex;align-items:center;gap:10px;margin:0 0 12px;color:var(--ink3);font-size:11px;letter-spacing:.08em;text-transform:uppercase}
 .orline::before,.orline::after{content:"";flex:1;height:1px;background:var(--line)}
 
+/* ============ link público (vitrine) ============
+   Lista de links de um lado, montagem do link do outro. Nada aqui mostra
+   custo: esta tela existe para o que sai do app, não para o que fica. */
+.lnk{
+  display:flex;gap:12px;align-items:center;width:100%;text-align:left;
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+  padding:13px var(--pad);margin-bottom:10px;cursor:pointer;font:inherit;color:inherit;
+  box-shadow:var(--sh-1);transition:box-shadow .15s,border-color .15s,transform .12s;
+}
+.lnk:hover{border-color:var(--line2);box-shadow:var(--sh-2);transform:translateY(-1px)}
+.lnk:active{transform:translateY(0)}
+.lnk .ic{
+  flex:none;width:42px;height:42px;border-radius:12px;background:var(--surface2);
+  border:1px solid var(--line);display:flex;align-items:center;justify-content:center;
+}
+.lnk .ic svg{width:19px;height:19px;stroke:var(--ink3);fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.lnk .mid{flex:1;min-width:0}
+.lnk .nm{display:block;font-weight:600;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lnk .sb{display:block;font-size:12px;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.airpill{
+  display:inline-flex;align-items:center;gap:5px;flex:none;font-size:10.5px;font-weight:700;
+  letter-spacing:.07em;text-transform:uppercase;border-radius:999px;padding:5px 10px;
+  border:1px solid var(--line);color:var(--ink3);background:var(--surface2);
+}
+.airpill .d{width:7px;height:7px;border-radius:50%;background:currentColor;flex:none}
+.airpill.on{color:var(--ok-ink);background:var(--ok-bg);border-color:var(--ok-line)}
+
+/* o endereço, para copiar com o polegar */
+.urlbox{
+  display:flex;align-items:center;gap:9px;background:var(--surface2);border:1px solid var(--line);
+  border-radius:var(--r-sm);padding:11px 13px;box-shadow:var(--sh-in);margin-bottom:12px;
+}
+.urlbox .u{
+  flex:1;min-width:0;font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--ink2);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.urlbox .cp{
+  flex:none;border:1px solid var(--line);background:var(--surface);border-radius:var(--r-xs);
+  min-height:38px;padding:0 12px;font:inherit;font-size:12.5px;font-weight:600;color:var(--ink2);cursor:pointer;
+}
+.urlbox .cp:hover{border-color:var(--line2);color:var(--ink)}
+
+/* escolher os produtos do link */
+.pick{max-height:none}
+.pick .prow{
+  display:flex;gap:11px;align-items:center;width:100%;text-align:left;font:inherit;color:inherit;
+  background:transparent;border:0;border-bottom:1px solid var(--line);padding:10px 2px;cursor:pointer;
+}
+.pick .prow:last-child{border-bottom:0}
+.pick .prow:hover{background:var(--surface2)}
+.pick .bx{
+  flex:none;width:22px;height:22px;border-radius:6px;border:1.8px solid var(--line2);
+  background:var(--surface);display:flex;align-items:center;justify-content:center;
+}
+.pick .bx svg{width:13px;height:13px;stroke:#fff;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;opacity:0}
+.pick .prow[aria-pressed="true"] .bx{background:var(--hot);border-color:var(--hot)}
+.pick .prow[aria-pressed="true"] .bx svg{opacity:1}
+.pick .th{
+  flex:none;width:44px;height:44px;border-radius:9px;overflow:hidden;background:var(--surface3);
+  border:1px solid var(--line);position:relative;
+}
+.pick .th img{width:100%;height:100%;object-fit:cover;display:block}
+.pick .th .ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.pick .th .ph svg{width:20px;height:20px;stroke:var(--ink3);fill:none;stroke-width:1.5;stroke-linejoin:round}
+.pick .mid{flex:1;min-width:0}
+.pick .nm{display:block;font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pick .sb{display:block;font-size:11.5px;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.pick .sb.warn{color:var(--warn-ink)}
+.pick .vl{flex:none;font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:13.5px}
+.picktools{display:flex;gap:8px;margin:0 0 10px}
+.picktools button{
+  border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 13px;
+  font:inherit;font-size:12.5px;font-weight:600;color:var(--ink2);cursor:pointer;box-shadow:var(--sh-1);
+}
+.picktools button:hover{border-color:var(--line2);color:var(--ink)}
+
+/* vídeos do produto */
+.vrow{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.vrow .u{
+  flex:1;min-width:0;font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--ink2);
+  background:var(--surface2);border:1px solid var(--line);border-radius:var(--r-sm);
+  padding:10px 12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;box-shadow:var(--sh-in);
+}
+.vrow .kill{
+  flex:none;width:46px;min-height:46px;border:1px solid var(--line);background:var(--surface);
+  border-radius:var(--r-sm);color:var(--red);font-size:20px;cursor:pointer;line-height:1;
+}
+.vrow .kill:hover{background:var(--err-bg);border-color:var(--err-line)}
+.vnone{font-size:13px;color:var(--ink3);padding:10px 0}
+
 /* ---------- multicolor / AMS ---------- */
 #mat-box{margin-top:14px}
 .matrow{display:flex;gap:8px;align-items:center;margin-bottom:8px}
@@ -2084,8 +2174,29 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
           </div>
         </div>
         <div class="field" style="margin-bottom:0">
-          <label for="pd-note">Observações <span class="hint">— cores, variações, prazo</span></label>
+          <label for="pd-note">Observações <span class="hint">— só você vê</span></label>
           <textarea id="pd-note" placeholder="Ex.: sai em preto, branco e vermelho. Entrega em 3 dias."></textarea>
+        </div>
+      </div>
+
+      <h2 class="section">Para o cliente<button type="button" class="help" data-h="paracliente" aria-label="O que é isso?">?</button></h2>
+      <div class="card">
+        <div class="field">
+          <label for="pd-pubdesc">Descrição do produto <span class="hint">— aparece no link público</span></label>
+          <textarea id="pd-pubdesc" placeholder="Ex.: Vaso hexagonal de 18 cm, impresso em PLA. Escolha a cor na hora do pedido."></textarea>
+          <p class="note" id="pd-pubfrom" style="margin:8px 0 0" hidden>Você já escreveu algo nas observações. <button type="button" class="golink" id="btn-pd-pubfrom">Usar aquele texto aqui</button> — depois é só ajustar.</p>
+        </div>
+        <div class="field" style="margin-bottom:0">
+          <label>Vídeos <span class="hint">— YouTube, Instagram, TikTok ou link direto</span></label>
+          <div id="pd-vids"></div>
+          <div class="linkrow" style="margin-top:8px">
+            <div class="field"><input id="pd-vid-new" type="url" inputmode="url" placeholder="https://youtube.com/..."></div>
+            <button type="button" class="go" id="btn-pd-vid-add" aria-label="Adicionar vídeo"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+          </div>
+          <p class="note" style="margin:10px 0 0">As fotos, o nome, a descrição e o <b>seu preço de venda</b> são o que o cliente enxerga. Custo, margem, gramas e tempo nunca saem daqui.</p>
+        </div>
+        <div class="btnrow" style="margin-top:14px">
+          <button type="button" class="btn" id="btn-pd-share">Gerar link público deste produto</button>
         </div>
       </div>
 
@@ -2192,6 +2303,85 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
       <div class="btnrow" style="margin-top:14px">
         <button type="button" class="btn" id="btn-pd-dup">Duplicar</button>
         <button type="button" class="btn danger" id="btn-pd-del">Excluir</button>
+      </div>
+    </section>
+
+    <!-- ============ LINK PÚBLICO (vitrine) ============
+         O único lugar do app que fala com quem NÃO é você. Aqui um punhado de
+         produtos do catálogo vira um endereço que o cliente abre no celular,
+         vê foto, vídeo, descrição e preço, marca quantas quer e devolve o
+         pedido pronto no WhatsApp. Não é um site: é um link que você gera,
+         manda e, quando quiser, tira do ar. -->
+    <section class="view" id="v-share" hidden>
+      <div id="shr-list-wrap">
+        <h2 class="section ptitle">Link público</h2>
+        <p class="viewintro">Escolha produtos do catálogo e gere um endereço para mandar no WhatsApp ou colar na bio. Quem abrir vê fotos, vídeos, descrição e preço, marca a quantidade que quer e devolve o pedido pronto para você. Ainda não é um site — é um link seu, que sai do ar quando você quiser.</p>
+        <div class="toolbar">
+          <input id="shr-search" type="search" placeholder="Buscar link pelo nome...">
+          <button type="button" class="btn primary" id="btn-add-link">+ Novo link</button>
+        </div>
+        <div id="shr-cloud"></div>
+        <div id="shr-msg"></div>
+        <div id="shr-list"></div>
+        <p class="gohint">Os produtos que entram aqui saem do <button type="button" class="golink" data-go="products">catálogo</button>. A descrição e os vídeos que o cliente vê ficam na ficha de cada produto, em <b>Para o cliente</b>.</p>
+      </div>
+
+      <div id="shr-edit" hidden>
+        <div class="detailhead">
+          <button type="button" class="btn ghost back" id="btn-shr-back">‹ Voltar</button>
+          <span class="t" id="shr-head">Link público</span>
+        </div>
+
+        <div id="shr-out"></div>
+
+        <h2 class="section">Capa</h2>
+        <div class="card">
+          <div class="field">
+            <label for="shr-title">Título do link</label>
+            <input id="shr-title" type="text" placeholder="Ex.: Novidades de dezembro">
+          </div>
+          <div class="field" style="margin-bottom:0">
+            <label for="shr-intro">Recado para quem abrir <span class="hint">— opcional</span></label>
+            <textarea id="shr-intro" placeholder="Ex.: entrega em 3 dias úteis em Curitiba. Cores sob consulta."></textarea>
+          </div>
+        </div>
+
+        <h2 class="section">Produtos no link</h2>
+        <div class="card">
+          <div class="field">
+            <input id="shr-pfind" type="search" placeholder="Buscar produto...">
+          </div>
+          <div id="shr-pick"></div>
+        </div>
+
+        <h2 class="section">Como o cliente pede</h2>
+        <div class="card">
+          <div class="field">
+            <label for="shr-wa">WhatsApp que recebe o pedido<button type="button" class="help" data-h="waped" aria-label="O que é isso?">?</button></label>
+            <input id="shr-wa" type="tel" inputmode="tel" placeholder="(41) 99999-0000">
+          </div>
+          <div class="field" style="margin-bottom:0">
+            <label>Preços na vitrine</label>
+            <div class="seg" id="seg-shr-price">
+              <button type="button" data-v="on" aria-pressed="true">Mostrar</button>
+              <button type="button" data-v="off" aria-pressed="false">Sob consulta</button>
+            </div>
+            <p class="note" style="margin:10px 0 0">Em <b>sob consulta</b> a pessoa ainda escolhe as quantidades — só o valor fica para a conversa.</p>
+          </div>
+        </div>
+
+        <div class="btnrow" style="margin-top:16px">
+          <button type="button" class="btn primary" id="btn-shr-pub">Publicar link</button>
+          <button type="button" class="btn" id="btn-shr-copy">Copiar link</button>
+        </div>
+        <div class="btnrow" style="margin-top:10px">
+          <button type="button" class="btn" id="btn-shr-open">Abrir a vitrine</button>
+          <button type="button" class="btn" id="btn-shr-wa">Mandar no WhatsApp</button>
+        </div>
+        <div class="btnrow" style="margin-top:14px">
+          <button type="button" class="btn danger" id="btn-shr-off">Tirar do ar</button>
+          <button type="button" class="btn danger" id="btn-shr-del">Excluir link</button>
+        </div>
       </div>
     </section>
 
@@ -2695,7 +2885,7 @@ var STATUS = {
 };
 var STATUS_ORDER = ['orcado','aprovado','imprimindo','entregue','pago'];
 
-var COLLS = ['printers','filaments','categories','products','buys','jobs','clients'];
+var COLLS = ['printers','filaments','categories','products','buys','jobs','clients','links'];
 var DEFAULTS = {
   /* ids fixos: dois aparelhos que semeiam o mesmo padrão geram o MESMO documento
      na nuvem em vez de duas cópias. Igual ao que já era feito nas categorias. */
@@ -2712,6 +2902,9 @@ var DEFAULTS = {
   /* clientes: a agenda do negócio. Nasce vazia — quem só calcula preço nunca
      precisa abrir esta tela, e quem vende passa a ter o histórico por pessoa. */
   clients:[],
+  /* links publicos: cada um e uma vitrine ja publicada (ou em rascunho). Nasce
+     vazia — quem so calcula preco nunca precisa gerar link nenhum. */
+  links:[],
   /* fixed/fixedHours nascem em 0: quem nunca abriu Ajustes continua com o preço
      de antes, e o rateio só entra depois que o usuário informa os dois números */
   settings:{kwh:0.75,hour:25,waste:8,fail:8,fee:0,fixed:0,fixedHours:0,biz:'',contact:'',valid:7,tiers:'1, 10, 50'},
@@ -2752,6 +2945,23 @@ function migrate(seed){
   /* produto salvo antes desta opção é peça única: 1 peça por produto mantém a
      conta, a mesa e o preço exatamente como estavam */
   S.products.forEach(function(p){ if(p.parts == null) p.parts = ''; });
+  /* o que o CLIENTE vê no link público. Nasce vazio: a descrição interna
+     (observações) é sua, e ninguém quer descobrir que ela virou vitrine. */
+  S.products.forEach(function(p){
+    if(p.pubDesc == null) p.pubDesc = '';
+    if(!Array.isArray(p.videos)) p.videos = [];
+  });
+  /* vitrines: o código é o endereço público e não pode nascer duas vezes igual */
+  S.links.forEach(function(l){
+    if(!l.code) l.code = linkCode();
+    if(typeof l.title !== 'string') l.title = '';
+    if(typeof l.intro !== 'string') l.intro = '';
+    if(typeof l.wa !== 'string') l.wa = '';
+    if(!Array.isArray(l.items)) l.items = [];
+    if(!Array.isArray(l.pubPhotos)) l.pubPhotos = [];
+    if(typeof l.showPrices !== 'boolean') l.showPrices = true;
+    if(!isFinite(num(l.publishedAt))) l.publishedAt = 0;
+  });
 
   Object.keys(DEFAULTS.settings).forEach(function(k){ if(S.settings[k]===undefined) S.settings[k] = DEFAULTS.settings[k]; });
 
@@ -3038,6 +3248,9 @@ function addPhotos(files, target, msgEl, after){
 
 /* ============ ajuda (passe o mouse ou toque) ============ */
 var HELP = {
+  paracliente:{t:'Para o cliente', d:'Tudo o que está NESTE bloco é o que a pessoa vê quando abre o link público: a descrição escrita para vender e os vídeos da peça girando, imprimindo ou em uso. As fotos e o seu preço de venda vêm dos blocos de cima. O resto da ficha — custo, margem, gramas, tempo, impressora — nunca sai do app.', e:''},
+  waped:{t:'WhatsApp que recebe o pedido', d:'Quando o cliente termina de marcar as quantidades, o botão da vitrine abre o WhatsApp com o pedido já escrito. Ponha o número com DDD; o app completa o 55 do Brasil. Deixe em branco e o botão passa a copiar o pedido para a pessoa colar onde quiser.', e:'(41) 99999-0000'},
+  linkpub:{t:'Link público', d:'Um endereço na internet com os produtos que você escolher: foto, vídeo, descrição, preço e um marcador de quantidade. Ele fica no ar até você tirar. Não é uma loja — não cobra nem processa pagamento; o pedido chega pelo WhatsApp e a venda continua na conversa, como já é hoje.', e:''},
   margem:{t:'Margem × Markup', d:'Margem é a fatia do PREÇO que sobra pra você. Markup é o quanto você soma EM CIMA do custo. Os dois números são diferentes — 50% de markup dá só 33% de margem.', e:'Custo R$ 29,03\n50% de markup → R$ 43,55\n50% de margem → R$ 58,06'},
   precofinal:{t:'Preço que eu vou cobrar', d:'O app sugere um preço matemático. Aqui você grava o preço redondo que realmente vai praticar (R$ 49,90 em vez de R$ 48,38). A conferência recalcula o lucro real com o SEU preço, e ele fica salvo no produto.', e:''},
   gramas:{t:'Gramas da peça', d:'O número que o fatiador mostra depois de fatiar. Se o valor for da mesa cheia, marque "a mesa toda" abaixo que o app divide pela quantidade.', e:''},
@@ -3150,6 +3363,7 @@ var ICO = {
   biz:'<line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="17" x2="20" y2="17"/><circle cx="9" cy="7" r="2.5"/><circle cx="15" cy="17" r="2.5"/>',
   app:'<rect x="6" y="2.5" width="12" height="19" rx="2.6"/><line x1="10.4" y1="18.4" x2="13.6" y2="18.4"/>',
   data:'<ellipse cx="12" cy="6" rx="7.6" ry="3"/><path d="M4.4 6v12c0 1.66 3.4 3 7.6 3s7.6-1.34 7.6-3V6"/><path d="M4.4 12c0 1.66 3.4 3 7.6 3s7.6-1.34 7.6-3"/>',
+  share:'<circle cx="18" cy="5.5" r="2.8"/><circle cx="6" cy="12" r="2.8"/><circle cx="18" cy="18.5" r="2.8"/><line x1="8.4" y1="10.7" x2="15.6" y2="6.8"/><line x1="8.4" y1="13.3" x2="15.6" y2="17.2"/>',
   add:'<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
   down:'<path d="M12 3.5v11"/><path d="M7.6 10.4L12 14.8l4.4-4.4"/><path d="M4.5 17v3.5h15V17"/>',
   up:'<path d="M12 14.8v-11"/><path d="M7.6 7.9L12 3.5l4.4 4.4"/><path d="M4.5 17v3.5h15V17"/>',
@@ -3171,6 +3385,7 @@ var NAV = [
   {g:'Negócio', items:[
     {id:'dash',      t:'Painel do mês',  s:'como o mês está indo',  kw:'painel dashboard faturamento resumo mes graficos'},
     {id:'products',  t:'Produtos',       s:'seu catálogo',          kw:'catalogo pecas itens produto'},
+    {id:'share',     t:'Link público',   s:'vitrine para o cliente', kw:'link publico vitrine compartilhar catalogo online site loja whatsapp pedido divulgar'},
     {id:'buys',      t:'Compras',        s:'material que entrou',   kw:'compras gastos material nota entrada despesa'},
     {id:'clients',   t:'Clientes',       s:'sua agenda',            kw:'clientes agenda contatos whatsapp telefone'}
   ]},
@@ -3193,6 +3408,7 @@ var ROUTE = {
   saved:     {v:'saved'},
   dash:      {v:'dash'},
   products:  {v:'products'},
+  share:     {v:'share'},
   buys:      {v:'buys'},
   clients:   {v:'cadastros', cad:'clients'},
   printers:  {v:'cadastros', cad:'printers'},
@@ -3279,6 +3495,7 @@ function buildNav(){
 function paintNavCounts(){
   if(typeof S === 'undefined' || !S) return;
   var m = {saved:(S.jobs||[]).length, products:(S.products||[]).length, buys:(S.buys||[]).length,
+           share:(S.links||[]).length,
            clients:(S.clients||[]).length, printers:(S.printers||[]).length,
            filaments:(S.filaments||[]).length, cats:(S.categories||[]).length};
   Object.keys(m).forEach(function(k){
@@ -3321,6 +3538,7 @@ function go(id, opt){
   if(r.v === 'quick') renderQuick();
   if(r.v === 'saved') renderSaved();
   if(r.v === 'products'){ renderCatFilter(); renderProducts(); renderCats(); }
+  if(r.v === 'share') renderShare();
   if(r.v === 'buys'){ renderBuyFilter(); renderBuys(); }
   if(r.v === 'cadastros'){ showCad(cadTab); renderPrinters(); renderFilaments(); renderCats(); renderClients(); }
   if(r.v === 'clientdetail') renderClientDetail();
@@ -3341,6 +3559,7 @@ var PALACT = [
   {t:'Novo cliente',           s:'Negócio › Clientes',      ic:'add',   go:'clients',   click:'btn-add-client',   kw:'adicionar contato agenda'},
   {t:'Novo produto',           s:'Negócio › Produtos',      ic:'add',   go:'products',  click:'btn-add-product',  kw:'adicionar catalogo item'},
   {t:'Nova compra',            s:'Negócio › Compras',       ic:'add',   go:'buys',      click:'btn-add-buy',      kw:'adicionar gasto nota material'},
+  {t:'Novo link público',      s:'Negócio › Link público',  ic:'share', go:'share',     click:'btn-add-link',     kw:'vitrine compartilhar catalogo cliente whatsapp divulgar loja'},
   {t:'Salvar este orçamento',  s:'Calculadora',             ic:'saved', go:'calc',      click:'btn-save',         kw:'guardar pedido proposta'},
   {t:'Gerar PDF do orçamento', s:'Calculadora',             ic:'pdf',   go:'calc',      click:'btn-pdf',          kw:'imprimir proposta papel'},
   {t:'Limpar o cálculo',       s:'Calculadora',             ic:'broom', go:'calc',      click:'btn-clear',        kw:'zerar apagar recomecar'},
@@ -6057,7 +6276,7 @@ function renderProducts(){
   hydratePhotos(grid);
 }
 function newProduct(){
-  return {id:uid(), name:'', category:'', note:'', stlUrl:'', photos:[],
+  return {id:uid(), name:'', category:'', note:'', stlUrl:'', photos:[], pubDesc:'', videos:[],
     grams:0, hours:0, qty:1, scope:'unit', perPlate:'', parts:'', printer:'', filament:'',
     waste:num(S.settings.waste), fail:num(S.settings.fail), prep:0, finish:0, extras:[],
     mode:'margem', margin:40, price:0, cost:0, priceSet:0,
@@ -6078,6 +6297,12 @@ function renderProductDetail(){
   fillCatSelect();
   if(document.activeElement !== $('pd-name'))  $('pd-name').value  = p.name || '';
   if(document.activeElement !== $('pd-note'))  $('pd-note').value  = p.note || '';
+  if(document.activeElement !== $('pd-pubdesc')) $('pd-pubdesc').value = p.pubDesc || '';
+  /* quem já usava o app escreveu a fala de venda nas observações, quando elas
+     eram o único campo de texto. O link não pega isso sozinho — observação é
+     anotação sua —, mas ninguém precisa redigitar: é um toque. */
+  $('pd-pubfrom').hidden = !(String(p.note||'').trim() && !String(p.pubDesc||'').trim());
+  renderPdVideos(p);
   if(document.activeElement !== $('pd-stl'))   $('pd-stl').value   = p.stlUrl || '';
   if(document.activeElement !== $('pd-price')) $('pd-price').value = num(p.priceSet) > 0 ? dec(num(p.priceSet),2) : '';
   $('pd-cat').value = p.category || '';
@@ -6145,6 +6370,26 @@ function renderGallery(elId, target, after){
   });
   hydratePhotos(el);
 }
+/* Os vídeos são do CLIENTE, não do app: aqui eles são só uma lista de
+   endereços que a vitrine sabe tocar. Nada é baixado nem guardado. */
+function renderPdVideos(p){
+  var el = $('pd-vids');
+  var list = (p.videos || []);
+  el.innerHTML = list.length ? list.map(function(u, i){
+    return '<div class="vrow"><span class="u" title="' + esc(u) + '">' + esc(u) + '</span>' +
+      '<button type="button" class="kill" data-rmvid="' + i + '" aria-label="Remover vídeo">×</button></div>';
+  }).join('') : '<p class="vnone">Nenhum vídeo ainda. Cole o endereço de um vídeo do YouTube, do Instagram ou do TikTok — ele aparece dentro do link público.</p>';
+  each(qsa(el, '[data-rmvid]'), function(b){
+    b.addEventListener('click', function(){
+      var i = +b.getAttribute('data-rmvid');
+      p.videos.splice(i, 1);
+      p.updatedAt = Date.now();
+      persist();
+      renderPdVideos(p);
+    });
+  });
+}
+
 function loadProduct(p){
   $('f-piece').value = p.name || '';
   $('f-grams').value = p.grams || '';
@@ -6335,6 +6580,7 @@ function pdApplyManual(){
 function pdCommitFields(p){
   p.name    = $('pd-name').value;
   p.note    = $('pd-note').value;
+  p.pubDesc = $('pd-pubdesc').value;
   p.stlUrl  = $('pd-stl').value;
   p.priceSet = num($('pd-price').value);
   p.category = $('pd-cat').value;
@@ -8064,6 +8310,7 @@ function bindProducts(){
   }
   upd('pd-name',  function(p,v){ p.name = v; });
   upd('pd-note',  function(p,v){ p.note = v; });
+  upd('pd-pubdesc', function(p,v){ p.pubDesc = v; });
   upd('pd-stl',   function(p,v){ p.stlUrl = v; });
   upd('pd-price', function(p,v){ p.priceSet = num(v); });
   $('pd-cat').addEventListener('change', function(){
@@ -8074,6 +8321,48 @@ function bindProducts(){
   $('pd-stl-go').addEventListener('click', function(){
     var u = safeUrl($('pd-stl').value);
     if(u) window.open(u, '_blank', 'noopener');
+  });
+  function pdAddVideo(){
+    var inp = $('pd-vid-new'), u = safeUrl(inp.value);
+    var p = S.products.filter(function(x){return x.id===pdId;})[0];
+    if(!p) return;
+    if(!u){
+      $('photo-msg').textContent = 'Cole o endereço completo do vídeo, começando com https://';
+      inp.focus();
+      return;
+    }
+    if(!Array.isArray(p.videos)) p.videos = [];
+    if(p.videos.indexOf(u) < 0) p.videos.push(u);
+    p.updatedAt = Date.now();
+    persist();
+    inp.value = '';
+    $('photo-msg').textContent = '';
+    renderPdVideos(p);
+  }
+  $('btn-pd-pubfrom').addEventListener('click', function(){
+    var p = S.products.filter(function(x){return x.id===pdId;})[0];
+    if(!p) return;
+    p.pubDesc = String(p.note || '');
+    p.updatedAt = Date.now();
+    persist();
+    renderProductDetail();
+    $('pd-pubdesc').focus();
+  });
+  $('btn-pd-vid-add').addEventListener('click', pdAddVideo);
+  $('pd-vid-new').addEventListener('keydown', function(e){
+    if(e.key === 'Enter'){ e.preventDefault(); pdAddVideo(); }
+  });
+  $('btn-pd-share').addEventListener('click', function(){
+    var p = S.products.filter(function(x){return x.id===pdId;})[0];
+    if(!p) return;
+    pdCommitFields(p);
+    if(!String(p.name).trim()){
+      $('pd-save-msg').innerHTML = '<div class="alert bad" style="margin-bottom:0">Dê um nome ao produto antes de gerar o link.</div>';
+      $('pd-name').focus();
+      return;
+    }
+    persist();
+    shareThisProduct(p);
   });
   $('btn-photo-cam').addEventListener('click', function(){ $('file-cam').click(); });
   $('btn-photo-lib').addEventListener('click', function(){ $('file-lib').click(); });
@@ -8165,6 +8454,416 @@ function renderMoneyBox(p, m){
       ? '<div class="kv"><span>Lucro por hora de máquina'+helpBtn('lucrohora')+'</span><span class="v" style="color:'+(m.profit>=0?'var(--teal)':'var(--red)')+'">'+brl(productPerHour(p))+'/h</span></div>'
       : '')+
     (m.price <= 0 ? '<p class="note">Defina seu preço acima, ou abra na calculadora para o app sugerir um.</p>' : '');
+}
+
+/* ============ link público (vitrine) ============
+   A única parte do app que fala com quem não é você. O app inteiro existe para
+   descobrir o preço; esta tela existe para MOSTRAR o preço — e só o preço.
+   Nada de custo, margem, gramas ou impressora atravessa esta fronteira. */
+var lnkId = null, lnkQuery = '', pickQuery = '';
+
+/* endereço curto e sem ambiguidade: nada de 0/O nem 1/l num código que alguém
+   pode acabar lendo em voz alta ou digitando à mão */
+function linkCode(){
+  var A = 'abcdefghjkmnpqrstuvwxyz23456789', out = '';
+  for(var i = 0; i < 10; i++) out += A.charAt(Math.floor(Math.random() * A.length));
+  return out;
+}
+function newLink(){
+  return {id:uid(), code:linkCode(), title:'', intro:'', items:[], wa:'',
+          showPrices:true, publishedAt:0, pubPhotos:[],
+          createdAt:Date.now(), updatedAt:Date.now()};
+}
+function linkById(id){ return S.links.filter(function(l){ return l.id === id; })[0] || null; }
+/* a data que o usuário lê é a do relógio dele: toISOString() é UTC e faria uma
+   publicação das nove da noite aparecer como do dia seguinte */
+function stampDate(ms){
+  var d = new Date(num(ms));
+  return brDate(d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'));
+}
+function curLink(){ return linkById(lnkId); }
+function linkProducts(l){
+  return (l.items || []).map(function(pid){
+    return S.products.filter(function(p){ return p.id === pid; })[0];
+  }).filter(Boolean);
+}
+function linkTitle(l){
+  var t = String(l.title || '').trim();
+  if(t) return t;
+  var ps = linkProducts(l);
+  if(ps.length === 1) return ps[0].name || 'Produto';
+  if(ps.length > 1) return ps.length + ' produtos';
+  return 'Link sem nome';
+}
+
+/* o endereço da vitrine mora ao lado do app, no mesmo servidor */
+function pubBase(){
+  var u = location.href.split('#')[0].split('?')[0];
+  return u.replace(/[^\/]*$/, '') + 'p.html';
+}
+function pubUrl(l){ return pubBase() + '?v=' + l.code; }
+/* aberto por file:// o app funciona, mas não existe endereço para mandar a ninguém */
+function pubHosted(){ return /^https?:$/i.test(location.protocol); }
+
+function pubDoc(code){ return SYNC.F.doc(SYNC.db, 'pub', code); }
+function pubPhotoDoc(code, id){ return SYNC.F.doc(SYNC.db, 'pub', code, 'photos', id); }
+
+/* O QUE SAI DAQUI. Esta função é a fronteira: se um campo não está escrito
+   aqui, ele não chega ao cliente. Vale reler antes de mexer. */
+function linkPayload(l){
+  var st = S.settings;
+  var items = linkProducts(l).map(function(p){
+    var c = catById(p.category);
+    return {
+      id:        String(p.id),
+      name:      String(p.name || 'Produto'),
+      desc:      String(p.pubDesc || ''),
+      cat:       c ? String(c.name) : '',
+      catColor:  c ? safeColor(c.color, '#8A95A2') : '',
+      price:     l.showPrices ? num(productPrice(p)) : 0,
+      photos:    (p.photos || []).slice(0, PHOTO_MAX).map(String),
+      videos:    (p.videos || []).map(safeUrl).filter(Boolean)
+    };
+  });
+  return {
+    v:1, at:Date.now(),
+    title:      String(l.title || '').trim() || (items.length === 1 ? items[0].name : 'Catálogo'),
+    intro:      String(l.intro || ''),
+    biz:        String(st.biz || ''),
+    contact:    String(st.contact || ''),
+    wa:         String(l.wa || ''),
+    showPrices: !!l.showPrices,
+    items:      items
+  };
+}
+function payloadPhotoIds(pay){
+  var ids = [];
+  pay.items.forEach(function(it){
+    it.photos.forEach(function(x){ if(ids.indexOf(x) < 0) ids.push(x); });
+  });
+  return ids;
+}
+
+var shrMsgT = null;
+function shrMsg(html, keep){
+  var el = $('shr-msg');
+  if(!el) return;
+  el.innerHTML = html;
+  if(shrMsgT) clearTimeout(shrMsgT);
+  if(html && !keep) shrMsgT = setTimeout(function(){
+    var e2 = $('shr-msg'); if(e2) e2.innerHTML = '';
+  }, 8000);
+}
+function shrErr(e){
+  var m = (e && (e.code || e.message)) ? String(e.code || e.message) : 'erro';
+  if(m.indexOf('permission-denied') > -1 || m.indexOf('unauthenticated') > -1){
+    return 'O Firestore recusou a publicação. Falta liberar a pasta <b>/pub</b> nas regras de segurança — o passo está no arquivo FIREBASE.md, em "Link público".';
+  }
+  return 'Não deu para publicar agora: ' + esc(m) + '. Verifique a conexão e tente de novo.';
+}
+
+function publishLink(l){
+  if(!online()){
+    shrMsg('<div class="alert">Para publicar um link é preciso estar conectado à nuvem. Entre na sua conta em <button type="button" class="golink" data-go="data">Ajustes › Meus dados</button>.</div>', true);
+    return;
+  }
+  var pay = linkPayload(l);
+  if(!pay.items.length){
+    shrMsg('<div class="alert">Escolha pelo menos um produto antes de publicar.</div>');
+    return;
+  }
+  var ids = payloadPhotoIds(pay), code = l.code, before = (l.pubPhotos || []).slice();
+  shrMsg('<div class="gcok"><span class="spin"></span> Publicando <b>' + esc(linkTitle(l)) + '</b>...</div>', true);
+
+  /* as fotos primeiro: um endereço no ar sem imagem é pior que um segundo a mais */
+  Promise.all(ids.map(function(id){
+    return photoGet(id).then(function(ph){
+      if(!ph || !ph.thumb) return null;
+      return SYNC.F.setDoc(pubPhotoDoc(code, id), {thumb:ph.thumb, full:ph.full || ph.thumb, at:Date.now()});
+    });
+  })).then(function(){
+    return SYNC.F.setDoc(pubDoc(code), pay);
+  }).then(function(){
+    /* foto que saiu do link não precisa continuar pública */
+    before.forEach(function(id){
+      if(ids.indexOf(id) < 0) SYNC.F.deleteDoc(pubPhotoDoc(code, id)).catch(function(){});
+    });
+    l.publishedAt = Date.now();
+    l.pubPhotos = ids;
+    l.updatedAt = Date.now();
+    persist();
+    renderShare();
+    shrMsg('<div class="gcok"><b>' + esc(linkTitle(l)) + '</b> está no ar. Copie o endereço e mande para o cliente.</div>');
+  }).catch(function(e){
+    shrMsg('<div class="alert">' + shrErr(e) + '</div>', true);
+  });
+}
+
+function unpublishLink(l){
+  if(!online()){
+    shrMsg('<div class="alert">Sem conexão com a nuvem não dá para tirar o link do ar agora. Conecte-se e tente de novo.</div>', true);
+    return;
+  }
+  var code = l.code, ids = (l.pubPhotos || []).slice();
+  shrMsg('<div class="gcok"><span class="spin"></span> Tirando do ar...</div>', true);
+  SYNC.F.deleteDoc(pubDoc(code)).then(function(){
+    return Promise.all(ids.map(function(id){
+      return SYNC.F.deleteDoc(pubPhotoDoc(code, id)).catch(function(){});
+    }));
+  }).then(function(){
+    l.publishedAt = 0; l.pubPhotos = []; l.updatedAt = Date.now();
+    persist();
+    renderShare();
+    shrMsg('<div class="gcok">Link fora do ar. Quem abrir o endereço antigo vê um aviso de que ele não existe mais.</div>');
+  }).catch(function(e){
+    shrMsg('<div class="alert">' + shrErr(e) + '</div>', true);
+  });
+}
+
+/* ---- a tela ---- */
+function renderShare(){
+  var l = curLink();
+  $('shr-list-wrap').hidden = !!l;
+  $('shr-edit').hidden = !l;
+  if(l) renderShareEdit(l); else renderShareList();
+}
+
+function renderShareList(){
+  var box = $('shr-cloud');
+  box.innerHTML = !pubHosted()
+    ? '<div class="alert">Este app está aberto direto de um arquivo no aparelho, então não existe endereço para mandar a ninguém. Abra a versão publicada na internet para gerar links.</div>'
+    : (online() ? '' : '<div class="alert">Você está fora da nuvem. Dá para montar o link agora, mas para <b>publicar</b> é preciso entrar na sua conta em <button type="button" class="golink" data-go="data">Ajustes › Meus dados</button>.</div>');
+
+  var list = S.links.slice().sort(function(a,b){ return num(b.updatedAt) - num(a.updatedAt); });
+  if(lnkQuery){
+    list = list.filter(function(l){
+      return palNorm(linkTitle(l) + ' ' + l.intro + ' ' + l.code).indexOf(palNorm(lnkQuery)) > -1;
+    });
+  }
+  $('shr-list').innerHTML = list.length ? list.map(function(l){
+    var n = linkProducts(l).length;
+    var on = num(l.publishedAt) > 0;
+    return '<button type="button" class="lnk" data-lnk="' + esc(l.id) + '">' +
+      '<span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true">' + ICO.share + '</svg></span>' +
+      '<span class="mid">' +
+        '<span class="nm">' + esc(linkTitle(l)) + '</span>' +
+        '<span class="sb">' + n + (n === 1 ? ' produto' : ' produtos') +
+          (on ? ' · no ar desde ' + stampDate(l.publishedAt) : ' · rascunho') +
+        '</span>' +
+      '</span>' +
+      '<span class="airpill' + (on ? ' on' : '') + '"><span class="d"></span>' + (on ? 'No ar' : 'Rascunho') + '</span>' +
+    '</button>';
+  }).join('') : (S.links.length
+    ? emptyFind(lnkQuery, ' link')
+    : emptyBox('Nenhum link ainda',
+        'Um link público é a sua vitrine: você escolhe produtos do catálogo e recebe um endereço para mandar no WhatsApp. Quem abrir vê foto, vídeo, descrição e preço, e devolve o pedido com as quantidades marcadas.',
+        'btn-add-link', '+ Criar o primeiro link'));
+
+  each(qsa($('shr-list'), '[data-lnk]'), function(b){
+    b.addEventListener('click', function(){ openLink(b.getAttribute('data-lnk')); });
+  });
+}
+
+function openLink(id){
+  lnkId = id;
+  shrMsg('');
+  pickQuery = '';
+  if($('shr-pfind')) $('shr-pfind').value = '';
+  go('share');
+}
+
+function renderShareEdit(l){
+  $('shr-head').textContent = linkTitle(l);
+  if(document.activeElement !== $('shr-title')) $('shr-title').value = l.title || '';
+  if(document.activeElement !== $('shr-intro')) $('shr-intro').value = l.intro || '';
+  if(document.activeElement !== $('shr-wa'))    $('shr-wa').value    = l.wa || '';
+  setSeg('seg-shr-price', l.showPrices ? 'on' : 'off');
+
+  var on = num(l.publishedAt) > 0, url = pubUrl(l);
+  var ps = linkProducts(l);
+  var semPreco = l.showPrices ? ps.filter(function(p){ return productPrice(p) <= 0; }).length : 0;
+  var semFoto  = ps.filter(function(p){ return !(p.photos || []).length; }).length;
+
+  $('shr-out').innerHTML =
+    (on
+      ? '<div class="urlbox"><span class="u">' + esc(url) + '</span><button type="button" class="cp" id="btn-shr-cp2">Copiar</button></div>' +
+        '<p class="note" style="margin:-4px 0 14px">No ar desde ' + stampDate(l.publishedAt) +
+        '. Mexeu em algo aqui ou na ficha de um produto? Toque em <b>Atualizar link</b> para o cliente ver a versão nova.</p>'
+      : '<div class="gcok">Este link ainda é um rascunho — ninguém consegue abri-lo. Escolha os produtos e toque em <b>Publicar link</b>.' + helpBtn('linkpub') + '</div>') +
+    (semFoto  ? '<div class="alert">' + semFoto + (semFoto === 1 ? ' produto está' : ' produtos estão') + ' sem foto. Vitrine sem imagem quase não vende — adicione ao menos uma na ficha.</div>' : '') +
+    (semPreco ? '<div class="alert">' + semPreco + (semPreco === 1 ? ' produto está' : ' produtos estão') + ' sem preço de venda e vai aparecer como "sob consulta".</div>' : '');
+
+  if($('btn-shr-cp2')) $('btn-shr-cp2').addEventListener('click', function(){ copyLink(l); });
+
+  $('btn-shr-pub').textContent = on ? 'Atualizar link' : 'Publicar link';
+  ['btn-shr-copy','btn-shr-open','btn-shr-wa','btn-shr-off'].forEach(function(id){ $(id).disabled = !on; });
+  $('btn-shr-pub').disabled = !pubHosted();
+
+  renderPick(l);
+}
+
+function renderPick(l){
+  var list = S.products.slice().sort(byProductName);
+  if(pickQuery){
+    list = list.filter(function(p){
+      var c = catById(p.category);
+      return palNorm((p.name || '') + ' ' + (c ? c.name : '')).indexOf(palNorm(pickQuery)) > -1;
+    });
+  }
+  var chosen = l.items || [];
+  var head = '<div class="picktools">' +
+      '<button type="button" data-pk="all">Marcar todos</button>' +
+      '<button type="button" data-pk="none">Limpar</button>' +
+      '<span style="flex:1"></span>' +
+      '<span style="align-self:center;font-size:12.5px;color:var(--ink3)">' + chosen.length + ' escolhido' + (chosen.length === 1 ? '' : 's') + '</span>' +
+    '</div>';
+
+  $('shr-pick').innerHTML = head + (list.length ? '<div class="pick">' + list.map(function(p){
+    var sel = chosen.indexOf(p.id) > -1;
+    var ph = (p.photos || [])[0];
+    var price = productPrice(p);
+    var faltas = [];
+    if(!ph) faltas.push('sem foto');
+    if(!String(p.pubDesc || '').trim()) faltas.push('sem descrição');
+    if(l.showPrices && price <= 0) faltas.push('sem preço');
+    var c = catById(p.category);
+    return '<button type="button" class="prow" data-pp="' + esc(p.id) + '" aria-pressed="' + sel + '">' +
+      '<span class="bx"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>' +
+      '<span class="th">' + (ph ? '<img data-photo="' + esc(ph) + '" data-kind="thumb" alt="">' : '') +
+        '<span class="ph">' + BOXSVG + '</span></span>' +
+      '<span class="mid">' +
+        '<span class="nm">' + esc(p.name || 'Sem nome') + '</span>' +
+        '<span class="sb' + (faltas.length ? ' warn' : '') + '">' +
+          (faltas.length ? esc(faltas.join(' · ')) : esc(c ? c.name : 'pronto para a vitrine')) + '</span>' +
+      '</span>' +
+      '<span class="vl">' + (price > 0 ? brl(price) : '—') + '</span>' +
+    '</button>';
+  }).join('') + '</div>' : (S.products.length
+    ? emptyFind(pickQuery, ' produto')
+    : emptyBox('Catálogo vazio',
+        'O link público mostra produtos do seu catálogo. Cadastre o primeiro para poder montar a vitrine.',
+        'btn-add-product', '+ Novo produto')));
+
+  each(qsa($('shr-pick'), '[data-pp]'), function(b){
+    b.addEventListener('click', function(){
+      var id = b.getAttribute('data-pp');
+      var i = l.items.indexOf(id);
+      if(i > -1) l.items.splice(i, 1); else l.items.push(id);
+      l.updatedAt = Date.now();
+      persist();
+      renderShareEdit(l);
+    });
+  });
+  each(qsa($('shr-pick'), '[data-pk]'), function(b){
+    b.addEventListener('click', function(){
+      l.items = b.getAttribute('data-pk') === 'all' ? list.map(function(p){ return p.id; }) : [];
+      l.updatedAt = Date.now();
+      persist();
+      renderShareEdit(l);
+    });
+  });
+  hydratePhotos($('shr-pick'));
+}
+
+function copyLink(l){
+  var url = pubUrl(l);
+  function done(){ shrMsg('<div class="gcok">Endereço copiado. É só colar na conversa.</div>'); }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(url).then(done, function(){ prompt('Copie o endereço:', url); });
+  } else prompt('Copie o endereço:', url);
+}
+
+function bindShare(){
+  $('shr-search').addEventListener('input', function(){
+    lnkQuery = this.value.trim();
+    renderShareList();
+  });
+  $('btn-add-link').addEventListener('click', function(){
+    var l = newLink();
+    S.links.push(l);
+    persist();
+    openLink(l.id);
+  });
+  $('btn-shr-back').addEventListener('click', function(){
+    lnkId = null;
+    shrMsg('');
+    renderShare();
+    window.scrollTo(0,0);
+  });
+
+  function upd(field, fn){
+    $(field).addEventListener('input', function(){
+      var l = curLink(); if(!l) return;
+      fn(l, this.value);
+      l.updatedAt = Date.now();
+      persist();
+      $('shr-head').textContent = linkTitle(l);
+    });
+  }
+  upd('shr-title', function(l,v){ l.title = v; });
+  upd('shr-intro', function(l,v){ l.intro = v; });
+  upd('shr-wa',    function(l,v){ l.wa = v; });
+
+  $('shr-pfind').addEventListener('input', function(){
+    pickQuery = this.value.trim();
+    var l = curLink(); if(l) renderPick(l);
+  });
+  each(qsa($('seg-shr-price'), 'button'), function(b){
+    b.addEventListener('click', function(){
+      var l = curLink(); if(!l) return;
+      l.showPrices = b.getAttribute('data-v') === 'on';
+      l.updatedAt = Date.now();
+      persist();
+      renderShareEdit(l);
+    });
+  });
+
+  $('btn-shr-pub').addEventListener('click', function(){ var l = curLink(); if(l) publishLink(l); });
+  $('btn-shr-copy').addEventListener('click', function(){ var l = curLink(); if(l) copyLink(l); });
+  $('btn-shr-open').addEventListener('click', function(){
+    var l = curLink(); if(l) window.open(pubUrl(l), '_blank', 'noopener');
+  });
+  $('btn-shr-wa').addEventListener('click', function(){
+    var l = curLink(); if(!l) return;
+    var txt = (linkTitle(l) !== 'Link sem nome' ? linkTitle(l) + '\n' : '') + pubUrl(l);
+    if(navigator.share){ navigator.share({title:linkTitle(l), text:txt}).catch(function(){}); return; }
+    window.open('https://wa.me/?text=' + encodeURIComponent(txt), '_blank', 'noopener');
+  });
+  $('btn-shr-off').addEventListener('click', function(){
+    var l = curLink(); if(!l) return;
+    if(!confirm('Tirar este link do ar? Quem já tem o endereço deixa de conseguir abrir.')) return;
+    unpublishLink(l);
+  });
+  $('btn-shr-del').addEventListener('click', function(){
+    var l = curLink(); if(!l) return;
+    if(!confirm('Excluir o link "' + linkTitle(l) + '"? Os produtos continuam no catálogo.')) return;
+    if(num(l.publishedAt) > 0 && online()){
+      var code = l.code, ids = (l.pubPhotos || []).slice();
+      SYNC.F.deleteDoc(pubDoc(code)).catch(function(){});
+      ids.forEach(function(id){ SYNC.F.deleteDoc(pubPhotoDoc(code, id)).catch(function(){}); });
+    }
+    S.links = S.links.filter(function(x){ return x.id !== l.id; });
+    lnkId = null;
+    persist();
+    renderShare();
+    shrMsg('<div class="gcok">Link excluído.</div>');
+  });
+}
+
+/* atalho da ficha do produto: um link só com aquele produto, pronto para mandar */
+function shareThisProduct(p){
+  var l = S.links.filter(function(x){
+    return (x.items || []).length === 1 && x.items[0] === p.id;
+  })[0];
+  if(!l){
+    l = newLink();
+    l.title = p.name || '';
+    l.items = [p.id];
+    l.wa = String(S.settings.contact || '').replace(/\D/g,'').length >= 10 ? String(S.settings.contact) : '';
+    S.links.push(l);
+    persist();
+  }
+  openLink(l.id);
 }
 
 function bindBuys(){
@@ -8710,6 +9409,7 @@ function boot(reload){
   renderCats(); renderCatFilter(); renderProducts();
   renderClients(); fillClientSelect();
   renderBuyFilter(); renderBuys();
+  renderShare();
   syncMarginLabel();
   refreshOrderInputs();
   if(reload) refreshSettingsInputs();
@@ -8749,6 +9449,7 @@ bindImport();
 bindProductImport();
 bindOrder();
 bindProducts();
+bindShare();
 bindClients();
 bindBuys();
 bindSaved();

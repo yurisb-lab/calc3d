@@ -50,6 +50,12 @@ service cloud.firestore {
     match /orgs/empresa/{document=**} {
       allow read, write: if request.auth != null;
     }
+    // vitrines: o link público que o cliente abre sem ter conta nenhuma.
+    // Só entra aqui o que VOCÊ mandou publicar, e só você pode escrever.
+    match /pub/{code}/{document=**} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
     // pasta antiga, de quando cada conta guardava tudo separado
     match /users/{uid}/{document=**} {
       allow read, write: if request.auth != null && request.auth.uid == uid;
@@ -62,6 +68,16 @@ Estas regras mandam ninguém sem conta chegar perto do banco, e toda conta do
 projeto compartilhar a pasta da empresa. Quem já usava a versão anterior
 precisa publicar estas regras **antes** de abrir o app atualizado — senão o
 app avisa que "o Firestore recusou o acesso".
+
+A pasta `pub` é a **única** aberta para a internet, e é assim de propósito: o
+link público precisa abrir no celular de quem não tem conta. O código da
+vitrine tem 10 letras sorteadas — quem não recebeu o link não acha a página —,
+e **nada** de custo, margem, gramas, tempo ou impressora é gravado ali: só nome,
+descrição, fotos, vídeos e o seu preço de venda dos produtos que você marcou.
+Tirou o link do ar, o documento é apagado e o endereço deixa de existir.
+
+Sem esta parte das regras, o app avisa na hora de publicar que "o Firestore
+recusou a publicação".
 
 Sem isso, ou o Firestore bloqueia tudo (o app avisa "o Firestore recusou o
 acesso"), ou o banco fica aberto para qualquer pessoa da internet.
@@ -107,6 +123,24 @@ Se cada conta já tinha dados da versão antiga: a primeira que entrar leva os
 dela para a empresa; o que estava na outra continua guardado na pasta antiga
 dela e pode ser trazido com **Backup › Exportar** e **Backup › Importar**.
 
+### O link público (vitrine)
+
+Em **Negócio › Link público** você escolhe produtos do catálogo e recebe um
+endereço para mandar no WhatsApp — algo como
+`https://yurisb-lab.github.io/calc3d/p.html?v=k7m2pq9xrb`. Quem abrir vê as
+fotos, os vídeos, a descrição e o preço, marca a quantidade que quer e devolve
+o pedido pronto no seu WhatsApp.
+
+- A vitrine é a página `p.html`, que fica ao lado do app. Ela não pede login,
+  não usa o SDK do Firebase (lê o Firestore direto, para abrir rápido no 4G) e
+  não instala nada no celular do cliente.
+- **Publicar** exige estar conectado à nuvem: é a sua conta que grava em `pub`.
+- **Tirar do ar** apaga o documento e as fotos publicadas; o endereço passa a
+  mostrar "este link não está mais no ar".
+- Mudou a foto, o preço ou a descrição de um produto? Toque em **Atualizar
+  link** — a vitrine não acompanha o catálogo sozinha, para você não publicar
+  sem querer um preço que ainda estava sendo mexido.
+
 ### Sair da nuvem
 No mesmo painel, **"Usar só neste aparelho, sem nuvem"**. Nada é apagado, e o
 botão **Voltar a usar a nuvem** desfaz.
@@ -130,6 +164,10 @@ orgs/empresa/
   buys/{id}              compras e notas fiscais
   jobs/{id}              orçamentos salvos
   photos/{id}            fotos: miniatura + imagem, em JPEG comprimido
+  links/{id}             links públicos (quais produtos, título, WhatsApp)
+
+pub/{codigo}             a vitrine publicada, aberta para qualquer pessoa
+  photos/{id}            cópia pública só das fotos dos produtos publicados
 ```
 
 Cada foto é um documento separado, comprimido para caber com folga no limite de

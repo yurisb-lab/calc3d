@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#141E29">
+<meta name="robots" content="noindex, nofollow">
+<meta name="description" content="Catálogo de peças em impressão 3D — L.Y.K.E 3D.">
+<title>L.Y.K.E 3D</title>
+<link rel="icon" href="icone-192.png" sizes="192x192" type="image/png">
+<link rel="apple-touch-icon" href="icone-180.png">
+<link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" media="print" onload="this.media='all';this.onload=null"
+      href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* ============================================================
+   VITRINE — a página que o CLIENTE abre.
+   Mesmos tokens do app, mas sem menu, sem ajuste, sem número de
+   custo: aqui só entram foto, descrição, vídeo, preço e a
+   quantidade que a pessoa quer.
+   ============================================================ */
+:root{
+  color-scheme:light;
+  --bg:#EAEDF1;
+  --bg-grad:radial-gradient(1200px 600px at 50% -10%,#F7F8FA 0%,#EAEDF1 60%);
+  --surface:#FFFFFF;
+  --surface2:#F4F6F9;
+  --surface3:#E5E9EF;
+  --ink:#141E29;
+  --ink2:#586573;
+  --ink3:#8A95A2;
+  --line:#DCE1E8;
+  --line2:#C5CDD8;
+  --hot:#C93C55;
+  --teal:#0E9184;
+  --chrome:#141E29;
+  --chrome-2:#1F2B38;
+  --on-chrome:#FFFFFF;
+  --on-chrome-2:#93A0AE;
+  --chrome-line:rgba(255,255,255,.10);
+  --wa:#1FA855;
+  --sh-1:0 1px 2px rgba(20,30,41,.05), 0 0 0 1px rgba(20,30,41,.02);
+  --sh-2:0 2px 4px -2px rgba(20,30,41,.08), 0 6px 14px -4px rgba(20,30,41,.09);
+  --sh-3:0 4px 8px -3px rgba(20,30,41,.10), 0 14px 32px -8px rgba(20,30,41,.18);
+  --sh-in:inset 0 1px 2px rgba(20,30,41,.06);
+  --r:16px; --r-sm:11px; --pad:16px;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    color-scheme:dark;
+    --bg:#0A0E13;
+    --bg-grad:radial-gradient(1200px 600px at 50% -10%,#161D26 0%,#0A0E13 60%);
+    --surface:#151B22;
+    --surface2:#1B222B;
+    --surface3:#242D38;
+    --ink:#E9EDF1;
+    --ink2:#9EAAB8;
+    --ink3:#6C7784;
+    --line:#242C36;
+    --line2:#35404E;
+    --hot:#EB6775;
+    --teal:#2CC3B0;
+    --wa:#25C15F;
+    --sh-1:0 1px 2px rgba(0,0,0,.40), 0 0 0 1px rgba(255,255,255,.03);
+    --sh-2:0 2px 4px -2px rgba(0,0,0,.5), 0 6px 14px -4px rgba(0,0,0,.5);
+    --sh-3:0 4px 8px -3px rgba(0,0,0,.5), 0 14px 32px -8px rgba(0,0,0,.6);
+    --sh-in:inset 0 1px 2px rgba(0,0,0,.35);
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;background:var(--bg);background-image:var(--bg-grad);color:var(--ink);
+  font-family:'Archivo',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  font-size:15px;line-height:1.55;
+  padding-bottom:calc(96px + env(safe-area-inset-bottom));
+  -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:'IBM Plex Mono','SFMono-Regular',Consolas,monospace;font-variant-numeric:tabular-nums}
+img{max-width:100%}
+
+/* ---- topo com a marca ---- */
+.top{
+  background:var(--chrome);color:var(--on-chrome);
+  padding:calc(22px + env(safe-area-inset-top)) var(--pad) 26px;
+  text-align:center;
+}
+.plate{
+  display:inline-block;background:#fff;border-radius:14px;padding:12px 16px;
+  box-shadow:0 6px 20px rgba(0,0,0,.30);
+}
+.plate img{display:block;width:150px;height:auto}
+.top h1{font-size:21px;font-weight:700;letter-spacing:-.02em;margin:16px 0 0}
+.top .sub{color:var(--on-chrome-2);font-size:13px;margin:4px 0 0}
+
+.wrap{max-width:760px;margin:0 auto;padding:0 var(--pad)}
+.intro{
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+  padding:15px var(--pad);margin:-18px 0 18px;box-shadow:var(--sh-2);
+  font-size:14.5px;color:var(--ink2);white-space:pre-wrap;
+}
+.count{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin:0 0 10px}
+
+/* ---- cartão do produto ---- */
+.card{
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+  box-shadow:var(--sh-2);margin-bottom:16px;overflow:hidden;
+}
+.shots{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;background:var(--surface3);scrollbar-width:none}
+.shots::-webkit-scrollbar{display:none}
+.shot{
+  flex:none;width:100%;scroll-snap-align:center;aspect-ratio:4/3;
+  border:0;padding:0;margin:0;background:var(--surface3);cursor:zoom-in;display:block;position:relative;
+}
+.shot img{width:100%;height:100%;object-fit:cover;display:block}
+.shot .ph{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  color:var(--ink3);
+}
+.shot .ph svg{width:46px;height:46px;stroke:currentColor;fill:none;stroke-width:1.4;stroke-linejoin:round}
+.dots{display:flex;gap:5px;justify-content:center;padding:9px 0 0}
+.dots i{width:6px;height:6px;border-radius:50%;background:var(--line2);display:block;transition:background .2s}
+.dots i.on{background:var(--hot)}
+.body{padding:14px var(--pad) var(--pad)}
+.nm{font-size:17px;font-weight:700;letter-spacing:-.01em;margin:0}
+.cat{
+  display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);margin:0 0 4px;
+}
+.cat i{width:8px;height:8px;border-radius:50%;display:block}
+.desc{color:var(--ink2);font-size:14px;margin:8px 0 0;white-space:pre-wrap}
+.vids{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.vid{
+  display:inline-flex;align-items:center;gap:7px;background:var(--surface2);
+  border:1px solid var(--line);border-radius:999px;padding:8px 13px;font:inherit;
+  font-size:13px;font-weight:600;color:var(--ink2);cursor:pointer;box-shadow:var(--sh-1);
+}
+.vid:hover{border-color:var(--line2);color:var(--ink)}
+.vid svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.player{margin-top:12px;border-radius:var(--r-sm);overflow:hidden;background:#000;border:1px solid var(--line)}
+.player iframe,.player video{display:block;width:100%;aspect-ratio:16/9;border:0}
+
+/* ---- preço e quantidade ---- */
+.buy{
+  display:flex;align-items:center;gap:12px;justify-content:space-between;
+  margin-top:15px;padding-top:14px;border-top:1px dashed var(--line);flex-wrap:wrap;
+}
+.price{font-size:21px;font-weight:700;letter-spacing:-.02em}
+.price .un{display:block;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3)}
+.price.ask{font-size:15px;font-weight:600;color:var(--ink2)}
+.qty{
+  display:flex;align-items:center;border:1px solid var(--line);border-radius:var(--r-sm);
+  overflow:hidden;background:var(--surface);box-shadow:var(--sh-1);
+}
+.qty button{
+  width:46px;height:48px;border:0;background:var(--surface);font:inherit;font-size:20px;
+  color:var(--ink2);cursor:pointer;line-height:1;
+}
+.qty button:hover{background:var(--surface3);color:var(--ink)}
+.qty button:disabled{opacity:.35;cursor:default}
+.qty input{
+  width:56px;height:48px;border:0;border-left:1px solid var(--line);border-right:1px solid var(--line);
+  text-align:center;font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:600;
+  background:var(--surface);color:var(--ink);
+}
+.qty input:focus{outline:2px solid var(--hot);outline-offset:-2px}
+.line{
+  margin-top:10px;font-size:12.5px;color:var(--teal);font-weight:600;
+  font-family:'IBM Plex Mono',monospace;
+}
+
+/* ---- barra do pedido ---- */
+.bar{
+  position:fixed;left:0;right:0;bottom:0;z-index:40;
+  background:var(--chrome);color:var(--on-chrome);
+  border-top:1px solid var(--chrome-line);
+  padding:11px var(--pad) calc(11px + env(safe-area-inset-bottom));
+  box-shadow:0 -8px 24px rgba(0,0,0,.28);
+}
+.barin{max-width:760px;margin:0 auto;display:flex;align-items:center;gap:12px}
+.barin .t{flex:1;min-width:0}
+.barin .k{display:block;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--on-chrome-2)}
+.barin .v{display:block;font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:600;letter-spacing:-.02em}
+.send{
+  flex:none;display:inline-flex;align-items:center;gap:9px;background:var(--wa);color:#fff;
+  border:0;border-radius:var(--r-sm);padding:14px 18px;font:inherit;font-size:15px;font-weight:700;
+  cursor:pointer;min-height:52px;box-shadow:0 4px 14px rgba(0,0,0,.30);
+}
+.send:hover{filter:brightness(1.06)}
+.send:disabled{opacity:.45;cursor:default;box-shadow:none}
+.send svg{width:19px;height:19px;fill:currentColor}
+
+/* ---- estados e rodapé ---- */
+.msg{
+  max-width:760px;margin:40px auto;padding:30px var(--pad);text-align:center;color:var(--ink2);
+}
+.msg .et{display:block;font-size:17px;font-weight:700;color:var(--ink);margin-bottom:7px}
+.spin{
+  display:inline-block;width:22px;height:22px;border:2.5px solid var(--line2);
+  border-top-color:var(--hot);border-radius:50%;animation:sp .8s linear infinite;
+}
+@keyframes sp{to{transform:rotate(360deg)}}
+.foot{
+  max-width:760px;margin:0 auto;padding:22px var(--pad) 30px;text-align:center;
+  color:var(--ink3);font-size:12px;line-height:1.7;
+}
+.foot b{color:var(--ink2)}
+.foot .mark{opacity:.55;width:34px;margin:0 auto 10px;display:block}
+
+/* ---- foto em tela cheia ---- */
+.lens{
+  position:fixed;inset:0;z-index:60;background:rgba(6,9,13,.92);
+  display:flex;align-items:center;justify-content:center;padding:20px;
+}
+.lens[hidden]{display:none}
+.lens img{max-width:100%;max-height:100%;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.lens button{
+  position:absolute;top:calc(14px + env(safe-area-inset-top));right:14px;
+  width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,255,255,.25);
+  background:rgba(0,0,0,.45);color:#fff;font-size:22px;line-height:1;cursor:pointer;
+}
+@media (min-width:620px){
+  .shot{aspect-ratio:16/10}
+  .top{padding-top:calc(30px + env(safe-area-inset-top))}
+  .plate img{width:180px}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <span class="plate"><img src="lyke-logo.png" width="416" height="346" alt="L.Y.K.E 3D"></span>
+  <h1 id="t-title">L.Y.K.E 3D</h1>
+  <p class="sub" id="t-sub"></p>
+</header>
+
+<div id="stage">
+  <div class="msg"><span class="spin"></span><br><br>Carregando o catálogo...</div>
+</div>
+
+<div class="lens" id="lens" hidden><img id="lens-img" alt=""><button type="button" id="lens-x" aria-label="Fechar">×</button></div>
+
+<div class="bar" id="bar" hidden>
+  <div class="barin">
+    <span class="t"><span class="k" id="bar-k">Seu pedido</span><span class="v" id="bar-v">—</span></span>
+    <button type="button" class="send" id="btn-send" disabled>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.86 9.86 0 004.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91C21.96 6.45 17.5 2 12.04 2zm5.8 14.13c-.24.68-1.42 1.31-1.96 1.36-.5.05-.97.24-3.27-.68-2.75-1.08-4.5-3.9-4.64-4.08-.13-.18-1.11-1.48-1.11-2.82 0-1.34.7-2 .95-2.28.25-.27.54-.34.72-.34.18 0 .36 0 .52.01.17.01.39-.06.61.47.23.54.77 1.88.84 2.02.07.13.11.29.02.47-.09.18-.14.29-.27.45-.13.16-.28.35-.4.47-.13.13-.27.28-.12.54.15.27.67 1.11 1.44 1.79.99.88 1.83 1.16 2.09 1.29.26.13.41.11.56-.07.15-.18.65-.76.82-1.02.17-.26.34-.22.58-.13.23.09 1.5.71 1.76.84.26.13.43.2.49.31.06.11.06.63-.18 1.31z"/></svg>
+      Pedir
+    </button>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* Mesmo projeto do app. Esta chave é pública por natureza — quem protege os
+   dados são as regras do Firestore: a pasta /pub é a ÚNICA que qualquer pessoa
+   pode ler, e nela só entra o que o dono mandou publicar. */
+var CFG = {apiKey:"AIzaSyBOuA0TGXVxVJR60VtsssFcQkjQHlElwmY", projectId:"lyke3dcalc"};
+var API = 'https://firestore.googleapis.com/v1/projects/' + CFG.projectId + '/databases/(default)/documents/';
+
+var ESCMAP = {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','`':'&#96;'};
+function esc(s){ return String(s==null?'':s).replace(/[&<>"'`]/g,function(c){return ESCMAP[c];}); }
+function $(id){ return document.getElementById(id); }
+function each(l,f){ Array.prototype.forEach.call(l,f); }
+var fmtBRL = new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'});
+function brl(n){ return fmtBRL.format(isFinite(n)?n:0); }
+function num(v){ var n = parseFloat(v); return isFinite(n)?n:0; }
+function safeColor(c){ return /^#[0-9a-fA-F]{6}$/.test(String(c||'')) ? String(c) : '#8A95A2'; }
+function safeUrl(u){
+  var s = String(u||'').trim();
+  if(!s) return '';
+  return /^https?:\/\//i.test(s) ? s : '';
+}
+
+/* ---- o código da vitrine vem de ?v= ou do # ---- */
+function readCode(){
+  var m = /[?&]v=([A-Za-z0-9_-]{4,64})/.exec(location.search);
+  if(m) return m[1];
+  m = /^#([A-Za-z0-9_-]{4,64})$/.exec(location.hash);
+  return m ? m[1] : '';
+}
+var CODE = readCode();
+
+/* ---- Firestore REST: só leitura, sem SDK ----
+   A vitrine abre no celular do cliente, muitas vezes no 4G da rua. Carregar
+   300 KB de SDK para ler dois documentos seria cobrar dele o preço do nosso
+   conforto. O formato tipado do REST se desembrulha em vinte linhas. */
+function unwrap(v){
+  if(!v || typeof v !== 'object') return null;
+  if('stringValue'  in v) return v.stringValue;
+  if('integerValue' in v) return parseFloat(v.integerValue);
+  if('doubleValue'  in v) return v.doubleValue;
+  if('booleanValue' in v) return v.booleanValue;
+  if('nullValue'    in v) return null;
+  if('timestampValue' in v) return v.timestampValue;
+  if('arrayValue'   in v) return ((v.arrayValue && v.arrayValue.values) || []).map(unwrap);
+  if('mapValue'     in v) return fields((v.mapValue && v.mapValue.fields) || {});
+  return null;
+}
+function fields(f){
+  var o = {};
+  Object.keys(f||{}).forEach(function(k){ o[k] = unwrap(f[k]); });
+  return o;
+}
+function getDoc(path){
+  return fetch(API + path + '?key=' + encodeURIComponent(CFG.apiKey), {cache:'no-store'})
+    .then(function(r){
+      if(r.status === 404) return null;
+      if(!r.ok) throw new Error('http ' + r.status);
+      return r.json().then(function(j){ return fields(j.fields); });
+    });
+}
+
+/* ---- fotos: uma por documento, buscadas só quando entram na tela ---- */
+var PH = {};
+function photo(id){
+  if(PH[id]) return PH[id];
+  PH[id] = getDoc('pub/' + CODE + '/photos/' + id).catch(function(){ return null; });
+  return PH[id];
+}
+var seer = null;
+if(window.IntersectionObserver){
+  seer = new IntersectionObserver(function(rows){
+    rows.forEach(function(row){
+      if(!row.isIntersecting) return;
+      seer.unobserve(row.target);
+      fill(row.target);
+    });
+  }, {rootMargin:'400px 0px'});
+}
+function fill(img){
+  var id = img.getAttribute('data-photo');
+  if(!id || img.getAttribute('data-done') === '1') return;
+  img.setAttribute('data-done','1');
+  photo(id).then(function(p){
+    if(!p || !p.thumb) return;
+    img.src = p.thumb;
+    var ph = img.parentNode && img.parentNode.querySelector('.ph');
+    if(ph) ph.style.display = 'none';
+  });
+}
+function watchPhotos(root){
+  each(root.querySelectorAll('img[data-photo]'), function(img){
+    if(seer) seer.observe(img); else fill(img);
+  });
+}
+
+/* ---- vídeo: YouTube e Vimeo tocam aqui dentro; o resto abre fora ---- */
+function videoEmbed(url){
+  var u = safeUrl(url); if(!u) return null;
+  var m = /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{6,20})/.exec(u);
+  if(m) return {kind:'frame', src:'https://www.youtube-nocookie.com/embed/' + m[1] + '?rel=0'};
+  m = /vimeo\.com\/(?:video\/)?(\d{6,12})/.exec(u);
+  if(m) return {kind:'frame', src:'https://player.vimeo.com/video/' + m[1]};
+  if(/\.(mp4|webm|ogg|mov)(\?|$)/i.test(u)) return {kind:'file', src:u};
+  return null;
+}
+function videoLabel(url){
+  var u = safeUrl(url); if(!u) return 'Vídeo';
+  try {
+    var h = new URL(u).hostname.replace(/^www\./,'');
+    if(/youtu/.test(h)) return 'Ver no YouTube';
+    if(/vimeo/.test(h)) return 'Ver no Vimeo';
+    if(/instagram/.test(h)) return 'Ver no Instagram';
+    if(/tiktok/.test(h)) return 'Ver no TikTok';
+    return 'Vídeo em ' + h;
+  } catch(e){ return 'Vídeo'; }
+}
+
+/* ---- estado do pedido, guardado neste aparelho ---- */
+var DATA = null, QTY = {};
+var QKEY = 'lyke-pedido-' + CODE;
+function loadQty(){
+  try { QTY = JSON.parse(localStorage.getItem(QKEY)) || {}; } catch(e){ QTY = {}; }
+  if(!QTY || typeof QTY !== 'object') QTY = {};
+}
+function saveQty(){ try { localStorage.setItem(QKEY, JSON.stringify(QTY)); } catch(e){} }
+
+var BOXSVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8l8.2 4.6v9.2L12 21.2 3.8 16.6V7.4z"/><path d="M3.8 7.4L12 12l8.2-4.6"/><line x1="12" y1="12" x2="12" y2="21.2"/></svg>';
+
+function itemPrice(it){ return num(it.price); }
+
+function render(){
+  var d = DATA;
+  document.title = (d.title || 'Catálogo') + ' — ' + (d.biz || 'L.Y.K.E 3D');
+  $('t-title').textContent = d.title || d.biz || 'L.Y.K.E 3D';
+  $('t-sub').textContent = d.title && d.biz ? d.biz : (d.contact || '');
+
+  var items = (d.items || []).filter(Boolean);
+  var html = '<div class="wrap">';
+  if(d.intro) html += '<div class="intro">' + esc(d.intro) + '</div>';
+  if(!items.length){
+    html += '<div class="msg"><span class="et">Nada por aqui ainda</span>Este link foi publicado sem produtos.</div></div>';
+    $('stage').innerHTML = html;
+    return;
+  }
+  html += '<p class="count">' + items.length + (items.length > 1 ? ' produtos' : ' produto') + '</p>';
+
+  items.forEach(function(it, i){
+    var photos = (it.photos || []).filter(function(x){ return typeof x === 'string' && x; });
+    var vids = (it.videos || []).map(safeUrl).filter(Boolean);
+    var price = itemPrice(it);
+    var show = d.showPrices !== false && price > 0;
+
+    html += '<article class="card" data-i="' + i + '">';
+    html += '<div class="shots" data-shots="' + i + '">';
+    if(photos.length){
+      photos.forEach(function(pid){
+        html += '<button type="button" class="shot" data-full="' + esc(pid) + '">' +
+                  '<span class="ph">' + BOXSVG + '</span>' +
+                  '<img data-photo="' + esc(pid) + '" alt="' + esc(it.name || 'Produto') + '">' +
+                '</button>';
+      });
+    } else {
+      html += '<span class="shot"><span class="ph">' + BOXSVG + '</span></span>';
+    }
+    html += '</div>';
+    if(photos.length > 1){
+      html += '<div class="dots" data-dots="' + i + '">' +
+              photos.map(function(_, k){ return '<i class="' + (k ? '' : 'on') + '"></i>'; }).join('') +
+              '</div>';
+    }
+    html += '<div class="body">';
+    if(it.cat) html += '<p class="cat"><i style="background:' + esc(safeColor(it.catColor)) + '"></i>' + esc(it.cat) + '</p>';
+    html += '<h2 class="nm">' + esc(it.name || 'Produto') + '</h2>';
+    if(it.desc) html += '<p class="desc">' + esc(it.desc) + '</p>';
+    if(vids.length){
+      html += '<div class="vids">';
+      vids.forEach(function(v, k){
+        var em = videoEmbed(v);
+        html += '<button type="button" class="vid" data-vid="' + i + '-' + k + '" data-url="' + esc(v) + '">' +
+                '<svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="10,8 16,12 10,16"/><rect x="2.5" y="4.5" width="19" height="15" rx="3"/></svg>' +
+                esc(em ? 'Ver o vídeo' : videoLabel(v)) + '</button>';
+      });
+      html += '</div><div id="pl-' + i + '"></div>';
+    }
+    html += '<div class="buy">';
+    html += show
+      ? '<span class="price">' + brl(price) + '<span class="un">cada</span></span>'
+      : '<span class="price ask">Preço sob consulta</span>';
+    html += '<span class="qty">' +
+              '<button type="button" data-q="' + i + '" data-d="-1" aria-label="Menos um">−</button>' +
+              '<input type="text" inputmode="numeric" data-qi="' + i + '" value="' + (QTY[it.id] || 0) + '" aria-label="Quantidade de ' + esc(it.name || 'produto') + '">' +
+              '<button type="button" data-q="' + i + '" data-d="1" aria-label="Mais um">+</button>' +
+            '</span>';
+    html += '</div>';
+    html += '<div class="line" id="ln-' + i + '"></div>';
+    html += '</div></article>';
+  });
+
+  html += '</div>';
+  html += '<div class="foot">' +
+    '<img class="mark" src="lyke-marca.png" width="34" height="34" alt="">' +
+    (d.biz ? '<b>' + esc(d.biz) + '</b><br>' : '') +
+    (d.contact ? esc(d.contact) + '<br>' : '') +
+    'Peças em impressão 3D. Escolha as quantidades e envie o pedido — os valores são confirmados na conversa.' +
+    '</div>';
+
+  $('stage').innerHTML = html;
+  bind(items);
+  watchPhotos($('stage'));
+  items.forEach(function(_, i){ paintLine(items, i); });
+  paintBar(items);
+  $('bar').hidden = false;
+}
+
+function bind(items){
+  each(document.querySelectorAll('[data-q]'), function(b){
+    b.addEventListener('click', function(){
+      var i = +b.getAttribute('data-q');
+      step(items, i, +b.getAttribute('data-d'));
+    });
+  });
+  each(document.querySelectorAll('[data-qi]'), function(inp){
+    inp.addEventListener('input', function(){
+      var i = +inp.getAttribute('data-qi');
+      var v = Math.max(0, Math.min(999, Math.round(num(inp.value.replace(/\D/g,'')))));
+      QTY[items[i].id] = v; saveQty();
+      paintLine(items, i); paintBar(items);
+    });
+    inp.addEventListener('blur', function(){
+      var i = +inp.getAttribute('data-qi');
+      inp.value = QTY[items[i].id] || 0;
+    });
+  });
+  each(document.querySelectorAll('[data-full]'), function(b){
+    b.addEventListener('click', function(){ lens(b.getAttribute('data-full')); });
+  });
+  each(document.querySelectorAll('[data-vid]'), function(b){
+    b.addEventListener('click', function(){
+      var i = b.getAttribute('data-vid').split('-')[0];
+      var url = b.getAttribute('data-url');
+      var em = videoEmbed(url);
+      if(!em){ window.open(url, '_blank', 'noopener'); return; }
+      var box = $('pl-' + i);
+      if(!box) return;
+      box.innerHTML = '<div class="player">' + (em.kind === 'frame'
+        ? '<iframe src="' + esc(em.src) + '" allow="accelerometer; autoplay; encrypted-media; picture-in-picture" allowfullscreen title="Vídeo do produto"></iframe>'
+        : '<video src="' + esc(em.src) + '" controls playsinline></video>') + '</div>';
+      box.scrollIntoView({behavior:'smooth', block:'nearest'});
+    });
+  });
+  each(document.querySelectorAll('[data-shots]'), function(strip){
+    var i = strip.getAttribute('data-shots');
+    var dots = document.querySelector('[data-dots="' + i + '"]');
+    if(!dots) return;
+    strip.addEventListener('scroll', function(){
+      var k = Math.round(strip.scrollLeft / Math.max(1, strip.clientWidth));
+      each(dots.children, function(d, n){ d.className = n === k ? 'on' : ''; });
+    }, {passive:true});
+  });
+  $('btn-send').addEventListener('click', function(){ send(items); });
+}
+
+function step(items, i, d){
+  var it = items[i];
+  var v = Math.max(0, Math.min(999, (QTY[it.id] || 0) + d));
+  QTY[it.id] = v; saveQty();
+  var inp = document.querySelector('[data-qi="' + i + '"]');
+  if(inp) inp.value = v;
+  paintLine(items, i); paintBar(items);
+}
+function paintLine(items, i){
+  var el = $('ln-' + i); if(!el) return;
+  var it = items[i], q = QTY[it.id] || 0, p = itemPrice(it);
+  el.textContent = (q > 0 && p > 0 && DATA.showPrices !== false)
+    ? q + ' × ' + brl(p) + ' = ' + brl(q * p)
+    : (q > 0 ? q + (q > 1 ? ' unidades' : ' unidade') : '');
+}
+function total(items){
+  var q = 0, v = 0;
+  items.forEach(function(it){
+    var n = QTY[it.id] || 0;
+    q += n; v += n * itemPrice(it);
+  });
+  return {q:q, v:v};
+}
+function paintBar(items){
+  var t = total(items);
+  var priced = DATA.showPrices !== false && t.v > 0;
+  $('bar-k').textContent = t.q ? (t.q + (t.q > 1 ? ' itens escolhidos' : ' item escolhido')) : 'Seu pedido';
+  $('bar-v').textContent = t.q ? (priced ? brl(t.v) : t.q + (t.q > 1 ? ' itens' : ' item')) : 'nada escolhido ainda';
+  $('btn-send').disabled = !t.q;
+}
+
+/* ---- o pedido vira uma mensagem de WhatsApp ---- */
+function orderText(items){
+  var t = total(items);
+  var l = ['*Pedido — ' + (DATA.title || DATA.biz || 'L.Y.K.E 3D') + '*', ''];
+  items.forEach(function(it){
+    var q = QTY[it.id] || 0; if(!q) return;
+    var p = itemPrice(it);
+    l.push('• ' + (it.name || 'Produto') + ' — ' + q + (p > 0 && DATA.showPrices !== false
+      ? ' × ' + brl(p) + ' = ' + brl(q * p) : ' un.'));
+  });
+  l.push('');
+  if(DATA.showPrices !== false && t.v > 0) l.push('*Total: ' + brl(t.v) + '*');
+  else l.push('*' + t.q + (t.q > 1 ? ' itens*' : ' item*'));
+  l.push('', 'Enviado pela vitrine: ' + location.href);
+  return l.join('\n');
+}
+function send(items){
+  var txt = orderText(items);
+  var wa = String(DATA.wa || '').replace(/\D/g,'');
+  if(wa){
+    if(wa.length <= 11) wa = '55' + wa;         /* número brasileiro sem o país */
+    window.open('https://wa.me/' + wa + '?text=' + encodeURIComponent(txt), '_blank', 'noopener');
+    return;
+  }
+  if(navigator.share){ navigator.share({text:txt}).catch(function(){}); return; }
+  copy(txt);
+}
+function copy(txt){
+  function done(){ alert('Pedido copiado. Cole na conversa com a loja.'); }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(done, function(){ prompt('Copie o pedido:', txt); });
+  } else prompt('Copie o pedido:', txt);
+}
+
+/* ---- foto grande ---- */
+function lens(id){
+  photo(id).then(function(p){
+    if(!p) return;
+    $('lens-img').src = p.full || p.thumb || '';
+    $('lens').hidden = false;
+  });
+}
+$('lens-x').addEventListener('click', function(){ $('lens').hidden = true; $('lens-img').src = ''; });
+$('lens').addEventListener('click', function(e){
+  if(e.target === $('lens')){ $('lens').hidden = true; $('lens-img').src = ''; }
+});
+document.addEventListener('keydown', function(e){
+  if(e.key === 'Escape' && !$('lens').hidden){ $('lens').hidden = true; $('lens-img').src = ''; }
+});
+
+/* ---- entrada ---- */
+function fail(title, sub){
+  $('stage').innerHTML = '<div class="msg"><span class="et">' + esc(title) + '</span>' + esc(sub) + '</div>';
+}
+if(!CODE){
+  fail('Link incompleto', 'Abra o endereço completo que a loja enviou — ele termina com um código depois de "?v=".');
+} else {
+  loadQty();
+  getDoc('pub/' + CODE).then(function(d){
+    if(!d){ fail('Este link não está mais no ar', 'A loja pode ter tirado a vitrine do ar ou publicado outra. Peça o link novo.'); return; }
+    DATA = d;
+    render();
+  }).catch(function(e){
+    fail('Não deu para abrir a vitrine', 'Verifique a conexão e tente de novo. (' + ((e && e.message) || 'erro') + ')');
+  });
+}
+})();
+</script>
+</body>
+</html>

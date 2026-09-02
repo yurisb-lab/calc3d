@@ -10,8 +10,8 @@
    o Firebase (que usa fetch de longa duração e streaming) precisam ir direto
    para a rede, sem interferência. */
 
-var VERSION = 'calc3d-v5';
-var SHELL = ['./', './index.html', './manifest.webmanifest',
+var VERSION = 'calc3d-v6';
+var SHELL = ['./', './index.html', './p.html', './manifest.webmanifest',
              './icone-192.png', './icone-512.png', './icone-512-mask.png', './icone-180.png',
              './lyke-marca.png', './lyke-logo.png'];
 
@@ -56,8 +56,13 @@ self.addEventListener('fetch', function(e){
       fetch(req)
         .then(function(res){ return putCopy(req, res); })
         .catch(function(){
-          return caches.match(req).then(function(hit){
-            return hit || caches.match('./index.html') || caches.match('./');
+          /* a vitrine chega como p.html?v=CODIGO: sem ignorar a query, o cache
+             não reconheceria a página e o dono do app receberia a calculadora
+             no lugar dela */
+          return caches.match(req, {ignoreSearch:true}).then(function(hit){
+            if(hit) return hit;
+            if(/p\.html$/.test(url.pathname)) return caches.match('./p.html');
+            return caches.match('./index.html') || caches.match('./');
           });
         })
     );
