@@ -1810,6 +1810,18 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
             <button type="button" data-v="multi" aria-pressed="false">Multicolor / AMS</button>
           </div>
         </div>
+        <div class="field" style="margin:14px 0 0">
+          <label>Como o produto é montado<button type="button" class="help" data-h="multipeca" aria-label="O que é isso?">?</button></label>
+          <div class="seg" id="seg-parts">
+            <button type="button" data-v="single" aria-pressed="true">Peça única</button>
+            <button type="button" data-v="set" aria-pressed="false">Montado com várias peças</button>
+          </div>
+        </div>
+        <div class="field" id="fld-parts" style="margin:12px 0 0" hidden>
+          <label for="f-parts">Peças por produto <span class="hint">peças impressas</span></label>
+          <input id="f-parts" type="text" inputmode="decimal" placeholder="quantas peças formam um produto">
+          <p class="note" id="parts-note" style="margin:8px 0 0"></p>
+        </div>
       </div>
 
       <h2 class="section">Do fatiador</h2>
@@ -1879,7 +1891,7 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
           <div class="mattot" id="mat-tot"></div>
         </div>
         <div class="field">
-          <label for="f-qty">Quantidade de peças</label>
+          <label id="lbl-qty" for="f-qty">Quantidade de peças</label>
           <input id="f-qty" type="text" inputmode="decimal" value="1">
         </div>
         <div class="field">
@@ -1890,7 +1902,7 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
           </div>
         </div>
         <div class="field" style="margin-bottom:0">
-          <label for="f-perplate">Cabem por mesa <span class="hint">peças — opcional</span><button type="button" class="help" data-h="pormesa" aria-label="O que é isso?">?</button></label>
+          <label for="f-perplate">Cabem por mesa <span class="hint" id="lbl-perplate-hint">peças — opcional</span><button type="button" class="help" data-h="pormesa" aria-label="O que é isso?">?</button></label>
           <input id="f-perplate" type="text" inputmode="decimal" placeholder="quantas cabem de uma vez">
           <p class="note" id="perplate-note" style="margin:8px 0 0"></p>
         </div>
@@ -1915,7 +1927,7 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
               <input id="f-prep" type="text" inputmode="decimal" value="0">
             </div>
             <div class="field">
-              <label for="f-finish">Acabamento <span class="hint">min / peça</span><button type="button" class="help" data-h="acabamento" aria-label="O que é isso?">?</button></label>
+              <label for="f-finish">Acabamento <span class="hint" id="lbl-finish-hint">min / peça</span><button type="button" class="help" data-h="acabamento" aria-label="O que é isso?">?</button></label>
               <input id="f-finish" type="text" inputmode="decimal" value="0">
             </div>
           </div>
@@ -2140,7 +2152,7 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
         </div>
         <div class="row">
           <div class="field">
-            <label for="pd-m-qty">Quantidade de peças</label>
+            <label id="lbl-pd-qty" for="pd-m-qty">Quantidade de peças</label>
             <input id="pd-m-qty" type="text" inputmode="decimal" value="1">
           </div>
           <div class="field">
@@ -2148,11 +2160,22 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
             <input id="pd-m-perplate" type="text" inputmode="decimal" placeholder="quantas cabem">
           </div>
         </div>
-        <div class="field" style="margin-bottom:0">
+        <div class="field">
           <label>Os valores acima são para<button type="button" class="help" data-h="escopo" aria-label="O que é isso?">?</button></label>
           <div class="seg" id="seg-pd-scope">
             <button type="button" data-v="unit" aria-pressed="true">1 peça</button>
             <button type="button" data-v="plate" aria-pressed="false">A mesa toda</button>
+          </div>
+        </div>
+        <div class="field" style="margin-bottom:0">
+          <label>Como o produto é montado<button type="button" class="help" data-h="multipeca" aria-label="O que é isso?">?</button></label>
+          <div class="seg" id="seg-pd-parts">
+            <button type="button" data-v="single" aria-pressed="true">Peça única</button>
+            <button type="button" data-v="set" aria-pressed="false">Montado com várias peças</button>
+          </div>
+          <div class="field" id="fld-pd-parts" style="margin:12px 0 0" hidden>
+            <label for="pd-m-parts">Peças por produto <span class="hint">peças impressas</span></label>
+            <input id="pd-m-parts" type="text" inputmode="decimal" placeholder="quantas peças formam um produto">
           </div>
         </div>
         <div class="btnrow" style="margin-top:14px">
@@ -2726,6 +2749,9 @@ function migrate(seed){
   /* produtos salvos antes desta opção não dizem quantas cabem na mesa: vazio
      mantém a conta antiga (um preparo para o lote), sem mexer em preço nenhum */
   S.products.forEach(function(p){ if(p.perPlate == null) p.perPlate = ''; });
+  /* produto salvo antes desta opção é peça única: 1 peça por produto mantém a
+     conta, a mesa e o preço exatamente como estavam */
+  S.products.forEach(function(p){ if(p.parts == null) p.parts = ''; });
 
   Object.keys(DEFAULTS.settings).forEach(function(k){ if(S.settings[k]===undefined) S.settings[k] = DEFAULTS.settings[k]; });
 
@@ -2797,6 +2823,10 @@ var multi = false;
 var mats = [];
 var purgeStr = '';
 var scope = 'unit';
+/* produto montado: um produto pronto só existe depois de juntar várias peças
+   impressas (caixa e tampa, boneco articulado, organizador em módulos). Peça
+   passa a ser o que ocupa a mesa, e produto o que o cliente compra. */
+var assembled = false;
 var mode = 'margem';
 var margin = 40;
 var last = null;
@@ -3016,7 +3046,8 @@ var HELP = {
   falhas:{t:'Reserva de falhas', d:'Peça que soltou da mesa, rolo embolado, arquivo com defeito. Referência: 5% a 15%. O app DIVIDE (custo ÷ 0,92), não soma — é assim que a peça boa paga a peça perdida.', e:'R$ 26,71 ÷ 0,92 = R$ 29,03'},
   preparo:{t:'Preparo (por lote)', d:'Minutos para fatiar, limpar a mesa, trocar filamento e ligar. É gasto uma vez por MESA, não por pedido: o app conta quantas mesas o lote precisa usando o campo "cabem por mesa" e divide pela quantidade de peças.', e:''},
   pormesa:{t:'Cabem por mesa', d:'Quantas peças DESTAS cabem juntas na mesa da impressora. É o campo que decide se o preço cai no lote: o preparo — fatiar, limpar a mesa, trocar o filamento e ligar — custa igual para uma mesa com 1 peça ou com 24. Se só uma cabe, um pedido de 30 são 30 mesas e 30 preparos, e o preço por peça não cai nada. Deixe em branco para não controlar: o app volta a contar um preparo só para o lote inteiro, como fazia antes.', e:'Chaveiro: cabem 24 por mesa\nVaso grande: cabe 1 por mesa'},
-  acabamento:{t:'Acabamento (por peça)', d:'Minutos com a mão em CADA peça: tirar suporte, lixar, pintar, montar, embalar. Em peça pequena costuma ser o maior custo de todos.', e:''},
+  multipeca:{t:'Produto montado com várias peças', d:'Marque quando UM produto pronto só existe depois de juntar VÁRIAS peças impressas: caixa e tampa, boneco articulado, organizador em módulos. O app passa a separar duas coisas que até aqui eram a mesma: peça é o que ocupa lugar na mesa, produto é o que o cliente compra. Gramas, tempo e preço continuam sendo os do produto INTEIRO — o conjunto todo, com todas as peças —, e a quantidade passa a ser de produtos. O que muda na conta é a mesa: um produto de 5 peças ocupa 5 lugares, então ele enche a mesa cinco vezes mais rápido e o preparo se dilui bem menos. Deixe em "peça única" quando o que sai da mesa já é o produto pronto.', e:'Caixa com tampa: 2 peças por produto\nDragão articulado: 5 peças por produto'},
+  acabamento:{t:'Acabamento (por peça)', d:'Minutos com a mão em CADA peça: tirar suporte, lixar, pintar, montar, embalar. Em produto montado, conte os minutos do produto inteiro: o suporte de todas as peças mais o tempo de juntar. Em peça pequena costuma ser o maior custo de todos.', e:''},
   cliente:{t:'Cliente do pedido', d:'Escolha uma ficha já cadastrada ou só digite o nome — ao salvar o orçamento, quem ainda não tem ficha ganha uma. O pedido passa a contar no histórico da pessoa: quanto já pagou, o que está em aberto e o ticket médio. A agenda inteira fica em Cadastros › Clientes.', e:'Maria da papelaria\n4 pedidos · R$ 640,00 pagos · R$ 120,00 em aberto'},
   orcamento:{t:'Orçamento do pedido', d:'Pedido de verdade quase nunca é uma peça só. Adicione cada peça calculada à lista, ponha o nome do cliente, o desconto e o frete — e mande tudo de uma vez pelo WhatsApp ou em PDF. Se você não adicionar nada, o orçamento sai com a peça que está na calculadora.', e:'3x Chaveiro — R$ 12,00 cada\n1x Vaso — R$ 80,00\nDesconto R$ 10,00 · Frete R$ 15,00\nTotal R$ 121,00'},
   insumos:{t:'Insumos e acessórios', d:'Tudo que vai junto com a peça: embalagem, etiqueta, sacola, ímã, argola, parafuso, LED, cola, tinta. O preço é unitário e a quantidade é por peça — 4 parafusos de R$ 0,30 viram R$ 1,20 na peça.', e:'Argola R$ 0,35 × 1\nSaquinho R$ 0,20 × 1\nCartão R$ 1,00 × 1\nTotal R$ 1,55 por peça'},
@@ -3482,11 +3513,44 @@ function plateFit(){
   var k = Math.round(num(el.value));
   return k > 0 ? Math.min(k, 100000) : 0;
 }
-function platesFor(qty, perPlate){
+
+/* ============ produto montado com várias peças ============ */
+/* Quem vende uma caixa com tampa não vende duas peças pela metade do preço:
+   vende UM produto que só fica pronto com as duas na mão. Enquanto o app
+   tratava peça e produto como a mesma coisa, quem montava tinha de escolher
+   entre errar o preço (dividir tudo pelo número de peças) ou errar a mesa
+   (dizer que o conjunto ocupa um lugar só). Este campo separa os dois: as
+   gramas, o tempo e o preço são do conjunto; na mesa entram as peças. */
+function partsCount(){
+  if(!assembled) return 1;
+  var el = $('f-parts');
+  var k = el ? Math.round(num(el.value)) : 0;
+  return k > 1 ? Math.min(k, 1000) : 1;
+}
+/* um caminho só para ligar a opção e o número, usado por tudo que traz um
+   produto de volta para a calculadora: 0, vazio ou 1 é peça única */
+function setParts(k){
+  var n = Math.round(num(k));
+  assembled = n > 1;
+  var el = $('f-parts');
+  if(el) el.value = assembled ? String(Math.min(n, 1000)) : '';
+  setSeg('seg-parts', assembled ? 'set' : 'single');
+  syncPartsUi();
+}
+/* o lugar na mesa é ocupado por peça, não por produto: 3 dragões de 5 peças
+   pedem 15 lugares */
+function platesFor(qty, perPlate, parts){
   var q = Math.max(1, Math.round(qty) || 1);
-  return perPlate > 0 ? Math.ceil(q/perPlate) : 1;
+  var p = parts > 1 ? parts : 1;
+  return perPlate > 0 ? Math.ceil(q*p/perPlate) : 1;
 }
 function plateWord(k){ return k === 1 ? '1 mesa' : dec(k,0) + ' mesas'; }
+/* peça e produto só são a mesma palavra enquanto o produto for de uma peça */
+function unitWord(n, parts){
+  if(parts > 1) return n === 1 ? 'produto' : 'produtos';
+  return n === 1 ? 'peça' : 'peças';
+}
+function pieceWord(n){ return n === 1 ? '1 peça' : dec(n,0) + ' peças'; }
 
 function compute(){
   var p = curPrinter(), f = curFilament(), st = S.settings;
@@ -3538,9 +3602,11 @@ function compute(){
      montar a tabela por faixa de quantidade sem recalcular a tela inteira */
   var prepTotal = num($('f-prep').value)/60 * num(st.hour);
   var finishCost = num($('f-finish').value)/60 * num(st.hour);
-  /* uma mesa por vez: se só cabe uma peça, um lote de 30 são 30 preparos */
+  /* uma mesa por vez: se só cabe uma peça, um lote de 30 são 30 preparos.
+     Produto montado ocupa a mesa por peça: 5 peças enchem a mesa 5x mais rápido */
+  var parts    = partsCount();
   var perPlate = plateFit();
-  var plates   = platesFor(qty, perPlate);
+  var plates   = platesFor(qty, perPlate, parts);
   var prepLot  = prepTotal * plates;
   var labor    = prepLot/qty + finishCost;
   var supplies = extrasTotal(extras);
@@ -3592,8 +3658,9 @@ function compute(){
     machineHour:machineHour(p), fixedHour:fixedHour(),
     waste:waste, failR:failR, watts:num(p.watts), kwh:num(st.kwh), hourRate:num(st.hour),
     prep:num($('f-prep').value), finish:num($('f-finish').value),
-    /* quantas peças cabem juntas e quantas mesas este lote precisa */
-    perPlate:perPlate, plates:plates,
+    /* quantas peças cabem juntas, quantas peças formam um produto e quantas
+       mesas este lote precisa */
+    perPlate:perPlate, parts:parts, plates:plates,
     /* multicolor: o que cada rolo entrega nesta peça */
     multi:useMulti, use:use, purge:purge/div, mR:mR,
     /* base da tabela por faixa: tudo que não depende do lote, e o preparo do
@@ -3793,13 +3860,13 @@ function fxHtml(r){
   if(r.labor > 0){
     var f = [];
     if(r.prep > 0)   f.push(dec(r.prep,0)+' min'+(r.plates > 1 ? ' × '+dec(r.plates,0)+' mesas' : '')+
-                             ' ÷ '+r.qty+(r.qty === 1 ? ' peça' : ' peças'));
-    if(r.finish > 0) f.push(dec(r.finish,0)+' min/peça');
+                             ' ÷ '+r.qty+' '+unitWord(r.qty, r.parts));
+    if(r.finish > 0) f.push(dec(r.finish,0)+' min/'+unitWord(1, r.parts));
     out += fxRow('Mão de obra', f.join(' + ')+' × '+brl(r.hourRate)+'/h', r.labor);
   }
   if(r.supplies > 0) out += fxRow('Insumos', extras.length+(extras.length === 1 ? ' item da lista' : ' itens da lista'), r.supplies);
   if(r.reserve > 0)  out += fxRow('Reserva de falhas', brl(r.subtotal)+' ÷ '+dec(1-r.failR,2)+' — reserva de '+dec(r.failR*100,0)+'%', r.reserve);
-  out += fxRow('<b>Custo da peça</b>', '', r.cost);
+  out += fxRow('<b>Custo '+(r.parts > 1 ? 'do produto montado' : 'da peça')+'</b>', '', r.cost);
   return out;
 }
 
@@ -3826,12 +3893,57 @@ function renderPerPlate(r){
   var el = $('perplate-note');
   if(!el) return;
   if(!(r.perPlate > 0)){
-    el.innerHTML = 'Em branco, o lote inteiro conta como <b>um preparo só</b>. Diga quantas cabem juntas para o app contar quantas vezes a mesa precisa ser montada.';
+    el.innerHTML = 'Em branco, o lote inteiro conta como <b>um preparo só</b>. Diga quantas cabem juntas para o app contar quantas vezes a mesa precisa ser montada.'+
+      (r.parts > 1 ? ' Aqui vão <b>peças</b>, não produtos: cada produto seu ocupa '+pieceWord(r.parts)+' na mesa.' : '');
     return;
   }
-  var head = r.perPlate === 1 ? 'Só <b>1 peça por mesa</b>' : 'Cabem <b>'+dec(r.perPlate,0)+' por mesa</b>';
-  el.innerHTML = head + ': ' + r.qty + (r.qty === 1 ? ' peça dá ' : ' peças dão ') + '<b>' + plateWord(r.plates) + '</b>' +
+  var head = r.perPlate === 1 ? 'Só <b>1 peça por mesa</b>' : 'Cabem <b>'+dec(r.perPlate,0)+' peças por mesa</b>';
+  var conta = r.qty + ' ' + unitWord(r.qty, r.parts) +
+    (r.parts > 1 ? ' (' + pieceWord(r.qty * r.parts) + ')' : '') +
+    (r.qty === 1 ? ' dá ' : ' dão ') + '<b>' + plateWord(r.plates) + '</b>';
+  el.innerHTML = head + ': ' + conta +
     (r.prep > 0 ? ' e ' + dec(r.prep * r.plates, 0) + ' min de preparo.' : '.');
+}
+
+/* ============ produto montado: o campo se explicando ============ */
+/* O número muda o significado de duas palavras na tela, então a tela precisa
+   trocar as palavras junto: quantidade passa a ser de produtos, e o que cabe
+   na mesa continua sendo contado em peças. */
+function syncPartsUi(){
+  var parts = partsCount();
+  var box = $('fld-parts');
+  if(box) box.hidden = !assembled;
+  var lq = $('lbl-qty');
+  if(lq) lq.textContent = parts > 1 ? 'Quantidade de produtos' : 'Quantidade de peças';
+  var b0 = qsa($('seg-scope'),'button')[0];
+  if(b0) b0.textContent = parts > 1 ? '1 produto' : '1 peça';
+  var lp = $('lbl-perplate-hint');
+  if(lp) lp.textContent = parts > 1 ? 'peças, não produtos — opcional' : 'peças — opcional';
+  var lf = $('lbl-finish-hint');
+  if(lf) lf.textContent = parts > 1 ? 'min / produto' : 'min / peça';
+}
+function renderParts(r){
+  syncPartsUi();
+  var el = $('parts-note');
+  if(!el) return;
+  if(!(r.parts > 1)){
+    el.innerHTML = 'Quantas peças impressas formam <b>um produto pronto</b> — a caixa mais a tampa são 2. Com 1, o produto volta a ser peça única.';
+    return;
+  }
+  var txt = 'Cada produto sai da impressora em <b>'+pieceWord(r.parts)+'</b>. As gramas, o tempo e o preço acima são do <b>produto inteiro</b>, com todas elas; a quantidade é de <b>produtos</b>.';
+  if(r.perPlate > 0){
+    var fit = Math.floor(r.perPlate/r.parts);
+    txt += fit >= 1
+      ? ' Na mesa cabem '+pieceWord(r.perPlate)+', ou seja <b>'+fit+' '+unitWord(fit, r.parts)+' por mesa</b>.'
+      : ' Cabem só '+pieceWord(r.perPlate)+' por mesa, então <b>um produto sozinho já usa '+plateWord(platesFor(1, r.perPlate, r.parts))+'</b>.';
+  }
+  /* a reserva de falhas é cobrada uma vez sobre o conjunto, mas quem falha é
+     cada peça: num conjunto de 5, a chance de perder alguma é bem maior */
+  if(r.failR > 0 && r.failR < 0.95){
+    var conj = 1 - Math.pow(1 - r.failR, r.parts);
+    txt += ' Atenção à <b>reserva de falhas</b>: '+dec(r.failR*100,0)+'% por peça vira <b>'+dec(conj*100,0)+'%</b> de chance de alguma das '+dec(r.parts,0)+' sair errada e atrasar o conjunto.';
+  }
+  el.innerHTML = txt;
 }
 
 function render(){
@@ -3886,7 +3998,7 @@ function render(){
   var rows = [
     ['Preço de venda', brl(r.price), ''],
     r.fee > 0 ? ['Taxa de recebimento', '−'+brl(r.fee), 'neg'] : null,
-    ['Custo real da peça', '−'+brl(r.cost), 'neg'],
+    ['Custo real ' + (r.parts > 1 ? 'do produto' : 'da peça'), '−'+brl(r.cost), 'neg'],
     ['Lucro líquido', brl(r.profit) + '  ·  ' + dec(r.realMargin*100,1) + '%', 'pos res']
   ].filter(Boolean);
   $('check').innerHTML = rows.map(function(x){
@@ -3917,6 +4029,7 @@ function render(){
   }
 
   paintMulti(r);
+  renderParts(r);
   renderPerPlate(r);
   renderTiers(r);
   renderActiveBanner();
@@ -3940,7 +4053,7 @@ function tierList(){
 function tierAt(r, n){
   /* o preparo se paga por mesa cheia: com 24 por mesa, um lote de 50 são 3
      preparos, não um — e não 50 */
-  var plates = platesFor(n, r.perPlate);
+  var plates = platesFor(n, r.perPlate, r.parts);
   var subtotal = r.batch + r.prepTotal*plates/n;
   var cost = subtotal/(1 - r.failR);
   var price;
@@ -3983,6 +4096,15 @@ function renderTiers(r){
   var note;
   if(!(r.prepTotal > 0)){
     note = 'Todas as faixas dão o mesmo preço porque o <b>preparo</b> está em 0 min. Preencha os minutos de fatiar, limpar a mesa e ligar no <b>Ajuste fino</b> — é ele que se dilui no lote.';
+  } else if(r.parts > 1 && r.perPlate > 0){
+    /* o conjunto ocupa a mesa por peça: um produto de 5 peças enche a mesa
+       cinco vezes mais rápido, e é aí que o desconto de lote acaba */
+    var fit = Math.floor(r.perPlate/r.parts);
+    note = 'Cada produto sai em <b>'+pieceWord(r.parts)+'</b> e na mesa cabem <b>'+pieceWord(r.perPlate)+'</b>: ' +
+      (fit >= 1
+        ? 'dá <b>'+fit+' '+unitWord(fit, r.parts)+' por mesa</b>, e é até aí que o preparo de <b>'+dec(r.prep,0)+' min</b> se dilui. '+same
+        : 'nem um produto inteiro cabe de uma vez — cada um já pede <b>'+plateWord(platesFor(1, r.perPlate, r.parts))+
+          '</b>, e o pouco que o preço cai no lote vem só da última mesa, que deixa de sobrar pela metade.');
   } else if(r.perPlate === 1){
     /* uma peça por mesa: cada unidade carrega um preparo inteiro e não existe
        desconto de volume nenhum. Prometer um seria vender abaixo do custo. */
@@ -4006,6 +4128,7 @@ function tierText(){
   out.push('*' + ($('f-piece').value || 'Impressão 3D') + '*');
   if(st.biz) out.push(st.biz);
   out.push('');
+  if(r.parts > 1){ out.push('Cada unidade é montada com ' + pieceWord(r.parts) + ' impressas.'); out.push(''); }
   list.forEach(function(t){
     var off = base.unit > 0 ? 1 - t.unit/base.unit : 0;
     out.push('• ' + t.n + ' un — ' + brl(t.unit) + ' cada' +
@@ -4017,8 +4140,8 @@ function tierText(){
      desconto por volume seria prometer ao cliente o que não existe */
   var top = list[list.length-1];
   if(base.unit > 0 && 1 - top.unit/base.unit > 0.0005){
-    out.push('Quanto maior o lote, menor o preço por peça: cabem ' +
-      (r.perPlate > 0 ? r.perPlate + ' por mesa e o preparo da impressão se paga uma vez por mesa cheia.'
+    out.push('Quanto maior o lote, menor o preço por ' + unitWord(1, r.parts) + ': cabem ' +
+      (r.perPlate > 0 ? r.perPlate + ' peças por mesa e o preparo da impressão se paga uma vez por mesa cheia.'
                       : 'o preparo da impressão é o mesmo para 1 ou para ' + top.n + '.'));
   }
   if(num(st.valid) > 0) out.push('Valores válidos por ' + dec(num(st.valid),0) + ' dias.');
@@ -4051,7 +4174,8 @@ function calcPayload(){
     qty:r.qty, waste:num($('f-waste').value), fail:num($('f-fail').value),
     prep:num($('f-prep').value), finish:num($('f-finish').value),
     extras:cloneExtras(extras), printer:$('f-printer').value, filament:$('f-filament').value,
-    scope:scope, perPlate:plateFit() > 0 ? String(plateFit()) : '', mode:mode, margin:margin,
+    scope:scope, perPlate:plateFit() > 0 ? String(plateFit()) : '',
+    parts:partsCount() > 1 ? String(partsCount()) : '', mode:mode, margin:margin,
     /* multicolor: as cores como o usuário digitou e, já resolvido, quanto sai
        de cada rolo por peça — é o que dá baixa no estoque depois */
     multi:multi, mats:cloneMats(mats), purge:purgeGrams(),
@@ -4126,6 +4250,7 @@ function restoreCalc(c){
   $('f-m').value = Math.round((num(c.hours) - Math.floor(num(c.hours)))*60);
   $('f-qty').value = c.qty;
   $('f-perplate').value = num(c.perPlate) > 0 ? String(Math.round(num(c.perPlate))) : '';
+  setParts(num(c.parts));
   $('f-waste').value = c.waste; $('f-fail').value = c.fail;
   $('f-prep').value = c.prep; $('f-finish').value = c.finish;
   extras = cloneExtras(c.extras);
@@ -4986,8 +5111,13 @@ function applySliced(res, fileName, box){
       (lost.length === 1 ? ' item' : ' itens') + ': confira a seleção.');
   if(!(res.seconds > 0)) li.push('Não veio o tempo — preencha horas e minutos na mão.');
   (res.notes || []).forEach(function(t){ li.push(esc(t)); });
-  li.push('Os valores são da <b>mesa toda</b>: confira a quantidade de peças'+
-    (plateFit() > 0 ? '.' : ' e diga quantas <b>cabem por mesa</b> — é o que faz o preço cair (ou não) no lote.'));
+  /* mesa de produto montado: a quantidade que interessa é de produtos, e as
+     peças do conjunto não podem virar preço unitário cada uma */
+  li.push(partsCount() > 1
+    ? 'Os valores são da <b>mesa toda</b>. Como o produto é <b>montado com ' + pieceWord(partsCount()) +
+      '</b>, a quantidade aqui é de <b>produtos</b>: uma mesa com as peças de um conjunto só é <b>1</b>.'
+    : 'Os valores são da <b>mesa toda</b>: confira a quantidade de peças'+
+      (plateFit() > 0 ? '.' : ' e diga quantas <b>cabem por mesa</b> — é o que faz o preço cair (ou não) no lote.'));
 
   gcMsgHtml('<div class="gcok"><span class="src">Lido do ' + esc(res.source || 'fatiador') + '</span>' +
     '<b>' + dec(totalG,1) + ' g</b>' +
@@ -5928,7 +6058,7 @@ function renderProducts(){
 }
 function newProduct(){
   return {id:uid(), name:'', category:'', note:'', stlUrl:'', photos:[],
-    grams:0, hours:0, qty:1, scope:'unit', perPlate:'', printer:'', filament:'',
+    grams:0, hours:0, qty:1, scope:'unit', perPlate:'', parts:'', printer:'', filament:'',
     waste:num(S.settings.waste), fail:num(S.settings.fail), prep:0, finish:0, extras:[],
     mode:'margem', margin:40, price:0, cost:0, priceSet:0,
     createdAt:Date.now(), updatedAt:Date.now()};
@@ -5961,6 +6091,9 @@ function renderProductDetail(){
 }
 function renderParams(p){
   var src = hostOf(p.stlUrl);
+  /* peça e produto deixam de ser sinônimos quando o produto é montado */
+  var pParts = Math.max(1, Math.round(num(p.parts)) || 1);
+  var pq = Math.max(1, Math.round(num(p.qty)) || 1);
   var pr = S.printers.filter(function(x){return x.id===p.printer;})[0];
   var fl = S.filaments.filter(function(x){return x.id===p.filament;})[0];
   $('pd-params').innerHTML =
@@ -5969,10 +6102,13 @@ function renderParams(p){
     /* depois de importar, os números são sempre da mesa: sem isto à vista,
        uma mesa com 4 peças passa por peça única e o preço sai pelo quádruplo */
     '<div class="kv"><span>Estes números são</span><span class="v">'+
-      (p.scope === 'plate' ? 'da mesa toda, com ' + dec(Math.max(1, Math.round(num(p.qty)) || 1),0) +
-        (Math.max(1, Math.round(num(p.qty)) || 1) > 1 ? ' peças' : ' peça') : 'de 1 peça')+'</span></div>'+
+      (p.scope === 'plate'
+        ? 'da mesa toda, com ' + dec(pq,0) + ' ' + unitWord(pq, pParts) + (pParts > 1 ? ' (' + pieceWord(pq * pParts) + ')' : '')
+        : 'de 1 ' + unitWord(1, pParts) + (pParts > 1 ? ' (' + pieceWord(pParts) + ')' : ''))+'</span></div>'+
     '<div class="kv"><span>Cabem por mesa</span><span class="v">'+
       (num(p.perPlate) > 0 ? dec(num(p.perPlate),0) + (num(p.perPlate) > 1 ? ' peças' : ' peça') : 'não informado')+'</span></div>'+
+    '<div class="kv"><span>Como é montado</span><span class="v">'+
+      (num(p.parts) > 1 ? 'montado com ' + dec(num(p.parts),0) + ' peças' : 'peça única')+'</span></div>'+
     '<div class="kv"><span>Impressora</span><span class="v">'+esc(pr ? pr.name : '—')+'</span></div>'+
     (p.multi && (p.mats||[]).length
       ? '<div class="kv"><span>Filamentos</span><span class="v">'+
@@ -5984,7 +6120,7 @@ function renderParams(p){
       : '<div class="kv"><span>Filamento</span><span class="v">'+esc(fl ? fl.name : '—')+'</span></div>')+
     '<div class="kv"><span>'+(p.mode==='markup'?'Markup':'Margem')+'</span><span class="v">'+dec(num(p.margin),0)+'%</span></div>'+
     '<div class="kv"><span>Desperdício / falhas</span><span class="v">'+dec(num(p.waste),0)+'% / '+dec(num(p.fail),0)+'%</span></div>'+
-    '<div class="kv"><span>Mão de obra</span><span class="v">'+dec(num(p.prep),0)+' min lote + '+dec(num(p.finish),0)+' min peça</span></div>'+
+    '<div class="kv"><span>Mão de obra</span><span class="v">'+dec(num(p.prep),0)+' min lote + '+dec(num(p.finish),0)+' min '+unitWord(1, pParts)+'</span></div>'+
     ((p.extras||[]).length ? '<div class="kv"><span>Insumos</span><span class="v">'+brl(extrasTotal(p.extras))+'</span></div>' : '')+
     (src ? '<div class="kv"><span>Modelo</span><span class="v"><a class="srcpill" href="'+esc(safeUrl(p.stlUrl))+'" target="_blank" rel="noopener noreferrer">'+esc(src)+'</a></span></div>' : '')+
     '<p class="note">Para atualizar estes números, mande o arquivo fatiado, cole os do Handy ou <b>digite na mão</b> o peso e o tempo do Bambu Studio logo abaixo — ou toque em <b>Abrir na calculadora</b>, ajuste e salve de novo.</p>';
@@ -6022,6 +6158,7 @@ function loadProduct(p){
   $('f-m').value = Math.round((num(p.hours) - Math.floor(num(p.hours)))*60) || 0;
   $('f-qty').value = p.qty || 1;
   $('f-perplate').value = num(p.perPlate) > 0 ? String(Math.round(num(p.perPlate))) : '';
+  setParts(num(p.parts));
   $('f-waste').value = p.waste; $('f-fail').value = p.fail;
   $('f-prep').value = p.prep; $('f-finish').value = p.finish;
   extras = cloneExtras(p.extras);
@@ -6041,6 +6178,7 @@ function fillProductFromCalc(p){
   p.hours = num($('f-h').value) + num($('f-m').value)/60;
   p.qty = r.qty; p.scope = scope;
   p.perPlate = r.perPlate > 0 ? String(r.perPlate) : '';
+  p.parts = r.parts > 1 ? String(r.parts) : '';
   p.printer = $('f-printer').value; p.filament = $('f-filament').value;
   p.multi = multi; p.mats = cloneMats(mats); p.purge = purgeGrams();
   p.waste = num($('f-waste').value); p.fail = num($('f-fail').value);
@@ -6083,7 +6221,19 @@ function applySlicedToProduct(res, fileName, box){
    entram pelo mesmo caminho do arquivo — passam pela calculadora e voltam com
    custo e preço refeitos — para o produto nunca ter duas verdades. */
 var pdScope = 'unit';
-var PD_MAN = ['pd-m-grams','pd-m-h','pd-m-m','pd-m-qty','pd-m-perplate','pd-m-printer','pd-m-filament'];
+var pdParts = 'single';
+var PD_MAN = ['pd-m-grams','pd-m-h','pd-m-m','pd-m-qty','pd-m-perplate','pd-m-parts','pd-m-printer','pd-m-filament'];
+/* a ficha fala a mesma língua da calculadora: montado, "1 peça" vira "1 produto" */
+function pdPartsUi(){
+  var on = pdParts === 'set';
+  var box = $('fld-pd-parts');
+  if(box) box.hidden = !on;
+  var k = on ? Math.round(num(($('pd-m-parts') || {}).value)) : 1;
+  var b0 = qsa($('seg-pd-scope'),'button')[0];
+  if(b0) b0.textContent = k > 1 ? '1 produto' : '1 peça';
+  var lq = $('lbl-pd-qty');
+  if(lq) lq.textContent = k > 1 ? 'Quantidade de produtos' : 'Quantidade de peças';
+}
 function pdManualFill(p){
   var a = document.activeElement;
   /* sincronização com a nuvem redesenha a ficha a qualquer momento: quem está
@@ -6096,12 +6246,16 @@ function pdManualFill(p){
   set('pd-m-m', hrs > 0 ? String(Math.round((hrs - Math.floor(hrs)) * 60)) : '');
   set('pd-m-qty', String(Math.max(1, Math.round(num(p.qty)) || 1)));
   set('pd-m-perplate', num(p.perPlate) > 0 ? String(Math.round(num(p.perPlate))) : '');
+  set('pd-m-parts', num(p.parts) > 1 ? String(Math.round(num(p.parts))) : '');
+  pdParts = num(p.parts) > 1 ? 'set' : 'single';
+  setSeg('seg-pd-parts', pdParts);
   var pr = $('pd-m-printer'), fl = $('pd-m-filament');
   if(pr && p.printer  && S.printers.some(function(x){ return x.id === p.printer; }))  pr.value = p.printer;
   var fid = p.filament || ((p.mats || [])[0] || {}).f;
   if(fl && fid && S.filaments.some(function(x){ return x.id === fid; })) fl.value = fid;
   pdScope = p.scope === 'plate' ? 'plate' : 'unit';
   setSeg('seg-pd-scope', pdScope);
+  pdPartsUi();
 }
 function pdApplyManual(){
   var box = 'pd-gc-msg';
@@ -6130,6 +6284,7 @@ function pdApplyManual(){
   $('f-qty').value = qty;
   $('f-perplate').value = num($('pd-m-perplate').value) > 0
     ? String(Math.round(num($('pd-m-perplate').value))) : '';
+  setParts(pdParts === 'set' ? num($('pd-m-parts').value) : 0);
   scope = pdScope; setSeg('seg-scope', scope);
   if($('pd-m-printer').value)  $('f-printer').value  = $('pd-m-printer').value;
   if($('pd-m-filament').value) $('f-filament').value = $('pd-m-filament').value;
@@ -6143,14 +6298,25 @@ function pdApplyManual(){
   openProduct(p.id);              /* volta para a ficha, já com preço refeito */
 
   var li = [];
+  var np = partsCount();
   li.push(scope === 'plate'
-    ? 'Contados como a <b>mesa toda</b>, com ' + qty + (qty > 1 ? ' peças' : ' peça') + '.'
-    : 'Contados como <b>1 peça</b>.');
+    ? 'Contados como a <b>mesa toda</b>, com ' + qty + ' ' + unitWord(qty, np) +
+      (np > 1 ? ' — ' + pieceWord(qty * np) + ' impressas.' : '.')
+    : 'Contados como <b>1 ' + unitWord(1, np) + '</b>.');
+  if(np > 1) li.push('Produto <b>montado com ' + pieceWord(np) + '</b>: o peso e o tempo acima valem pelo conjunto inteiro, e na mesa ele ocupa ' + pieceWord(np) + '.');
   var fit = plateFit();
-  li.push(fit > 0
-    ? (fit === 1 ? 'Só <b>1 peça por mesa</b>: cada uma paga um preparo inteiro e o preço não cai por lote.'
-                 : 'Cabem <b>' + fit + ' por mesa</b>: é até aí que o preparo se dilui e o preço por peça cai.')
-    : 'Sem "cabem por mesa", a tabela por faixa segue contando um preparo só para o lote inteiro.');
+  if(!(fit > 0)){
+    li.push('Sem "cabem por mesa", a tabela por faixa segue contando um preparo só para o lote inteiro.');
+  } else if(np > 1){
+    /* o que cabe na mesa é contado em peças; o que se dilui é o produto */
+    var uni = Math.floor(fit/np);
+    li.push(uni >= 1
+      ? 'Cabem <b>' + pieceWord(fit) + ' por mesa</b>, ou seja <b>' + uni + ' ' + unitWord(uni, np) + ' por mesa</b>: é até aí que o preparo se dilui.'
+      : 'Cabem só <b>' + pieceWord(fit) + ' por mesa</b>: um produto sozinho já usa <b>' + plateWord(platesFor(1, fit, np)) + '</b>.');
+  } else {
+    li.push(fit === 1 ? 'Só <b>1 peça por mesa</b>: cada uma paga um preparo inteiro e o preço não cai por lote.'
+                      : 'Cabem <b>' + fit + ' por mesa</b>: é até aí que o preparo se dilui e o preço por peça cai.');
+  }
   if(!(g > 0)) li.push('Sem o peso, só o tempo entrou: o filamento continua fora do custo.');
   if(!(hrs > 0)) li.push('Sem o tempo, a máquina e a energia ficam fora do custo — preencha as horas.');
   if(hadWaste) li.push('Desperdício zerado: o peso do fatiador já conta brim, suporte e purga.');
@@ -6300,6 +6466,7 @@ function jobItems(j){
     waste:num(j.waste), fail:num(j.fail), prep:num(j.prep), finish:num(j.finish),
     extras:cloneExtras(j.extras), printer:j.printer || '', filament:j.filament || '',
     scope:j.scope || 'unit', perPlate:j.perPlate == null ? '' : j.perPlate,
+    parts:j.parts == null ? '' : j.parts,
     mode:j.mode || 'margem', margin:num(j.margin),
     priceSet:num(j.priceSet), suggested:num(j.suggested), productId:j.productId || ''
   };
@@ -7545,7 +7712,7 @@ function buildPrint(){
 
 /* ============ eventos ============ */
 function bindCalc(){
-  ['f-grams','f-h','f-m','f-qty','f-perplate','f-waste','f-fail','f-prep','f-finish'].forEach(function(id){
+  ['f-grams','f-h','f-m','f-qty','f-perplate','f-parts','f-waste','f-fail','f-prep','f-finish'].forEach(function(id){
     $(id).addEventListener('input', render);
   });
   $('f-printer').addEventListener('change', render);
@@ -7561,7 +7728,9 @@ function bindCalc(){
          com 8 peças, é porque 8 cabem nela */
       var el = $('f-perplate');
       if(scope === 'plate' && !el.value.trim()){
-        var q = Math.max(1, Math.round(num($('f-qty').value)) || 1);
+        /* o que ocupa lugar na mesa é peça: uma mesa com 3 produtos de 5 peças
+           é uma mesa de 15 */
+        var q = Math.max(1, Math.round(num($('f-qty').value)) || 1) * partsCount();
         if(q > 1) el.value = String(q);
       }
       render();
@@ -7569,6 +7738,15 @@ function bindCalc(){
   });
   each(qsa($('seg-multi'),'button'), function(b){
     b.addEventListener('click', function(){ setMulti(b.getAttribute('data-v') === 'multi'); });
+  });
+  each(qsa($('seg-parts'),'button'), function(b){
+    b.addEventListener('click', function(){
+      var on = b.getAttribute('data-v') === 'set';
+      /* marcar "montado" sem número não diz nada: 2 é o caso mais comum, a
+         caixa com tampa, e quem tem mais peças troca no campo que aparece */
+      setParts(on ? Math.max(2, Math.round(num(($('f-parts') || {}).value))) : 0);
+      render();
+    });
   });
   $('btn-mat-add').addEventListener('click', function(){ matAdd(); renderMats(); render(); });
   $('f-purge').addEventListener('input', function(){ purgeStr = this.value; render(); });
@@ -7655,6 +7833,7 @@ function bindCalc(){
     $('f-qty').value = 1; extras = []; activeProductId = null; editingItemId = null;
     multi = false; mats = []; purgeStr = '';
     setSeg('seg-multi', 'one');
+    setParts(0);
     $('save-msg').innerHTML = ''; $('gc-msg').innerHTML = '';
     renderMats(); renderExtras(); render();
   });
@@ -7911,6 +8090,17 @@ function bindProducts(){
       setSeg('seg-pd-scope', pdScope);
     });
   });
+  each(qsa($('seg-pd-parts'),'button'), function(b){
+    b.addEventListener('click', function(){
+      pdParts = b.getAttribute('data-v');
+      setSeg('seg-pd-parts', pdParts);
+      var el = $('pd-m-parts');
+      if(pdParts === 'set' && !(num(el.value) > 1)) el.value = '2';
+      if(pdParts !== 'set') el.value = '';
+      pdPartsUi();
+    });
+  });
+  $('pd-m-parts').addEventListener('input', pdPartsUi);
   $('btn-pd-manual').addEventListener('click', pdApplyManual);
   $('btn-pd-save').addEventListener('click', function(){
     var p = S.products.filter(function(x){return x.id===pdId;})[0];
@@ -8321,6 +8511,10 @@ var TOUR = [
   {view:'calc', sel:'#seg-multi',
    t:'Peça de várias cores',
    d:'Com AMS, CFS ou MMU, marque <b>Multicolor</b> e informe as gramas de cada cor. A torre de purga entra em gramas à parte: em peça pequena ela chega a pesar mais que a própria peça.'},
+
+  {view:'calc', sel:'#seg-parts',
+   t:'Produto montado com várias peças',
+   d:'Caixa com tampa, boneco articulado, organizador em módulos: se o produto só fica pronto depois de juntar as peças, marque <b>Montado</b> e diga quantas são. Gramas, tempo e preço passam a valer pelo <b>conjunto inteiro</b>, e o app conta o espaço na mesa em <b>peças</b> — que é o que decide se o preço cai no lote.'},
 
   {view:'calc', sel:'#fold-fine',
    t:'Ajuste fino',

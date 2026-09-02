@@ -716,3 +716,62 @@ produto, frete por CEP, comparador de marketplaces, anexar o PDF no
 `navigator.share` e cadastro de clientes com histórico próprio. Encaixar as
 peças na mesa sozinho (nesting) também fica de fora: quem fatia sabe quantas
 cabem, e adivinhar isso pelo volume erraria mais do que acertaria.
+
+---
+
+# Adendo — v7 (setembro/2026)
+
+O app tratava **peça** e **produto** como a mesma coisa. Quem vende caixa com
+tampa, boneco articulado ou organizador em módulos não vende peça: vende um
+conjunto que só fica pronto depois de montado. Sem dizer isso ao app, sobrava
+escolher entre dois erros — informar a quantidade de peças e ver o preço do
+conjunto ser dividido pelo número de partes, ou informar 1 e mentir sobre o
+espaço que o conjunto ocupa na mesa.
+
+## 28. O que entrou
+
+### 28.1 Produto montado com várias peças
+Opção nova na calculadora (logo abaixo de *Cores da peça*) e na ficha do
+produto: **Peça única** ou **Montado com várias peças**, e, quando montado,
+**quantas peças impressas formam um produto**.
+
+- **As duas palavras passam a ser diferentes.** Peça é o que ocupa lugar na
+  mesa; produto é o que o cliente compra. Gramas, tempo e preço continuam
+  sendo os do **produto inteiro** — o conjunto todo —, e a quantidade passa a
+  ser de produtos. A tela troca as palavras junto: *Quantidade de produtos*,
+  *1 produto*, *min / produto*, *Custo do produto montado*.
+- **A mesa é contada em peças:** `mesas = ⌈(produtos × peças por produto) ÷
+  cabem por mesa⌉`. Um conjunto de 5 peças enche a mesa cinco vezes mais
+  rápido que uma peça solta, então o preparo se dilui bem menos — e a tabela
+  por faixa passa a dizer isso. Quando nem um conjunto inteiro cabe de uma vez,
+  o app mostra quantas mesas **um único produto** já pede.
+- O campo *Cabem por mesa* continua sendo em **peças**, e o app converte:
+  10 peças por mesa com 2 peças por produto são 5 produtos por mesa.
+- Marcar *A mesa toda* preenche *cabem por mesa* com **quantidade × peças por
+  produto**, que é o número de lugares realmente ocupados.
+- A **memória de cálculo** e o texto do WhatsApp falam a mesma língua:
+  `20 min × 3 mesas ÷ 2 produtos`, e o orçamento avisa que cada unidade é
+  montada com N peças impressas.
+- A nota do campo lembra do risco que muda junto: a **reserva de falhas** é
+  cobrada uma vez sobre o conjunto, mas quem falha é cada peça — 8% por peça
+  são 34% de chance de alguma das 5 sair errada. O app mostra a conta e deixa
+  a decisão com quem imprime; nada é alterado sozinho.
+- Ao importar a mesa fatiada, o aviso passa a dizer que a quantidade é de
+  **produtos**: uma mesa com as peças de um conjunto só é **1**.
+
+## 29. Compatibilidade
+
+Produto salvo antes da v7 sobe como **peça única** (`parts` vazio), e peça
+única é exatamente a conta de antes: 1 peça por produto não muda mesa, custo
+nem preço. Marcar *montado* também não mexe no preço sozinho enquanto não
+houver *cabem por mesa* preenchido — é ali que o número entra na conta. O
+campo sincroniza com o documento do produto, viaja no item do orçamento e
+entra no backup `.json` como os demais.
+
+## 30. Continua fora do escopo
+
+Resina/SLA, `.bgcode` binário do Prusa, miniatura do G-code virando foto do
+produto, frete por CEP, comparador de marketplaces e nesting automático. Lista
+de peças do conjunto (nome e quantidade de cada parte, tipo lista de material)
+também fica de fora: aqui interessa **quantas** peças o produto tem, que é o
+que muda o preço; catalogar quais elas são é outro assunto.
