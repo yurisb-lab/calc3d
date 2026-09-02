@@ -1027,6 +1027,8 @@ body.menu-open .scrim{opacity:1;visibility:visible}
   #print .pclient{border:1px solid #CCC;border-radius:2mm;padding:8px 11px;margin-bottom:16px;font-size:10.5pt;line-height:1.5}
   #print .pclient b{display:block;font-size:8.5pt;letter-spacing:.1em;text-transform:uppercase;color:#777;font-weight:700;margin-bottom:2px}
   #print td .sb{display:block;font-size:9pt;color:#777;margin-top:2px}
+  /* extrato: data e status são apoio, o que salta aos olhos é o item e o valor */
+  #print td.d{white-space:nowrap;color:#555;font-size:10.5pt}
   #print .sub{display:flex;justify-content:space-between;font-size:11pt;color:#444;padding:4px 0}
   #print .sub.dsc{color:#0A6E3E}
   #print tr{page-break-inside:avoid}
@@ -2592,6 +2594,27 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
       <h2 class="section">Histórico de pedidos</h2>
       <div class="card" id="cd-jobs"></div>
 
+      <h2 class="section">Extrato<button type="button" class="help" data-h="extrato" aria-label="O que é isso?">?</button></h2>
+      <div class="card">
+        <div class="field">
+          <label for="cd-ext-scope">O que entra no extrato</label>
+          <select id="cd-ext-scope">
+            <option value="open">Só o que está em aberto</option>
+            <option value="all">Todos os pedidos</option>
+            <option value="paid">Só o que já foi pago</option>
+          </select>
+        </div>
+        <p class="note" id="cd-ext-msg"></p>
+        <div class="btnrow">
+          <button type="button" class="btn primary" id="btn-cd-ext-wa">Enviar no WhatsApp</button>
+          <button type="button" class="btn" id="btn-cd-ext-copy">Copiar</button>
+        </div>
+        <div class="btnrow">
+          <button type="button" class="btn" id="btn-cd-ext-pdf">Gerar PDF</button>
+        </div>
+        <p class="dashnote">Sai só o que a pessoa já sabe: data, o que pediu, valor e status. Custo, margem, gramas e hora de máquina nunca entram no extrato.</p>
+      </div>
+
       <div class="btnrow" style="margin-top:16px">
         <button type="button" class="btn primary" id="btn-cd-order">Novo orçamento para este cliente</button>
       </div>
@@ -3261,6 +3284,7 @@ var HELP = {
   pormesa:{t:'Cabem por mesa', d:'Quantas peças DESTAS cabem juntas na mesa da impressora. É o campo que decide se o preço cai no lote: o preparo — fatiar, limpar a mesa, trocar o filamento e ligar — custa igual para uma mesa com 1 peça ou com 24. Se só uma cabe, um pedido de 30 são 30 mesas e 30 preparos, e o preço por peça não cai nada. Deixe em branco para não controlar: o app volta a contar um preparo só para o lote inteiro, como fazia antes.', e:'Chaveiro: cabem 24 por mesa\nVaso grande: cabe 1 por mesa'},
   multipeca:{t:'Produto montado com várias peças', d:'Marque quando UM produto pronto só existe depois de juntar VÁRIAS peças impressas: caixa e tampa, boneco articulado, organizador em módulos. O app passa a separar duas coisas que até aqui eram a mesma: peça é o que ocupa lugar na mesa, produto é o que o cliente compra. Gramas, tempo e preço continuam sendo os do produto INTEIRO — o conjunto todo, com todas as peças —, e a quantidade passa a ser de produtos. O que muda na conta é a mesa: um produto de 5 peças ocupa 5 lugares, então ele enche a mesa cinco vezes mais rápido e o preparo se dilui bem menos. Deixe em "peça única" quando o que sai da mesa já é o produto pronto.', e:'Caixa com tampa: 2 peças por produto\nDragão articulado: 5 peças por produto'},
   acabamento:{t:'Acabamento (por peça)', d:'Minutos com a mão em CADA peça: tirar suporte, lixar, pintar, montar, embalar. Em produto montado, conte os minutos do produto inteiro: o suporte de todas as peças mais o tempo de juntar. Em peça pequena costuma ser o maior custo de todos.', e:''},
+  extrato:{t:'Extrato do cliente', d:'A mesma coisa que está nesta ficha, num formato que dá para MANDAR: a lista de pedidos com data, o que foi, quanto deu e em que pé está. Serve para cobrar sem parecer cobrança, para lembrar quem sumiu do que já levou e para fechar o mês com quem compra todo mês. O extrato mostra só o que a pessoa já sabe — custo, margem, gramas e hora de máquina não saem daqui.', e:'12/03/2026 — 3x Chaveiro · R$ 36,00 · Pago\n28/03/2026 — 1x Vaso · R$ 80,00 · Entregue\nEm aberto: R$ 80,00'},
   cliente:{t:'Cliente do pedido', d:'Escolha uma ficha já cadastrada ou só digite o nome — ao salvar o orçamento, quem ainda não tem ficha ganha uma. O pedido passa a contar no histórico da pessoa: quanto já pagou, o que está em aberto e o ticket médio. A agenda inteira fica em Cadastros › Clientes.', e:'Maria da papelaria\n4 pedidos · R$ 640,00 pagos · R$ 120,00 em aberto'},
   orcamento:{t:'Orçamento do pedido', d:'Pedido de verdade quase nunca é uma peça só. Adicione cada peça calculada à lista, ponha o nome do cliente, o desconto e o frete — e mande tudo de uma vez pelo WhatsApp ou em PDF. Se você não adicionar nada, o orçamento sai com a peça que está na calculadora.', e:'3x Chaveiro — R$ 12,00 cada\n1x Vaso — R$ 80,00\nDesconto R$ 10,00 · Frete R$ 15,00\nTotal R$ 121,00'},
   insumos:{t:'Insumos e acessórios', d:'Tudo que vai junto com a peça: embalagem, etiqueta, sacola, ímã, argola, parafuso, LED, cola, tinta. O preço é unitário e a quantidade é por peça — 4 parafusos de R$ 0,30 viram R$ 1,20 na peça.', e:'Argola R$ 0,35 × 1\nSaquinho R$ 0,20 × 1\nCartão R$ 1,00 × 1\nTotal R$ 1,55 por peça'},
@@ -6102,6 +6126,7 @@ function renderClients(){
 
 /* ---- ficha do cliente ---- */
 function openClient(id){
+  if(id !== cdId) cdScope = 'open';   /* o recorte do extrato é de cada ficha */
   cdId = id;
   if(!clientById(id)){ go('cadastros'); return; }
   go('clientdetail');
@@ -6171,6 +6196,98 @@ function renderClientDetail(){
 
   var wa = $('btn-cd-wa');
   wa.disabled = !waPhone(c.contact);
+  wa.title = waPhone(c.contact) ? '' : 'Preencha o WhatsApp desta ficha.';
+
+  renderClientExt();
+}
+
+/* ---- extrato do cliente ---- */
+/* A ficha já responde "quanto essa pessoa pagou e quanto deve". O extrato é a
+   mesma verdade num formato que dá para MANDAR: a lista de pedidos com data,
+   valor e status. Nada é recalculado aqui — ele lê os mesmos pedidos da ficha,
+   então marcar um pedido como Pago muda o extrato junto. E ele para no que o
+   cliente já sabe: custo, margem, gramas e hora de máquina não saem. */
+var cdScope = 'open';
+var EXT_SCOPE = {
+  open: {t:'em aberto',        empty:'Nenhum pedido em aberto — está tudo pago.'},
+  all:  {t:'completo',         empty:'Nenhum pedido ainda.'},
+  paid: {t:'de pedidos pagos', empty:'Nenhum pedido pago ainda.'}
+};
+function extScope(){ return EXT_SCOPE[cdScope] ? cdScope : 'open'; }
+/* "está tudo pago" seria mentira para quem nunca comprou nada */
+function extEmpty(id){
+  return clientJobs(id).length ? EXT_SCOPE[extScope()].empty : 'Nenhum pedido ainda.';
+}
+function extJobs(id){
+  var sc = extScope();
+  var jobs = clientJobs(id).filter(function(j){
+    var pago = jobStatus(j) === 'pago';
+    return sc === 'all' || (sc === 'paid' ? pago : !pago);
+  });
+  /* extrato se lê do mais antigo para o mais novo, como o do banco — o
+     histórico da ficha é o contrário porque lá o que importa é o último */
+  return jobs.reverse();
+}
+function extTotals(jobs){
+  var o = {n:jobs.length, paid:0, open:0, total:0, quoted:false};
+  jobs.forEach(function(j){
+    var v = jobTotals(j).total;
+    o.total += v;
+    if(jobStatus(j) === 'pago') o.paid += v;
+    else { o.open += v; if(jobStatus(j) === 'orcado') o.quoted = true; }
+  });
+  return o;
+}
+/* em que pé está cada pedido, igual no WhatsApp e no PDF. Pago já carrega a
+   data do pagamento — repetir "Pago · Pago em 12/03" não informa nada. */
+function extStatus(j){
+  var s = jobStatus(j);
+  if(s === 'pago') return j.paidAt ? 'Pago em ' + brDate(j.paidAt) : 'Pago';
+  return STATUS[s].n + (j.due ? ' · entrega ' + brDate(j.due) : '');
+}
+/* orçado ainda é proposta, não dívida. Como ele entra no "em aberto" da ficha,
+   o extrato precisa dizer isso em voz alta antes que vire uma cobrança errada */
+var EXT_QUOTED = 'Pedidos marcados como Orçado ainda são proposta — só viram cobrança depois do seu ok.';
+function extText(c){
+  var jobs = extJobs(c.id), t = extTotals(jobs), st = S.settings;
+  var out = [];
+  out.push('*' + (st.biz || 'Extrato') + '*');
+  out.push('Extrato ' + EXT_SCOPE[extScope()].t + ' — ' + clientName(c));
+  out.push(new Date().toLocaleDateString('pt-BR'));
+  out.push('');
+  if(!jobs.length) out.push(extEmpty(c.id));
+  else {
+    jobs.forEach(function(j){
+      out.push('• ' + (j.date || '') + ' — ' + (jobLabel(j) || 'Pedido'));
+      out.push('   ' + brl(jobTotals(j).total) + ' · ' + extStatus(j));
+    });
+    out.push('');
+    out.push(t.n + (t.n === 1 ? ' pedido' : ' pedidos') + ' · ' + brl(t.total));
+    if(t.paid > 0 && extScope() !== 'paid') out.push('Já pago: ' + brl(t.paid));
+    if(t.open > 0) out.push('*Em aberto: ' + brl(t.open) + '*');
+    if(t.quoted){ out.push(''); out.push(EXT_QUOTED); }
+  }
+  if(st.contact){ out.push(''); out.push(st.contact); }
+  return out.join('\n');
+}
+function renderClientExt(){
+  var c = clientById(cdId);
+  if(!c) return;
+  var sel = $('cd-ext-scope');
+  if(sel && document.activeElement !== sel) sel.value = extScope();
+  var jobs = extJobs(c.id), t = extTotals(jobs), empty = !jobs.length;
+  var msg = $('cd-ext-msg');
+  if(msg){
+    msg.innerHTML = empty
+      ? esc(extEmpty(c.id))
+      : 'Vão no extrato <b>' + t.n + (t.n === 1 ? ' pedido' : ' pedidos') + '</b> · ' + brl(t.total) +
+        (t.open > 0 && extScope() === 'all' ? ' — sendo ' + brl(t.open) + ' em aberto' : '') + '.' +
+        (t.quoted ? '<br>' + EXT_QUOTED : '');
+  }
+  $('btn-cd-ext-copy').disabled = empty;
+  $('btn-cd-ext-pdf').disabled = empty;
+  var wa = $('btn-cd-ext-wa');
+  wa.disabled = empty || !waPhone(c.contact);
   wa.title = waPhone(c.contact) ? '' : 'Preencha o WhatsApp desta ficha.';
 }
 
@@ -7943,17 +8060,58 @@ function buildPrint(){
         (o.note ? '<br>'+esc(o.note) : '')+
         '<br>Valores sujeitos a alteração em caso de mudança no projeto.</div>';
 
-    /* sem esperar a decodificação, a foto e o logo podiam sair em branco no PDF */
-    var ims = qsa($('print'), 'img');
-    if(!ims.length) return null;
-    return Promise.all(Array.prototype.map.call(ims, function(im){
-      if(im.decode) return im.decode().catch(function(){});
-      return new Promise(function(res){
-        im.onload = im.onerror = res;
-        setTimeout(res, 1000);
-      });
-    }));
+    return printReady();
   });
+}
+
+/* sem esperar a decodificação, a foto e o logo podiam sair em branco no PDF */
+function printReady(){
+  var ims = qsa($('print'), 'img');
+  if(!ims.length) return Promise.resolve(null);
+  return Promise.all(Array.prototype.map.call(ims, function(im){
+    if(im.decode) return im.decode().catch(function(){});
+    return new Promise(function(res){
+      im.onload = im.onerror = res;
+      setTimeout(res, 1000);
+    });
+  }));
+}
+
+/* o extrato em papel. Mesmo cabeçalho e mesmo bloco de cliente do orçamento —
+   quem recebe os dois reconhece que vieram do mesmo lugar. */
+function buildClientPrint(c){
+  var jobs = extJobs(c.id), t = extTotals(jobs), st = S.settings;
+  var dd = new Date().toLocaleDateString('pt-BR');
+
+  var rows = jobs.map(function(j){
+    return '<tr><td class="d">'+esc(j.date || '')+'</td>'+
+      '<td>'+esc(jobLabel(j) || 'Pedido')+'<span class="sb">'+esc(extStatus(j))+'</span></td>'+
+      '<td class="r">'+brl(jobTotals(j).total)+'</td></tr>';
+  }).join('');
+
+  var subs = '';
+  if(t.paid > 0 && t.open > 0){
+    subs += '<div class="sub"><span>Já pago</span><span>'+brl(t.paid)+'</span></div>';
+    subs += '<div class="sub"><span>Em aberto</span><span>'+brl(t.open)+'</span></div>';
+  }
+
+  $('print').innerHTML =
+    '<div class="phead"><div class="pid">'+
+      '<h1>'+esc(st.biz || 'Extrato')+'</h1>'+
+      '<div class="pmeta">'+esc(st.contact || '')+'</div>'+
+    '</div><img class="plogo" src="lyke-logo.png" alt=""></div>'+
+    '<div class="ptitle">Extrato '+esc(EXT_SCOPE[extScope()].t)+' · '+dd+'</div>'+
+    clientPdfBlock({client:c.name, contact:c.contact, clientId:c.id})+
+    '<table><thead><tr><th>Data</th><th>Pedido</th><th class="r">Valor</th></tr></thead>'+
+    '<tbody>'+rows+'</tbody></table>'+
+    subs+
+    '<div class="tot"><span>'+(t.open > 0 && t.paid <= 0 ? 'Em aberto' : (extScope() === 'paid' ? 'Total pago' : 'Total'))+
+      '</span><span>'+brl(t.open > 0 && t.paid <= 0 ? t.open : t.total)+'</span></div>'+
+    '<div class="note">'+t.n+(t.n === 1 ? ' pedido' : ' pedidos')+' neste extrato.'+
+      (t.quoted ? '<br>'+EXT_QUOTED : '')+
+      '<br>Extrato emitido em '+dd+'.</div>';
+
+  return printReady();
 }
 
 /* ============ eventos ============ */
@@ -8147,6 +8305,32 @@ function bindClients(){
     if(!c) return;
     if(!waPhone(c.contact)){ alert('Preencha o WhatsApp desta ficha para poder chamar a pessoa.'); return; }
     waOpen('Olá, ' + clientName(c) + '!', c.contact);
+  });
+
+  /* extrato: escolher o recorte já redesenha o resumo, para ninguém mandar uma
+     lista sem saber o que ia dentro dela */
+  $('cd-ext-scope').addEventListener('change', function(){
+    cdScope = this.value;
+    renderClientExt();
+  });
+  $('btn-cd-ext-wa').addEventListener('click', function(){
+    var c = clientById(cdId);
+    if(!c) return;
+    if(!extJobs(c.id).length){ alert('Não há pedido nenhum neste recorte do extrato.'); return; }
+    if(!waPhone(c.contact)){ alert('Preencha o WhatsApp desta ficha para poder mandar o extrato.'); return; }
+    waOpen(extText(c), c.contact);
+  });
+  $('btn-cd-ext-copy').addEventListener('click', function(){
+    var c = clientById(cdId);
+    if(!c) return;
+    if(!extJobs(c.id).length){ alert('Não há pedido nenhum neste recorte do extrato.'); return; }
+    copyText(extText(c), this);
+  });
+  $('btn-cd-ext-pdf').addEventListener('click', function(){
+    var c = clientById(cdId);
+    if(!c) return;
+    if(!extJobs(c.id).length){ alert('Não há pedido nenhum neste recorte do extrato.'); return; }
+    buildClientPrint(c).then(function(){ window.print(); });
   });
 
   /* atalho que fecha o ciclo: da ficha direto para a calculadora com o cliente
