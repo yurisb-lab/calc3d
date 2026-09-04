@@ -334,6 +334,8 @@ O app sugeria um preço e você perdia esse número ao fechar a tela. Agora:
   o formulário (data, rolos, valor, loja) abre na própria ficha do rolo, diz o
   que vai acontecer antes de confirmar e só leva para a tela de Compras se o
   usuário quiser anexar a nota.
+- A partir da v9 (§35), **+ Nova** não abre mais uma ficha em branco: abre a
+  prateleira do que já está cadastrado.
 
 ### 11.5 Link de compra do filamento
 Cadastro de filamento ganhou **marca/loja** e **link de compra** — quando o
@@ -859,3 +861,79 @@ marketplaces e nesting automático. E, do lado da vitrine: carrinho com
 pagamento, cupom, conta de cliente, estoque reservado, domínio próprio e
 contador de visitas. A venda continua terminando na conversa — o link só evita
 que ela **comece** com vinte fotos soltas e o preço repetido de cabeça.
+
+---
+
+# Adendo — v9 (setembro/2026)
+
+Comprar era o caminho mais longo do app. **+ Nova**, em Compras, criava um
+registro **em branco** antes de saber o que era — quem desistia no meio deixava
+uma linha vazia na lista — e pedia que o usuário descrevesse, com as próprias
+palavras, um rolo que já está cadastrado ali dentro: nome, preço, loja e link
+estavam na tela ao lado e mesmo assim eram redigitados. Insumo era pior: não
+tinha caminho nenhum. A mesma sacola de saquinhos era descrita do zero todo
+mês, e o preço que se pagou por ela nunca chegava à calculadora.
+
+A v9 inverte a ordem da pergunta. Primeiro **o quê**, depois **quanto**.
+
+## 35. O que entrou
+
+### 35.1 A prateleira (Negócio › Compras › + Nova)
+Tela nova — *O que você comprou?* — no lugar da ficha em branco:
+
+- **Seus rolos**: todos os filamentos cadastrados, com os que acabaram e os que
+  estão acabando **em cima**, cada um com o preço do rolo e o que ainda tem
+  dentro.
+- **Insumos e embalagem**: os insumos que você **já comprou** (com o preço que
+  você pagou, marcado como *seu preço*) na frente das sugestões de partida.
+- **Comprar de novo**: as últimas peças, máquinas e outros gastos, para repetir
+  sem redigitar.
+- **Outra coisa — preencher do zero**: o formulário livre de sempre, agora como
+  escolha e não como ponto de partida.
+
+Escolhido o item, sobra **um** passo: quantos vieram, valor total, data e loja
+— tudo pré-preenchido pelo que o app já sabia. Um resumo abaixo dos campos diz,
+em português, tudo o que o botão vai mexer antes de ele ser tocado.
+
+### 35.2 O que o app aprende com a compra
+- **Rolo**: o preço do cadastro segue a última nota e o estoque volta a encher
+  (`peso do rolo × quantidade`). Rolo que ainda **não** era controlado ganha a
+  pergunta *Controlar o estoque deste rolo?* ali mesmo — é o passo que antes
+  exigia voltar ao cadastro e digitar as gramas na mão.
+- **Insumo**: o valor total dividido pela quantidade vira o **preço unitário**,
+  e ele passa a aparecer na calculadora, em *Insumos e acessórios*, na frente
+  da tabela de sugestões. Comprar 500 saquinhos por R$ 42,00 ensina ao app que
+  o saquinho custa R$ 0,08.
+
+### 35.3 O aviso de estoque fecha o ciclo
+Onde o app avisava que o rolo acabou, ele oferecia no máximo o **site da loja**
+— e ali o caminho morria. Agora, junto do link, existe **"já comprei — dar
+entrada"**, que volta para dentro do app com o rolo já escolhido. Vale nos três
+lugares em que o aviso aparece: na calculadora, no recado depois de salvar o
+orçamento e em *Rolos acabando*, no painel do mês (botão **Comprei**).
+
+### 35.4 Quantidade vira um dado
+A compra passa a guardar **quantas unidades vieram**. A lista mostra `100× a
+R$ 0,18` na linha, e o CSV ganha as colunas **Qtd** e **Valor unitário** — que
+é o número que serve para comparar fornecedor, não o total da nota.
+
+## 36. Compatibilidade
+
+Nenhum preço, conta ou tela de cálculo mudou. Compra registrada antes da v9 não
+tem quantidade: vale como **uma** unidade, que é exatamente como sempre foi
+lida — a lista e o CSV mostram o mesmo de antes para ela. O campo `qty` (e
+`fid`, o rolo de origem) entram no documento da compra, sincronizam como os
+demais cadastros e viajam no backup `.json`.
+
+O botão **"Registrar uma compra deste rolo"**, dentro da ficha do filamento,
+continua onde estava e faz o mesmo — passou a chamar a **mesma função** que a
+prateleira usa, para os dois caminhos não envelhecerem separados.
+
+## 37. Continua fora do escopo
+
+Resina/SLA, `.bgcode` binário do Prusa, frete por CEP, comparador de
+marketplaces e nesting automático. Do lado da compra: cadastro próprio de
+insumos com estoque e baixa automática (o insumo continua sendo uma linha do
+cálculo, e o preço vem do que você pagou), leitura da nota fiscal por foto,
+pedido de compra e lista de reposição automática. O app registra o que **já**
+entrou — decidir o que comprar continua sendo de quem imprime.
