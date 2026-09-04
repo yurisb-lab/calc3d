@@ -828,7 +828,8 @@ h2.section.amtrow{display:flex;align-items:center;gap:8px}
 h2.section .amt{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;color:var(--ink);letter-spacing:0;text-transform:none}
 .suphint{font-size:12.5px;color:var(--ink3);margin:0 0 10px}
 .chips button.preset{display:flex;align-items:baseline;gap:6px;padding:8px 12px;min-height:40px;font-size:13px;font-weight:600}
-.chips button.preset .cat{font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);font-weight:700}
+.chips button.preset .cat{font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);font-weight:700;white-space:nowrap}
+.chips button.preset .cat.mine{color:var(--hot)}
 .chips button.preset .pv{color:var(--ink3);font-weight:500;font-family:'IBM Plex Mono',monospace;font-size:12px}
 .chips button.more{color:var(--hot);border-style:dashed;background:transparent;box-shadow:none}
 .sup{border:1px solid var(--line);border-radius:var(--r-sm);padding:10px;margin-bottom:8px;background:var(--surface2);box-shadow:var(--sh-in)}
@@ -1421,6 +1422,44 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
 /* "Cancelar" nao precisa de metade da largura: quem cabe apertado e o botao
    que confirma, e em tela estreita ele quebrava em duas linhas */
 .buybox .btnrow .btn.ghost{width:auto;flex:none;padding-left:16px;padding-right:16px}
+
+/* ---------- prateleira da compra ----------
+   Registrar uma compra comecava por uma ficha em branco: nove campos e a
+   obrigacao de descrever com as proprias palavras um rolo que ja esta
+   cadastrado aqui dentro. A prateleira inverte isso — primeiro voce toca no
+   QUE chegou, depois confere o valor. */
+.pickrow{
+  display:flex;align-items:center;gap:11px;width:100%;text-align:left;
+  padding:12px var(--pad);min-height:62px;cursor:pointer;
+  background:none;border:0;border-bottom:1px solid var(--line);font:inherit;color:inherit;
+}
+.pickrow:last-child{border-bottom:0}
+.pickrow:hover{background:var(--surface2)}
+.pickrow:active{background:var(--surface3)}
+.pickrow .swatch{width:16px;height:16px;flex:none}
+.pickrow .mid{flex:1;min-width:0}
+.pickrow .nm{display:block;font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pickrow .sb{display:block;font-size:12px;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pickrow .chev{flex:none}
+.pickrow .chev svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.bntag{
+  flex:none;font-size:9.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  border-radius:5px;padding:3px 7px;background:var(--surface3);color:var(--ink3);
+}
+.bntag.low{background:var(--amber);color:#fff}
+.bntag.out{background:var(--red);color:#fff}
+/* o cabecalho do passo de confirmar: repete o que foi escolhido, para ninguem
+   registrar a compra do rolo errado */
+.bnwhat{display:flex;align-items:center;gap:10px;margin:0 0 14px;padding-bottom:13px;border-bottom:1px solid var(--line)}
+.bnwhat .swatch{width:20px;height:20px;flex:none}
+.bnwhat .mid{flex:1;min-width:0}
+.bnwhat .nm{display:block;font-weight:700;font-size:15px;line-height:1.3}
+.bnwhat .sb{display:block;font-size:12px;color:var(--ink3);margin-top:2px}
+.btn.swap{flex:none;width:auto;padding:8px 12px;min-height:38px;font-size:12.5px}
+/* quantidade com os botoes de mais e menos: no celular ninguem quer digitar
+   "12" num campo minusculo */
+.bnqty{display:flex;align-items:center;gap:9px}
+.bnqty .un{font-size:12.5px;color:var(--ink3)}
 .buymsg:empty{display:none}
 .buymsg{margin-top:12px}
 .buymsg .gcok{margin-bottom:0}
@@ -2401,6 +2440,19 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
       <div class="filterbar" id="buy-filter"></div>
       <div id="buy-list"></div>
       <div class="btnrow" style="margin-top:12px"><button type="button" class="btn ghost" id="btn-buy-csv">Exportar planilha (CSV)</button></div>
+    </section>
+
+    <!-- ============ NOVA COMPRA (prateleira) ============
+         A tela comeca pelo QUE chegou, nao por um formulario vazio: os rolos
+         cadastrados, os insumos que ja passaram por aqui e as compras que se
+         repetem. O app preenche descricao, preco, loja e link; sobra conferir
+         o valor. -->
+    <section class="view" id="v-buynew" hidden>
+      <div class="detailhead">
+        <button type="button" class="btn ghost back" id="btn-back-buynew">‹ Voltar</button>
+        <span class="t" id="bn-title">Nova compra</span>
+      </div>
+      <div id="buynew-body"></div>
     </section>
 
     <!-- ============ COMPRA (detalhe) ============ -->
@@ -3443,6 +3495,7 @@ var ROUTE = {
   data:      {v:'settings',  set:'data'},
   /* telas de detalhe: nao tem item proprio, acendem o item de onde vieram */
   productdetail:{v:'productdetail', nav:'products', t:'Produto',  s:'catálogo'},
+  buynew:       {v:'buynew',        nav:'buys',     t:'Nova compra', s:'o que chegou'},
   buydetail:    {v:'buydetail',     nav:'buys',     t:'Compra',   s:'compras'},
   clientdetail: {v:'clientdetail',  nav:'clients',  t:'Cliente',  s:'agenda'}
 };
@@ -3564,6 +3617,7 @@ function go(id, opt){
   if(r.v === 'products'){ renderCatFilter(); renderProducts(); renderCats(); }
   if(r.v === 'share') renderShare();
   if(r.v === 'buys'){ renderBuyFilter(); renderBuys(); }
+  if(r.v === 'buynew') renderBuyNew();
   if(r.v === 'cadastros'){ showCad(cadTab); renderPrinters(); renderFilaments(); renderCats(); renderClients(); }
   if(r.v === 'clientdetail') renderClientDetail();
   if(r.v === 'dash') renderDash();
@@ -3582,7 +3636,9 @@ var PALACT = [
   {t:'Nova categoria',         s:'Cadastros › Categorias',  ic:'add',   go:'cats',      click:'btn-add-cat',      kw:'adicionar grupo'},
   {t:'Novo cliente',           s:'Negócio › Clientes',      ic:'add',   go:'clients',   click:'btn-add-client',   kw:'adicionar contato agenda'},
   {t:'Novo produto',           s:'Negócio › Produtos',      ic:'add',   go:'products',  click:'btn-add-product',  kw:'adicionar catalogo item'},
-  {t:'Nova compra',            s:'Negócio › Compras',       ic:'add',   go:'buys',      click:'btn-add-buy',      kw:'adicionar gasto nota material'},
+  {t:'Nova compra',            s:'Negócio › Compras',       ic:'add',   go:'buys',      click:'btn-add-buy',      kw:'adicionar gasto nota material rolo insumo comprei repor estoque'},
+  {t:'Comprei um rolo',        s:'Negócio › Compras',       ic:'add',   go:'buys',      click:'btn-add-buy',      kw:'filamento reposicao repor estoque bobina chegou'},
+  {t:'Comprei insumo',         s:'Negócio › Compras',       ic:'add',   go:'buys',      click:'btn-add-buy',      kw:'embalagem saquinho argola ima etiqueta parafuso chegou'},
   {t:'Novo link público',      s:'Negócio › Link público',  ic:'share', go:'share',     click:'btn-add-link',     kw:'vitrine compartilhar catalogo cliente whatsapp divulgar loja'},
   {t:'Salvar este orçamento',  s:'Calculadora',             ic:'saved', go:'calc',      click:'btn-save',         kw:'guardar pedido proposta'},
   {t:'Gerar PDF do orçamento', s:'Calculadora',             ic:'pdf',   go:'calc',      click:'btn-pdf',          kw:'imprimir proposta papel'},
@@ -4841,18 +4897,22 @@ function cloneExtras(list){
 function renderSupplyPresets(){
   var el = $('sup-presets');
   if(!el) return;
-  var list = supplyAll ? SUPPLY_PRESETS : SUPPLY_PRESETS.slice(0, SUPPLY_SHOWN);
+  /* o que voce COMPROU vem na frente, com o preco que voce pagou: tabela nossa
+     e chute, nota fiscal e fato */
+  var all = supplyCatalog();
+  var list = supplyAll ? all : all.slice(0, SUPPLY_SHOWN);
   el.innerHTML = list.map(function(sp,i){
-    return '<button type="button" class="preset" data-sup="'+i+'"><span class="cat">'+esc(sp.c)+'</span>'+
+    return '<button type="button" class="preset" data-sup="'+i+'"><span class="cat'+(sp.mine?' mine':'')+'">'+esc(sp.c)+'</span>'+
       esc(sp.n)+' <span class="pv">'+brl(sp.v)+'</span></button>';
   }).join('') +
-  (SUPPLY_PRESETS.length > SUPPLY_SHOWN
-    ? '<button type="button" class="more" id="sup-more">'+(supplyAll ? 'ver menos' : '+ '+(SUPPLY_PRESETS.length-SUPPLY_SHOWN)+' itens')+'</button>'
+  (all.length > SUPPLY_SHOWN
+    ? '<button type="button" class="more" id="sup-more">'+(supplyAll ? 'ver menos' : '+ '+(all.length-SUPPLY_SHOWN)+' itens')+'</button>'
     : '');
   if($('sup-more')) $('sup-more').addEventListener('click', function(){ supplyAll = !supplyAll; renderSupplyPresets(); });
   each(qsa(el,'[data-sup]'), function(b){
     b.addEventListener('click', function(){
-      var sp = SUPPLY_PRESETS[+b.getAttribute('data-sup')], hit = null;
+      var sp = all[+b.getAttribute('data-sup')], hit = null;
+      if(!sp) return;
       for(var i = 0; i < extras.length; i++){ if((extras[i].n||'') === sp.n){ hit = extras[i]; break; } }
       if(hit) hit.q = exQty(hit) + 1;
       else extras.push({n:sp.n, v:dec(sp.v,2), q:1});
@@ -5484,12 +5544,20 @@ function stockSaveMsg(hit){
   return '<div class="alert'+(lowNow.some(function(f){ return stockState(f) === 'out'; }) ? ' bad' : '')+'" style="margin-bottom:0">'+
     'Baixa no estoque — '+body+'.<br>' +
     lowNow.map(function(f){
-      return (stockState(f) === 'out' ? 'Rolo <b>'+esc(f.name||'')+'</b> acabou.' : 'Rolo <b>'+esc(f.name||'')+'</b> está acabando.') + buyLink(f, 'Comprar');
+      return (stockState(f) === 'out' ? 'Rolo <b>'+esc(f.name||'')+'</b> acabou.' : 'Rolo <b>'+esc(f.name||'')+'</b> está acabando.') + buyAct(f, 'Comprar');
     }).join('<br>') + '</div>';
 }
 function buyLink(f, label){
   var u = safeUrl(f.url);
   return u ? ' <a href="'+esc(u)+'" target="_blank" rel="noopener noreferrer">'+label+' &rarr;</a>' : '';
+}
+/* O aviso dizia que o rolo acabou e oferecia, no maximo, o site da loja — e
+   ali o caminho morria: para dar entrada no rolo que chegou era preciso
+   atravessar o app ate Compras e redigitar tudo. O segundo atalho volta para
+   DENTRO, com o rolo ja escolhido. */
+function buyAct(f, label){
+  return buyLink(f, label) +
+    ' <button type="button" class="golink" data-gobuy="'+esc(f.id)+'">já comprei — dar entrada</button>';
 }
 function stockAlertHtml(r){
   var out = [], seen = {};
@@ -5500,12 +5568,12 @@ function stockAlertHtml(r){
     var have = stockG(f), st = stockState(f), nm = esc(f.name || 'filamento');
     var need = u.g * r.qty;
     if(st === 'out')
-      out.push('<div class="alert bad">O rolo <b>'+nm+'</b> está zerado no seu estoque.'+buyLink(f,'Comprar de novo')+'</div>');
+      out.push('<div class="alert bad">O rolo <b>'+nm+'</b> está zerado no seu estoque.'+buyAct(f,'Comprar de novo')+'</div>');
     else if(need > have)
       out.push('<div class="alert bad">Este pedido precisa de <b>'+dec(need,0)+' g</b> do rolo <b>'+nm+
-               '</b>, que tem <b>'+dec(have,0)+' g</b> — faltam '+dec(need-have,0)+' g.'+buyLink(f,'Comprar mais')+'</div>');
+               '</b>, que tem <b>'+dec(have,0)+' g</b> — faltam '+dec(need-have,0)+' g.'+buyAct(f,'Comprar mais')+'</div>');
     else if(st === 'low')
-      out.push('<div class="alert">O rolo <b>'+nm+'</b> está acabando: <b>'+dec(have,0)+' g</b> restantes.'+buyLink(f,'Comprar de novo')+'</div>');
+      out.push('<div class="alert">O rolo <b>'+nm+'</b> está acabando: <b>'+dec(have,0)+' g</b> restantes.'+buyAct(f,'Comprar de novo')+'</div>');
   });
   return out.join('');
 }
@@ -5827,23 +5895,14 @@ function renderFilaments(){
     b.addEventListener('click', function(){
       var i = +b.getAttribute('data-buyok-f'), f = cardItem('filaments', b);
       if(!f) return;
-      var rolls = Math.max(1, Math.round(num($('fbq'+i).value)) || 1);
-      var total = num($('fbv'+i).value);
-      var cap = num(f.spoolWeight) > 0 ? num(f.spoolWeight) : 1000;
-      var nb = newBuy();
-      nb.kind = 'filamento';
-      nb.date = $('fbd'+i).value || todayISO();
-      nb.desc = rolls + 'x ' + (f.name || 'Filamento') + ' (' + dec(cap,0) + ' g)';
-      nb.supplier = $('fbs'+i).value || f.brand || '';
-      nb.url = f.url || '';
-      nb.amount = total;
-      S.buys.unshift(nb);
-      /* o rolo que chegou e a verdade mais nova: o preco do cadastro segue a
-         ultima nota, e um rolo comprado enche o estoque de quem controla */
-      if(total > 0) f.spoolPrice = Math.round(total/rolls*100)/100;
-      if(stockOn(f)) setStock(f, cap * rolls);
-      f.updatedAt = Date.now();
-      persistNow();
+      /* a mesma funcao que a prateleira de Compras usa: registrar o rolo que
+         chegou nao pode significar duas coisas diferentes conforme a tela */
+      var nb = applyFilamentBuy(f, {
+        rolls:    $('fbq'+i).value,
+        total:    num($('fbv'+i).value),
+        date:     $('fbd'+i).value,
+        supplier: $('fbs'+i).value
+      });
       b.blur();
       renderFilaments(); fillSelects(); render(); paintNavCounts();
       filBuyDone(i, nb, f);
@@ -6759,12 +6818,14 @@ function renderBuys(){
     return '<div class="item"><div class="buy" data-b="'+esc(b.id)+'">'+
       '<span class="th">'+(ph ? '<img data-photo="'+esc(ph)+'" data-kind="thumb" alt="">' : NFSVG)+'</span>'+
       '<span class="mid"><span class="nm">'+esc(b.desc||'Sem descrição')+'</span>'+
-      '<span class="sb">'+brDate(b.date)+' · '+esc(KINDS[b.kind]||'Outro')+(b.supplier?' · '+esc(b.supplier):'')+(b.invoice?' · '+esc(b.invoice):'')+'</span></span>'+
+      '<span class="sb">'+brDate(b.date)+' · '+esc(KINDS[b.kind]||'Outro')+
+        (buyQty(b) > 1 ? ' · '+buyQty(b)+'× a '+brl(buyUnit(b)) : '')+
+        (b.supplier?' · '+esc(b.supplier):'')+(b.invoice?' · '+esc(b.invoice):'')+'</span></span>'+
       '<span class="amt">'+brl(num(b.amount))+'</span></div></div>';
   }).join('') || (S.buys.length
     ? (buyQuery ? emptyFind(buyQuery, 'a compra') : emptyFilter('as compras de novo'))
     : emptyBox('Nenhuma compra registrada',
-        'Guarde aqui a nota do próximo rolo: foto do comprovante, valor e loja. É o que salva na garantia e no fechamento do mês.',
+        'Toque em <b>Nova</b> e escolha o rolo ou o insumo que chegou — o app já sabe o preço, a loja e o link. A nota você anexa depois.',
         'btn-add-buy', '+ Nova compra'));
 
   var ym = todayISO().slice(0,7);
@@ -6800,14 +6861,428 @@ function renderBuyDetail(){
   renderGallery('bd-gal', b, renderBuyDetail);
 }
 function buysCSV(){
-  var rows = [['Data','Tipo','Descrição','Loja','Nº nota/pedido','Valor','Link','Observações']];
+  var rows = [['Data','Tipo','Descrição','Qtd','Valor unitário','Loja','Nº nota/pedido','Valor','Link','Observações']];
   sortedBuys().forEach(function(b){
-    rows.push([brDate(b.date), KINDS[b.kind]||'Outro', b.desc||'', b.supplier||'', b.invoice||'',
+    rows.push([brDate(b.date), KINDS[b.kind]||'Outro', b.desc||'', buyQty(b), dec(buyUnit(b),2),
+      b.supplier||'', b.invoice||'',
       dec(num(b.amount),2), safeUrl(b.url), (b.note||'').replace(/[\r\n]+/g,' ')]);
   });
   return '﻿' + rows.map(function(r){
     return r.map(function(c){ return '"' + String(c).replace(/"/g,'""') + '"'; }).join(';');
   }).join('\r\n');
+}
+
+/* ============ nova compra: comeca pelo QUE, nao por um formulario vazio ============
+   Registrar uma compra era o caminho mais longo do app. "+ Nova" criava uma
+   ficha em branco e pedia que o usuario descrevesse com as proprias palavras um
+   rolo que ja esta cadastrado aqui dentro — nome, preco, loja e link estavam
+   todos na tela ao lado, e mesmo assim tinham de ser redigitados. Insumo era
+   pior: nao tinha caminho nenhum, entao a mesma sacola de saquinhos era
+   redigitada do zero todo mes.
+
+   A prateleira inverte a ordem. Primeiro voce toca no QUE chegou — um rolo do
+   seu cadastro, um insumo que voce ja comprou antes, uma compra que se repete.
+   O app preenche descricao, preco, loja e link, e sobra um passo so: conferir
+   o valor. O que o app aprende com a compra volta para onde faz falta: o preco
+   do rolo, o estoque dele e o preco do insumo na calculadora. */
+
+/* quantas unidades vieram na compra e quanto custou cada uma. Compras antigas
+   nao tem `qty`: valem como uma unidade so, que e como sempre foram lidas. */
+function buyQty(b){ var q = Math.round(num(b && b.qty)); return q > 0 ? q : 1; }
+function buyUnit(b){ return num(b && b.amount) / buyQty(b); }
+function buyUnitWord(kind, n){
+  if(kind === 'filamento') return n === 1 ? 'rolo' : 'rolos';
+  return n === 1 ? 'unidade' : 'unidades';
+}
+
+/* Registrar o rolo que chegou e sempre a MESMA coisa, venha da ficha do
+   filamento ou da prateleira: entra em Compras, o preco do cadastro segue a
+   ultima nota e o estoque volta a encher. Uma funcao so para os dois caminhos
+   nao deixa um deles envelhecer sozinho. */
+function applyFilamentBuy(f, opt){
+  opt = opt || {};
+  var rolls = Math.max(1, Math.round(num(opt.rolls)) || 1);
+  var total = num(opt.total);
+  var cap = num(f.spoolWeight) > 0 ? num(f.spoolWeight) : 1000;
+  var nb = newBuy();
+  nb.kind = 'filamento';
+  nb.fid = f.id;
+  nb.qty = rolls;
+  nb.date = opt.date || todayISO();
+  nb.desc = rolls + 'x ' + (f.name || 'Filamento') + ' (' + dec(cap,0) + ' g)';
+  nb.supplier = opt.supplier || f.brand || '';
+  nb.url = f.url || '';
+  nb.amount = total;
+  S.buys.unshift(nb);
+  /* o rolo que chegou e a verdade mais nova: o preco do cadastro segue a
+     ultima nota, e um rolo comprado enche o estoque de quem controla */
+  if(total > 0) f.spoolPrice = Math.round(total/rolls*100)/100;
+  if(stockOn(f) || opt.startStock) setStock(f, cap * rolls);
+  f.updatedAt = Date.now();
+  persistNow();
+  return nb;
+}
+
+/* o que ja passou por aqui vira atalho: mesma descricao, mesma loja, mesmo
+   preco de antes — so a data muda */
+function buyRepeats(kinds, max){
+  var seen = {}, out = [];
+  sortedBuys().forEach(function(b){
+    if(out.length >= max) return;
+    if(kinds.indexOf(buyKind(b)) < 0) return;
+    var n = String(b.desc||'').trim();
+    if(!n) return;
+    var k = palNorm(n);
+    if(seen[k]) return;
+    seen[k] = 1;
+    out.push(b);
+  });
+  return out;
+}
+/* insumo comprado vira preco de verdade na calculadora: o que voce pagou
+   ontem e um palpite melhor que qualquer tabela nossa */
+function supplyBought(){
+  return buyRepeats(['insumo'], 12).map(function(b){
+    return {n:String(b.desc||'').trim(), v:Math.round(buyUnit(b)*100)/100,
+            c:'seu preço', mine:true, supplier:b.supplier||'', url:b.url||''};
+  }).filter(function(x){ return x.n; });
+}
+/* a lista que a calculadora e a prateleira mostram: primeiro o que voce
+   comprou de verdade, depois as sugestoes de partida */
+function supplyCatalog(){
+  var out = supplyBought(), seen = {};
+  out.forEach(function(x){ seen[palNorm(x.n)] = 1; });
+  SUPPLY_PRESETS.forEach(function(sp){
+    if(seen[palNorm(sp.n)]) return;
+    out.push({n:sp.n, v:sp.v, c:sp.c, mine:false, supplier:'', url:''});
+  });
+  return out;
+}
+
+/* bnPick = o que foi escolhido na prateleira; bnDone = a compra recem-gravada,
+   para a tela virar confirmacao em vez de voltar para o comeco */
+var bnPick = null, bnDone = null, bnTouched = false, bnAll = false, bnStock = true;
+
+function bnReset(){ bnPick = null; bnDone = null; bnTouched = false; bnStock = true; }
+/* atalho de fora: o aviso de estoque acabando ja sabe QUAL rolo faltou, entao
+   ele nao devia devolver o usuario para uma lista */
+function openQuickBuy(fid){
+  bnReset();
+  var f = fid ? collById('filaments', fid) : null;
+  if(f) bnPickFil(f);
+  go('buynew');
+}
+function bnPickFil(f){
+  var cap = num(f.spoolWeight) > 0 ? num(f.spoolWeight) : 1000;
+  bnStock = true;
+  bnPick = {kind:'filamento', fid:f.id, label:f.name || 'Filamento',
+    sub:dec(cap,0)+' g por rolo', color:safeColor(f.color,'#ccc'),
+    unit:num(f.spoolPrice), supplier:f.brand || '', url:f.url || ''};
+}
+function bnPickSupply(x){
+  bnPick = {kind:'insumo', label:x.n, sub:x.mine ? 'você já comprou este' : 'sugestão da lista',
+    unit:num(x.v), supplier:x.supplier || '', url:x.url || ''};
+}
+function bnPickBuy(b){
+  bnPick = {kind:buyKind(b), label:String(b.desc||'').trim() || 'Compra',
+    sub:'igual à de '+brDate(b.date), unit:buyUnit(b),
+    supplier:b.supplier || '', url:b.url || '', invoice:''};
+}
+function bnPickBlank(){
+  bnPick = {kind:'outro', label:'', sub:'', unit:0, supplier:'', url:'', free:true};
+}
+
+function bnFilSort(a, b){
+  var r = function(f){ var st = stockState(f); return st === 'out' ? 0 : (st === 'low' ? 1 : 2); };
+  var d = r(a) - r(b);
+  return d !== 0 ? d : String(a.name||'').localeCompare(String(b.name||''));
+}
+function bnFilRow(f){
+  var st = stockState(f), pg = num(f.spoolPrice);
+  var sub = (pg > 0 ? brl(pg) : 'sem preço no cadastro') +
+            (st ? ' · '+dec(stockG(f),0)+' g no rolo' : '');
+  return '<button type="button" class="pickrow" data-bnf="'+esc(f.id)+'">'+
+    '<span class="swatch" style="background:'+esc(safeColor(f.color,'#ccc'))+'"></span>'+
+    '<span class="mid"><span class="nm">'+esc(f.name||'Sem nome')+'</span>'+
+    '<span class="sb">'+esc(sub)+'</span></span>'+
+    (st === 'out' ? '<span class="bntag out">acabou</span>'
+                  : (st === 'low' ? '<span class="bntag low">acabando</span>' : ''))+
+    CHEV+'</button>';
+}
+function bnBuyRow(b){
+  return '<button type="button" class="pickrow" data-bnb="'+esc(b.id)+'">'+
+    '<span class="mid"><span class="nm">'+esc(b.desc||'Sem descrição')+'</span>'+
+    '<span class="sb">'+esc((KINDS[buyKind(b)]||'Outro')+' · '+brDate(b.date)+
+      (b.supplier ? ' · '+b.supplier : '')+' · '+brl(num(b.amount)))+'</span></span>'+
+    CHEV+'</button>';
+}
+function bnShelfHtml(){
+  var out = '<p class="viewintro">Toque no que chegou. O app já sabe o preço, a loja e o link — sobra conferir o valor.</p>';
+
+  var fils = S.filaments.slice().sort(bnFilSort);
+  if(fils.length){
+    out += '<h2 class="section">Seus rolos</h2><div class="card bare">'+
+      fils.map(bnFilRow).join('')+'</div>'+
+      '<p class="gohint">Rolo novo, que ainda não está aqui? Cadastre em <button type="button" class="golink" data-go="filaments">Cadastros › Filamentos</button>.</p>';
+  }
+
+  var sup = supplyCatalog();
+  var shown = bnAll ? sup : sup.slice(0, 8);
+  out += '<h2 class="section">Insumos e embalagem</h2><div class="card">'+
+    '<p class="suphint">O preço que você registrar aqui passa a aparecer na calculadora, em <b>Insumos e acessórios</b>.</p>'+
+    '<div class="chips">'+shown.map(function(x,i){
+      return '<button type="button" class="preset" data-bns="'+i+'"><span class="cat'+(x.mine?' mine':'')+'">'+esc(x.c||'')+'</span>'+
+        esc(x.n)+' <span class="pv">'+brl(x.v)+'</span></button>';
+    }).join('')+
+    (sup.length > 8 ? '<button type="button" class="more" id="bn-supmore">'+
+        (bnAll ? 'ver menos' : '+ '+(sup.length-8)+' itens')+'</button>' : '')+
+    '</div></div>';
+
+  var rep = buyRepeats(['peca','maquina','outro'], 4);
+  if(rep.length){
+    out += '<h2 class="section">Comprar de novo</h2><div class="card bare">'+
+      rep.map(bnBuyRow).join('')+'</div>';
+  }
+
+  out += '<div class="btnrow" style="margin-top:16px">'+
+    '<button type="button" class="btn ghost" id="bn-free">Outra coisa — preencher do zero</button></div>';
+  return out;
+}
+
+/* o resumo embaixo dos campos diz, em portugues, tudo que o botao vai mexer:
+   ninguem confirma o que nao entendeu */
+function bnNote(){
+  var p = bnPick, q = bnQtyVal(), total = bnTotalVal();
+  var li = [];
+  var what = q + ' ' + buyUnitWord(p.kind, q) + ' de <b>' + esc(p.label || 'algo') + '</b>';
+  li.push('Entra em <b>Compras</b> como ' + what + (total > 0 ? ' por <b>'+brl(total)+'</b>' : '') + '.');
+  if(total > 0 && q > 1) li.push('Sai a <b>'+brl(total/q)+'</b> cada.');
+  if(p.kind === 'filamento'){
+    var f = collById('filaments', p.fid);
+    if(f){
+      var cap = num(f.spoolWeight) > 0 ? num(f.spoolWeight) : 1000;
+      var unit = total > 0 ? total/q : 0;
+      if(unit > 0 && Math.abs(unit - num(f.spoolPrice)) >= 0.005)
+        li.push('O preço do rolo no cadastro passa a ser <b>'+brl(unit)+'</b>.');
+      if(stockOn(f)) li.push('O estoque volta para <b>'+dec(cap*q,0)+' g</b>.');
+      else if(bnStock) li.push('O estoque deste rolo passa a ser controlado, começando em <b>'+dec(cap*q,0)+' g</b>.');
+      else li.push('O estoque continua sem controle.');
+    }
+  } else if(p.kind === 'insumo' && total > 0){
+    li.push('<b>'+esc(p.label||'')+'</b> a '+brl(total/q)+' fica pronto para somar na calculadora.');
+  }
+  return li.join(' ');
+}
+function bnQtyVal(){
+  var el = $('bn-qty');
+  if(!el) return 1;
+  var q = Math.round(num(el.value));
+  return q > 0 ? Math.min(9999, q) : 1;
+}
+function bnTotalVal(){
+  var el = $('bn-total');
+  return el ? num(el.value) : (bnPick ? num(bnPick.unit) : 0);
+}
+
+function bnFormHtml(){
+  var p = bnPick;
+  var f = p.fid ? collById('filaments', p.fid) : null;
+  var startStock = (p.kind === 'filamento' && f && !stockOn(f));
+  var head = p.free
+    ? '<div class="field"><label for="bn-desc">O que foi comprado</label>'+
+        '<input id="bn-desc" type="text" placeholder="Ex.: bico 0,4 de aço" value="'+esc(p.label)+'"></div>'+
+      '<div class="field"><label for="bn-kind">Tipo</label><select id="bn-kind">'+
+        Object.keys(KINDS).map(function(k){
+          return '<option value="'+k+'"'+(p.kind === k ? ' selected' : '')+'>'+esc(KINDS[k])+'</option>';
+        }).join('')+'</select></div>'
+    : '<p class="bnwhat">'+
+        (p.color ? '<span class="swatch" style="background:'+esc(p.color)+'"></span>' : '')+
+        '<span class="mid"><span class="nm">'+esc(p.label)+'</span>'+
+        (p.sub ? '<span class="sb">'+esc(p.sub)+'</span>' : '')+'</span>'+
+        '<button type="button" class="btn ghost swap" id="bn-swap">Trocar</button></p>';
+
+  return '<div class="card">'+head+
+    '<div class="row">'+
+      '<div class="field"><label for="bn-qty">Quantos vieram</label>'+
+        '<div class="bnqty"><div class="qty">'+
+          '<button type="button" data-bnq="-1" aria-label="Diminuir">−</button>'+
+          '<input id="bn-qty" type="text" inputmode="numeric" value="1">'+
+          '<button type="button" data-bnq="1" aria-label="Aumentar">+</button>'+
+        '</div><span class="un" id="bn-un">'+esc(buyUnitWord(p.kind,1))+'</span></div></div>'+
+      '<div class="field"><label for="bn-total">Valor total <span class="hint">R$</span></label>'+
+        '<input id="bn-total" type="text" inputmode="decimal" placeholder="0,00" value="'+
+          esc(num(p.unit) > 0 ? dec(num(p.unit),2) : '')+'"></div>'+
+    '</div>'+
+    '<div class="row">'+
+      '<div class="field"><label for="bn-date">Data</label>'+
+        '<input id="bn-date" type="date" value="'+esc(todayISO())+'"></div>'+
+      '<div class="field"><label for="bn-sup">Loja / fornecedor</label>'+
+        '<input id="bn-sup" type="text" placeholder="Ex.: 3D Lab" value="'+esc(p.supplier||'')+'"></div>'+
+    '</div>'+
+    (startStock
+      ? '<div class="field"><label>Controlar o estoque deste rolo?'+helpBtn('estoque')+'</label>'+
+          '<div class="seg" id="seg-bnstock">'+
+            '<button type="button" data-v="1" aria-pressed="'+(bnStock?'true':'false')+'">Sim, começar agora</button>'+
+            '<button type="button" data-v="0" aria-pressed="'+(bnStock?'false':'true')+'">Não controlar</button>'+
+          '</div></div>'
+      : '')+
+    '<p class="note" id="bn-note">'+bnNote()+'</p>'+
+    '<div class="btnrow" style="margin-top:14px">'+
+      '<button type="button" class="btn primary" id="bn-ok">Registrar compra</button>'+
+      (p.free ? '<button type="button" class="btn ghost" id="bn-swap2">Voltar</button>' : '')+
+    '</div>'+
+    '<p class="savenote">A nota fiscal você anexa depois, na compra — não precisa estar com ela na mão agora.</p>'+
+  '</div>';
+}
+
+function bnDoneHtml(){
+  var b = bnDone, li = [];
+  li.push('Entrou em <b>Compras</b>: '+esc(b.desc||'')+' — <b>'+brl(num(b.amount))+'</b>.');
+  if(b.fid){
+    var f = collById('filaments', b.fid);
+    if(f){
+      li.push('Preço do rolo no cadastro: <b>'+brl(num(f.spoolPrice))+'</b>.');
+      if(stockOn(f)) li.push('Estoque de <b>'+esc(f.name||'')+'</b>: <b>'+dec(stockG(f),0)+' g</b>.');
+    }
+  }
+  if(buyKind(b) === 'insumo' && buyQty(b) > 0)
+    li.push('<b>'+esc(b.desc||'')+'</b> a '+brl(buyUnit(b))+' já aparece na calculadora, em Insumos.');
+  return '<div class="gcok"><ul style="margin-top:0">'+
+      '<li>'+li.join('</li><li>')+'</li></ul></div>'+
+    '<div class="btnrow"><button type="button" class="btn primary" id="bn-nf">Anexar a nota fiscal</button></div>'+
+    '<div class="btnrow"><button type="button" class="btn" id="bn-more">Registrar outra</button>'+
+      '<button type="button" class="btn ghost" id="bn-list">Ver todas as compras</button></div>';
+}
+
+function bnSave(){
+  var p = bnPick;
+  if(!p) return;
+  var q = bnQtyVal(), total = bnTotalVal();
+  var date = ($('bn-date') && $('bn-date').value) || todayISO();
+  var sup = $('bn-sup') ? $('bn-sup').value : '';
+  var nb;
+  if(p.kind === 'filamento' && p.fid){
+    var f = collById('filaments', p.fid);
+    if(!f){ bnReset(); renderBuyNew(); return; }
+    nb = applyFilamentBuy(f, {rolls:q, total:total, date:date, supplier:sup, startStock:bnStock});
+    fillSelects();
+  } else {
+    var desc = p.free && $('bn-desc') ? $('bn-desc').value.trim() : p.label;
+    var kind = p.free && $('bn-kind') ? $('bn-kind').value : p.kind;
+    nb = newBuy();
+    nb.kind = KINDS[kind] ? kind : 'outro';
+    nb.qty = q;
+    nb.date = date;
+    nb.desc = desc || 'Compra sem descrição';
+    nb.supplier = sup;
+    nb.url = p.url || '';
+    nb.amount = total;
+    S.buys.unshift(nb);
+    persistNow();
+  }
+  bnDone = nb;
+  renderBuyFilter(); renderBuys(); renderFilaments(); renderSupplyPresets();
+  paintNavCounts(); render();
+  renderBuyNew();
+  window.scrollTo(0,0);
+}
+
+function renderBuyNew(){
+  var el = $('buynew-body');
+  if(!el) return;
+  var t = $('bn-title');
+  if(bnDone){
+    if(t) t.textContent = 'Compra registrada';
+    el.innerHTML = bnDoneHtml();
+    bnWire(el);
+    return;
+  }
+  if(bnPick){
+    if(t) t.textContent = bnPick.free ? 'Nova compra' : (bnPick.label || 'Nova compra');
+    el.innerHTML = bnFormHtml();
+    bnWire(el);
+    var v = $('bn-total');
+    if(v && !bnPick.free){ v.focus(); v.select(); }
+    else if($('bn-desc')) $('bn-desc').focus();
+    return;
+  }
+  if(t) t.textContent = 'O que você comprou?';
+  el.innerHTML = bnShelfHtml();
+  bnWire(el);
+}
+
+function bnRefreshNote(){
+  var n = $('bn-note');
+  if(n && bnPick) n.innerHTML = bnNote();
+  var u = $('bn-un');
+  if(u && bnPick) u.textContent = buyUnitWord(bnPick.kind, bnQtyVal());
+}
+/* o valor total segue a quantidade enquanto o usuario nao escreve o dele: 3
+   rolos ja aparecem com o preco de 3. Assim que ele digita, o app para de
+   adivinhar — o que veio na nota vale mais que a nossa conta. */
+function bnSyncTotal(){
+  if(bnTouched || !bnPick || !(num(bnPick.unit) > 0)) return;
+  var v = $('bn-total');
+  if(v) v.value = dec(num(bnPick.unit) * bnQtyVal(), 2);
+}
+function bnWire(el){
+  each(qsa(el,'[data-bnf]'), function(b){
+    b.addEventListener('click', function(){
+      var f = collById('filaments', b.getAttribute('data-bnf'));
+      if(!f) return;
+      bnPickFil(f); bnTouched = false; renderBuyNew();
+    });
+  });
+  each(qsa(el,'[data-bns]'), function(b){
+    b.addEventListener('click', function(){
+      var x = supplyCatalog()[+b.getAttribute('data-bns')];
+      if(!x) return;
+      bnPickSupply(x); bnTouched = false; renderBuyNew();
+    });
+  });
+  each(qsa(el,'[data-bnb]'), function(b){
+    b.addEventListener('click', function(){
+      var x = S.buys.filter(function(y){ return y.id === b.getAttribute('data-bnb'); })[0];
+      if(!x) return;
+      bnPickBuy(x); bnTouched = false; renderBuyNew();
+    });
+  });
+  if($('bn-supmore')) $('bn-supmore').addEventListener('click', function(){ bnAll = !bnAll; renderBuyNew(); });
+  if($('bn-free')) $('bn-free').addEventListener('click', function(){ bnPickBlank(); bnTouched = false; renderBuyNew(); });
+  ['bn-swap','bn-swap2'].forEach(function(id){
+    if($(id)) $(id).addEventListener('click', function(){ bnReset(); renderBuyNew(); });
+  });
+  each(qsa(el,'[data-bnq]'), function(b){
+    b.addEventListener('click', function(){
+      var inp = $('bn-qty');
+      if(!inp) return;
+      inp.value = Math.max(1, bnQtyVal() + (+b.getAttribute('data-bnq')));
+      bnSyncTotal(); bnRefreshNote();
+    });
+  });
+  if($('bn-qty')) $('bn-qty').addEventListener('input', function(){ bnSyncTotal(); bnRefreshNote(); });
+  if($('bn-total')) $('bn-total').addEventListener('input', function(){ bnTouched = true; bnRefreshNote(); });
+  if($('bn-desc')) $('bn-desc').addEventListener('input', function(){
+    if(bnPick) bnPick.label = this.value;
+    bnRefreshNote();
+  });
+  if($('bn-kind')) $('bn-kind').addEventListener('change', function(){
+    if(bnPick) bnPick.kind = this.value;
+    bnRefreshNote();
+  });
+  if($('seg-bnstock')) each(qsa($('seg-bnstock'),'button'), function(b){
+    b.addEventListener('click', function(){
+      bnStock = b.getAttribute('data-v') === '1';
+      each(qsa($('seg-bnstock'),'button'), function(x){
+        x.setAttribute('aria-pressed', x === b ? 'true' : 'false');
+      });
+      bnRefreshNote();
+    });
+  });
+  if($('bn-ok')) $('bn-ok').addEventListener('click', bnSave);
+  if($('bn-nf')) $('bn-nf').addEventListener('click', function(){ if(bnDone) openBuy(bnDone.id); });
+  if($('bn-more')) $('bn-more').addEventListener('click', function(){ bnReset(); renderBuyNew(); });
+  if($('bn-list')) $('bn-list').addEventListener('click', function(){ bnReset(); go('buys'); });
 }
 
 /* ============ pedidos e orcamentos salvos ============ */
@@ -7327,9 +7802,10 @@ function renderDash(){
       return '<div class="rollrow"><span class="swatch" style="background:'+esc(safeColor(f.color,'#ccc'))+'"></span>'+
         '<span class="mid"><span class="nm"><span class="lowdot'+(st === 'out' ? ' out' : '')+'"></span>'+esc(f.name || 'Sem nome')+'</span>'+
         '<span class="sb">'+dec(stockG(f),0)+' g restantes'+(st === 'out' ? ' · rolo acabado' : '')+'</span></span>'+
+        '<button type="button" class="btn ghost swap" data-gobuy="'+esc(f.id)+'">Comprei</button>'+
         '<a class="go" '+(u ? 'href="'+esc(u)+'" target="_blank" rel="noopener noreferrer"'
                             : 'aria-disabled="true" tabindex="-1"')+' aria-label="Comprar de novo">'+LINKSVG+'</a></div>';
-    }).join('')+'<p class="dashnote">O link abre a página onde você comprou o rolo, cadastrada em <b>Cadastros → Filamentos</b>.</p></div>';
+    }).join('')+'<p class="dashnote">O link abre a página onde você comprou o rolo, cadastrada em <b>Cadastros → Filamentos</b>. <b>Comprei</b> dá entrada do rolo que chegou: enche o estoque e guarda a compra.</p></div>';
   }
 
   $('dash-body').innerHTML = out;
@@ -9052,11 +9528,19 @@ function shareThisProduct(p){
 
 function bindBuys(){
   $('b-search').addEventListener('input', function(){ buyQuery = this.value.trim().toLowerCase(); renderBuys(); });
-  $('btn-add-buy').addEventListener('click', function(){
-    var b = newBuy();
-    S.buys.unshift(b); persist();
-    renderBuyFilter(); renderBuys(); openBuy(b.id);
-    setTimeout(function(){ $('bd-desc').focus(); }, 60);
+  /* o botao criava uma compra EM BRANCO antes de saber o que era: quem
+     desistia no meio deixava um registro vazio na lista, e quem seguia tinha
+     de descrever com as proprias palavras um rolo ja cadastrado. Agora ele
+     abre a prateleira, e a compra so nasce quando ha o que gravar. */
+  $('btn-add-buy').addEventListener('click', function(){ openQuickBuy(''); });
+  $('btn-back-buynew').addEventListener('click', function(){
+    bnReset(); renderBuyFilter(); renderBuys(); go('buys');
+  });
+  /* "Ja comprei" nos avisos de estoque: o app sabe QUAL rolo faltou, entao
+     nao devia devolver o usuario para uma lista */
+  document.addEventListener('click', function(e){
+    var b = e.target.closest && e.target.closest('[data-gobuy]');
+    if(b) openQuickBuy(b.getAttribute('data-gobuy'));
   });
   $('btn-back-buys').addEventListener('click', function(){ renderBuyFilter(); renderBuys(); go('buys'); });
   $('btn-buy-csv').addEventListener('click', function(){
@@ -9405,7 +9889,7 @@ var TOUR = [
 
   {view:'calc', sel:'#sup-presets',
    t:'Insumos e acessórios',
-   d:'Embalagem, etiqueta, argola, ímã, parafuso, tinta. Toque para somar da lista e ajuste o preço para o seu custo. A quantidade é <b>por peça</b>.'},
+   d:'Embalagem, etiqueta, argola, ímã, parafuso, tinta. Toque para somar da lista e ajuste o preço para o seu custo. A quantidade é <b>por peça</b>. Os insumos que você registrar em <b>Compras</b> aparecem aqui na frente, com o preço que você pagou de verdade.'},
 
   {view:'calc', sel:'#seg-mode',
    t:'O seu lucro',
@@ -9437,7 +9921,7 @@ var TOUR = [
 
   {view:'buys', sel:'#btn-add-buy',
    t:'Compras e notas',
-   d:'Fotografe a nota, anote o valor e a loja. É o que salva na hora da garantia e no fechamento do mês — e sai em planilha quando você precisar.'},
+   d:'<b>Nova</b> não abre uma ficha em branco: abre a sua prateleira. Toque no rolo ou no insumo que chegou e o app preenche descrição, preço, loja e link — você só confere o valor. O rolo comprado enche o estoque sozinho, e o insumo passa a aparecer na calculadora com o preço que você pagou.'},
 
   {view:'saved', sel:'#v-saved .sumbar',
    t:'Pedidos e orçamentos',
