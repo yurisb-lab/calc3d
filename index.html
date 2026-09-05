@@ -1590,6 +1590,23 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
 .pick .sb{display:block;font-size:11.5px;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
 .pick .sb.warn{color:var(--warn-ink)}
 .pick .vl{flex:none;font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:13.5px}
+.pick .prow.on{background:var(--hot-soft)}
+.pick .prow .qty{margin-left:2px}
+.pick .prow .qty button{width:32px}
+.pick .prow .qty input{width:34px}
+/* o passo aperta antes do nome e do preco: quem escolhe precisa LER os dois */
+@media (max-width:420px){
+  .pick .prow{gap:8px}
+  .pick .prow .qty button{width:28px;min-height:42px;font-size:16px}
+  .pick .prow .qty input{width:30px;min-height:42px}
+  .pick .prow .th{width:38px;height:38px}
+}
+/* a mesma miniatura de 44px do seletor, fora dele */
+.thumb44{flex:none;width:44px;height:44px;border-radius:9px;overflow:hidden;background:var(--surface3);border:1px solid var(--line);position:relative;display:block}
+.thumb44 img{width:100%;height:100%;object-fit:cover;display:block}
+.thumb44 .ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.thumb44 .ph svg{width:20px;height:20px;stroke:var(--ink3);fill:none;stroke-width:1.5;stroke-linejoin:round}
+.subhead{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink3);font-weight:700;margin:18px 0 4px}
 .picktools{display:flex;gap:8px;margin:0 0 10px}
 .picktools button{
   border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 13px;
@@ -2257,6 +2274,14 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
         <div id="pd-money"></div>
       </div>
 
+      <h2 class="section">Vendas<button type="button" class="help" data-h="vendas" aria-label="O que é isso?">?</button></h2>
+      <div class="card">
+        <div class="btnrow" style="margin-top:0">
+          <button type="button" class="btn primary" id="btn-pd-sell">Vendi este produto</button>
+        </div>
+        <div id="pd-sales"></div>
+      </div>
+
       <h2 class="section">Parâmetros salvos</h2>
       <div class="card">
         <div id="pd-params"></div>
@@ -2352,6 +2377,37 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
         <button type="button" class="btn" id="btn-pd-dup">Duplicar</button>
         <button type="button" class="btn danger" id="btn-pd-del">Excluir</button>
       </div>
+    </section>
+
+    <!-- ============ VENDA RÁPIDA ============
+         "Vendi este produto para a Maria" em uma tela. O produto já tem preço,
+         custo, gramas e tempo salvos: não há o que calcular de novo, só dizer
+         para quem, quantos e por quanto. O que sai daqui é um PEDIDO igual aos
+         outros — é ele que faz a venda aparecer na ficha do cliente, no
+         extrato e no resultado do mês, sem inventar um segundo registro. -->
+    <section class="view" id="v-sell" hidden>
+      <div class="detailhead">
+        <button type="button" class="btn ghost back" id="btn-back-sell">‹ Voltar</button>
+        <span class="t" id="sl-title">Venda rápida</span>
+      </div>
+      <div id="sell-body"></div>
+    </section>
+
+    <!-- ============ ESCOLHER DO CATÁLOGO ============
+         Montar um pedido de vários produtos sem passar pela calculadora uma vez
+         por peça. Sai daqui direto para o orçamento, onde já existem desconto,
+         frete, PDF e WhatsApp. -->
+    <section class="view" id="v-pickprod" hidden>
+      <div class="detailhead">
+        <button type="button" class="btn ghost back" id="btn-back-pickprod">‹ Voltar</button>
+        <span class="t" id="pp-title">Vender do catálogo</span>
+      </div>
+      <p class="viewintro" id="pp-intro"></p>
+      <div class="toolbar">
+        <input id="pp-search" type="search" placeholder="Buscar produto pelo nome...">
+      </div>
+      <div class="card" id="pp-list"></div>
+      <div id="pp-foot"></div>
     </section>
 
     <!-- ============ LINK PÚBLICO (vitrine) ============
@@ -2649,6 +2705,14 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
 
       <h2 class="section">Resumo</h2>
       <div class="card" id="cd-stats"></div>
+
+      <h2 class="section">O que esta pessoa compra<button type="button" class="help" data-h="oquecompra" aria-label="O que é isso?">?</button></h2>
+      <div class="card">
+        <div class="btnrow" style="margin-top:0">
+          <button type="button" class="btn primary" id="btn-cd-sell">Vender produtos do catálogo</button>
+        </div>
+        <div id="cd-products"></div>
+      </div>
 
       <h2 class="section">Histórico de pedidos</h2>
       <div class="card" id="cd-jobs"></div>
@@ -3330,6 +3394,8 @@ function addPhotos(files, target, msgEl, after){
 
 /* ============ ajuda (passe o mouse ou toque) ============ */
 var HELP = {
+  vendas:{t:'Vendas deste produto', d:'Sai dos pedidos, não de um registro à parte: cada venda aqui é um pedido ligado a uma ficha de cliente. Por isso mudar o status de um pedido muda este bloco junto. Só entra o que passou de Orçado — orçamento ainda é proposta, e aparece separado.', e:''},
+  oquecompra:{t:'O que esta pessoa compra', d:'Os itens de todos os pedidos dela, somados por produto. O histórico abaixo responde QUANDO ela comprou; este bloco responde O QUE ela leva — que é o que decide o próximo produto a oferecer. Desconto e frete do pedido não entram: eles são do pedido inteiro, não de um item.', e:''},
   paracliente:{t:'Para o cliente', d:'Tudo o que está NESTE bloco é o que a pessoa vê quando abre o link público: a descrição escrita para vender e os vídeos da peça girando, imprimindo ou em uso. As fotos e o seu preço de venda vêm dos blocos de cima. O resto da ficha — custo, margem, gramas, tempo, impressora — nunca sai do app.', e:''},
   waped:{t:'WhatsApp que recebe o pedido', d:'Quando o cliente termina de marcar as quantidades, o botão da vitrine abre o WhatsApp com o pedido já escrito. Ponha o número com DDD; o app completa o 55 do Brasil. Deixe em branco e o botão passa a copiar o pedido para a pessoa colar onde quiser.', e:'(41) 99999-0000'},
   linkpub:{t:'Link público', d:'Um endereço na internet com os produtos que você escolher: foto, vídeo, descrição, preço e um marcador de quantidade. Ele fica no ar até você tirar. Não é uma loja — não cobra nem processa pagamento; o pedido chega pelo WhatsApp e a venda continua na conversa, como já é hoje.', e:''},
@@ -3502,6 +3568,8 @@ var ROUTE = {
   data:      {v:'settings',  set:'data'},
   /* telas de detalhe: nao tem item proprio, acendem o item de onde vieram */
   productdetail:{v:'productdetail', nav:'products', t:'Produto',  s:'catálogo'},
+  sell:         {v:'sell',          nav:'products', t:'Venda rápida', s:'catálogo'},
+  pickprod:     {v:'pickprod',      nav:'clients',  t:'Vender do catálogo', s:'agenda'},
   buynew:       {v:'buynew',        nav:'buys',     t:'Nova compra', s:'o que chegou'},
   buydetail:    {v:'buydetail',     nav:'buys',     t:'Compra',   s:'compras'},
   clientdetail: {v:'clientdetail',  nav:'clients',  t:'Cliente',  s:'agenda'}
@@ -3627,6 +3695,8 @@ function go(id, opt){
   if(r.v === 'buynew') renderBuyNew();
   if(r.v === 'cadastros'){ showCad(cadTab); renderPrinters(); renderFilaments(); renderCats(); renderClients(); }
   if(r.v === 'clientdetail') renderClientDetail();
+  if(r.v === 'sell') renderSell();
+  if(r.v === 'pickprod') renderPickProd();
   if(r.v === 'dash') renderDash();
   if(r.v === 'settings') showSet(setTab);
   paintNavCounts();
@@ -6260,6 +6330,8 @@ function renderClientDetail(){
     });
   });
 
+  renderClientProducts(c);
+
   var wa = $('btn-cd-wa');
   wa.disabled = !waPhone(c.contact);
   wa.title = waPhone(c.contact) ? '' : 'Preencha o WhatsApp desta ficha.';
@@ -6373,14 +6445,196 @@ function productPerHour(p){
   var h = productHours(p);
   return h > 0 ? productMoney(p).profit/h : 0;
 }
-function productMoney(p){
+/* a conta do dinheiro por preco: uma formula so, usada pela ficha (com o preco
+   salvo) e pela venda (com o preco cobrado no dia). Duas copias dela um dia
+   discordariam — e o lucro do mes sairia de uma, a ficha da outra. */
+function productMoneyAt(p, price){
   var feeR = Math.min(0.95, Math.max(0, num(S.settings.fee)/100));
-  var price = productPrice(p);
+  price = num(price);
   var fee = price * feeR;
   var cost = num(p.cost);
   var profit = price - fee - cost;
   return {price:price, fee:fee, feeR:feeR, cost:cost, profit:profit,
           margin: price > 0 ? profit/price : 0, markup: cost > 0 ? profit/cost : 0};
+}
+function productMoney(p){ return productMoneyAt(p, productPrice(p)); }
+/* gramas POR PECA, igual ao productHours: o produto pode ter sido salvo com os
+   numeros da mesa cheia */
+function productGrams(p){
+  var q = Math.max(1, Math.round(num(p.qty)) || 1);
+  return p.scope === 'plate' ? num(p.grams)/q : num(p.grams);
+}
+/* os materiais que aparecem no orcamento e no PDF, lidos do que o produto
+   guardou — o mesmo texto que itemMaterial monta a partir da calculadora */
+function productMaterial(p){
+  var ids = (p.multi && (p.mats||[]).length)
+    ? p.mats.map(function(m){ return m.f; })
+    : [p.filament];
+  var out = [];
+  ids.forEach(function(id){
+    var f = S.filaments.filter(function(x){ return x.id === id; })[0];
+    var m = f && f.material ? String(f.material).trim() : '';
+    if(m && out.indexOf(m) < 0) out.push(m);
+  });
+  return out.join(' + ');
+}
+/* O produto vira um item de pedido sem passar pela calculadora: os numeros ja
+   estao salvos nele e refaze-los aqui seria uma segunda verdade. O que sai
+   daqui tem a MESMA forma do que makeItem() produz — por isso a lista de
+   salvos, o PDF, o extrato e o painel do mes leem os dois sem saber a
+   diferenca.
+
+   O 'calc' que vai junto e o que permite reabrir o item na calculadora depois.
+   Ele sai sempre no escopo de UMA peca: um produto salvo "da mesa toda" com 4
+   por mesa, vendido em 3 unidades, viraria 3 mesas se o escopo viajasse junto. */
+function productCalc(p, qty, unitPrice){
+  var div = p.scope === 'plate' ? Math.max(1, Math.round(num(p.qty)) || 1) : 1;
+  return {
+    piece: p.name || '',
+    grams: productGrams(p),
+    hours: productHours(p),
+    qty: qty,
+    waste: num(p.waste), fail: num(p.fail),
+    prep: num(p.prep), finish: num(p.finish),
+    extras: cloneExtras(p.extras),
+    printer: p.printer || '', filament: p.filament || '',
+    scope: 'unit',
+    perPlate: num(p.perPlate) > 0 ? String(Math.round(num(p.perPlate))) : '',
+    parts: num(p.parts) > 1 ? String(Math.round(num(p.parts))) : '',
+    mode: p.mode || 'margem', margin: num(p.margin),
+    multi: !!p.multi,
+    mats: cloneMats((p.mats||[]).map(function(m){ return {f:m.f, g:num(m.g)/div}; })),
+    purge: num(p.purge)/div,
+    /* de que rolo sai quanto: é o que daria baixa no estoque se um dia esta
+       venda passar por lá. Aqui ninguém desconta nada. */
+    use: productUse(p),
+    /* o preço que viaja é o COBRADO, não o do catálogo: reabrir na calculadora
+       um item vendido com desconto tem de mostrar o desconto, e não desfazê-lo */
+    priceSet: num(unitPrice) > 0 ? num(unitPrice) : num(p.priceSet),
+    suggested: num(p.price),
+    productId: p.id
+  };
+}
+/* gramas cobradas de cada rolo, por peca, ja com desperdicio e purga — a mesma
+   conta que o compute() faz, lida dos numeros salvos do produto */
+function productUse(p){
+  var div = p.scope === 'plate' ? Math.max(1, Math.round(num(p.qty)) || 1) : 1;
+  var waste = Math.max(0, num(p.waste)/100);
+  var rows = (p.multi && (p.mats||[]).length) ? p.mats : null;
+  var out = [];
+  if(rows){
+    var modeled = 0;
+    rows.forEach(function(m){ modeled += Math.max(0, num(m.g)); });
+    var purge = Math.max(0, num(p.purge));
+    rows.forEach(function(m){
+      if(!m.f) return;
+      var mg = Math.max(0, num(m.g));
+      var share = modeled > 0 ? mg/modeled : 1/rows.length;
+      var g = (mg*(1 + waste) + purge*share)/div;
+      var hit = null;
+      out.forEach(function(x){ if(x.id === m.f) hit = x; });
+      if(hit) hit.g += g; else out.push({id:m.f, g:g});
+    });
+    return out;
+  }
+  return p.filament ? [{id:p.filament, g:productGrams(p)*(1 + waste)}] : [];
+}
+function productItem(p, qty, unitPrice){
+  var q = Math.max(1, Math.round(num(qty)) || 1);
+  var m = productMoneyAt(p, unitPrice);
+  return {
+    id: uid(),
+    name: p.name || 'Produto',
+    qty: q, unit: m.price, cost: m.cost, profit: m.profit,
+    grams: productGrams(p), hours: productHours(p),
+    material: productMaterial(p),
+    productId: p.id,
+    calc: productCalc(p, q, m.price)
+  };
+}
+
+/* ============ o que ja foi vendido ============
+   Nenhuma venda e gravada dentro do produto nem dentro do cliente: as duas
+   telas abaixo LEEM os pedidos, do mesmo jeito que a ficha do cliente sempre
+   leu. Mudar o status de um pedido muda os dois lugares junto, e nao existe um
+   segundo numero para desencontrar do primeiro. */
+
+/* orcado ainda e proposta, nao venda — a mesma linha que o extrato e o painel
+   do mes ja tracam ("aprovado em diante: e o que de fato foi para a mesa") */
+function jobIsSale(j){ return jobStatus(j) !== 'orcado'; }
+/* produto renomeado conserta a grafia em todo o historico, como o nome do
+   cliente ja faz; item sem produto vale pelo nome que foi digitado */
+function itemLabel(it){
+  var p = it.productId ? S.products.filter(function(x){ return x.id === it.productId; })[0] : null;
+  return (p && String(p.name).trim()) || it.name || 'Sem nome';
+}
+/* a venda entra na lista com a data do pedido; ordena do mais recente */
+function byLastDesc(a,b){ return b.last - a.last; }
+
+/* quem ja levou este produto */
+function productSales(pid){
+  var o = {qty:0, revenue:0, profit:0, hours:0, n:0, last:0, openQty:0, openN:0, byClient:[]};
+  var by = {};
+  S.jobs.forEach(function(j){
+    var sale = jobIsSale(j), when = num(j.createdAt);
+    jobItems(j).forEach(function(it){
+      if(it.productId !== pid) return;
+      var q = itemQty(it), v = num(it.unit)*q;
+      if(!sale){ o.openQty += q; o.openN++; return; }
+      o.qty += q; o.revenue += v; o.profit += num(it.profit)*q; o.hours += num(it.hours)*q;
+      o.n++; o.last = Math.max(o.last, when);
+      var c = clientById(j.clientId);
+      var key = c ? c.id : ('nm:' + normName(j.client));
+      var e = by[key] || (by[key] = {id: c ? c.id : '',
+        name: c ? clientName(c) : (String(j.client||'').trim() || 'Sem cliente'),
+        qty:0, total:0, n:0, last:0});
+      e.qty += q; e.total += v; e.n++; e.last = Math.max(e.last, when);
+    });
+  });
+  o.byClient = Object.keys(by).map(function(k){ return by[k]; })
+    .sort(function(a,b){ return b.qty - a.qty || byLastDesc(a,b); });
+  return o;
+}
+
+/* o que esta pessoa compra. Mesmo agrupamento do painel do mes (topItems), com
+   o recorte de uma ficha so. */
+function clientProducts(id){
+  var by = {}, o = {list:[], qty:0, total:0, openQty:0, discounted:false};
+  clientJobs(id).forEach(function(j){
+    var sale = jobIsSale(j), when = num(j.createdAt);
+    if(jobTotals(j).disc > 0) o.discounted = true;
+    jobItems(j).forEach(function(it){
+      var key = it.productId || ('nm:' + normName(it.name));
+      var q = itemQty(it), v = num(it.unit)*q;
+      var e = by[key] || (by[key] = {pid: it.productId || '', name: itemLabel(it),
+        qty:0, total:0, n:0, last:0, openQty:0});
+      /* o nome segue o produto atual enquanto ele existir */
+      e.name = itemLabel(it);
+      if(sale){
+        e.qty += q; e.total += v; e.n++; e.last = Math.max(e.last, when);
+        o.qty += q; o.total += v;
+      } else { e.openQty += q; o.openQty += q; }
+    });
+  });
+  o.list = Object.keys(by).map(function(k){ return by[k]; })
+    .sort(function(a,b){ return b.qty - a.qty || b.total - a.total || byLastDesc(a,b); });
+  return o;
+}
+
+/* a venda pode ser de ontem: a lista e cortada em 200, entao o corte tem de
+   olhar a data, e nao a ordem em que os pedidos foram digitados */
+function jobInsert(j){
+  S.jobs.push(j);
+  S.jobs.sort(function(a,b){ return num(b.createdAt) - num(a.createdAt); });
+  if(S.jobs.length > 200) S.jobs.length = 200;
+  return j;
+}
+/* meio-dia local: a data escolhida no calendario nao pode virar o dia anterior
+   por causa do fuso na hora de virar carimbo */
+function isoStamp(iso){
+  var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso||''));
+  if(!m) return Date.now();
+  return new Date(+m[1], +m[2]-1, +m[3], 12, 0, 0).getTime();
 }
 function renderCatFilter(){
   var counts = {all:S.products.length, none:0};
@@ -6494,6 +6748,7 @@ function renderProductDetail(){
   renderGallery('pd-gal', p, renderProductDetail);
 
   renderMoneyBox(p, productMoney(p));
+  renderProductSales(p);
   renderParams(p);
   pdManualFill(p);
 }
@@ -8314,7 +8569,14 @@ function refreshAfterSync(coll){
   if(coll === 'categories'){ renderCats(); renderCatFilter(); fillCatSelect(); renderProducts(); }
   if(coll === 'products'){ renderCatFilter(); renderProducts(); if(current === 'productdetail') renderProductDetail(); }
   if(coll === 'buys'){ renderBuyFilter(); renderBuys(); if(current === 'buydetail') renderBuyDetail(); }
-  if(coll === 'jobs' && current === 'saved') renderSaved();
+  /* as duas fichas LEEM os pedidos: um pedido que chegou de outro aparelho muda
+     o que elas mostram, mesmo que nada nelas tenha sido tocado */
+  if(coll === 'jobs'){
+    if(current === 'saved') renderSaved();
+    if(current === 'clientdetail') renderClientDetail();
+    if(current === 'productdetail') renderProductSales(collById('products', pdId) || {id:pdId});
+  }
+  if(coll === 'clients' && current === 'clientdetail') renderClientDetail();
   if(current === 'dash') renderDash();
   render();
   updateSyncUI();
@@ -8833,6 +9095,18 @@ function bindClients(){
     go('calc');
   });
 
+  /* o caminho curto para o pedido de varias pecas: escolher no catalogo em vez
+     de passar pela calculadora uma vez por peca */
+  $('btn-cd-sell').addEventListener('click', function(){
+    var c = clientById(cdId);
+    if(!c) return;
+    openPickProd(c.id);
+  });
+  $('btn-back-pickprod').addEventListener('click', function(){
+    if(ppClientId && clientById(ppClientId)) openClient(ppClientId); else go('products');
+  });
+  bindSearch('pp-search', function(v){ ppQuery = v; renderPickProd(); });
+
   $('btn-cd-del').addEventListener('click', function(){
     var c = clientById(cdId);
     if(!c) return;
@@ -9019,6 +9293,20 @@ function bindProducts(){
   $('pd-vid-new').addEventListener('keydown', function(e){
     if(e.key === 'Enter'){ e.preventDefault(); pdAddVideo(); }
   });
+  /* a venda comeca na ficha do produto porque e ali que se esta olhando para
+     ele. O produto ja tem preco, custo e tempo salvos: falta so para quem. */
+  $('btn-pd-sell').addEventListener('click', function(){
+    var p = S.products.filter(function(x){return x.id===pdId;})[0];
+    if(!p) return;
+    pdCommitFields(p);
+    persist();
+    openSell(p.id, 'productdetail');
+  });
+  $('btn-back-sell').addEventListener('click', function(){
+    var id = sellPid;
+    sellDone = null;
+    if(id && collById('products', id)) openProduct(id); else go('products');
+  });
   $('btn-pd-share').addEventListener('click', function(){
     var p = S.products.filter(function(x){return x.id===pdId;})[0];
     if(!p) return;
@@ -9121,6 +9409,536 @@ function renderMoneyBox(p, m){
       ? '<div class="kv"><span>Lucro por hora de máquina'+helpBtn('lucrohora')+'</span><span class="v" style="color:'+(m.profit>=0?'var(--teal)':'var(--red)')+'">'+brl(productPerHour(p))+'/h</span></div>'
       : '')+
     (m.price <= 0 ? '<p class="note">Defina seu preço acima, ou abra na calculadora para o app sugerir um.</p>' : '');
+}
+
+/* ============ o bloco de vendas da ficha do produto ============ */
+function relDay(ms){
+  if(!(num(ms) > 0)) return '';
+  var d = Math.floor((Date.now() - num(ms))/86400000);
+  if(d <= 0) return 'hoje';
+  if(d === 1) return 'ontem';
+  if(d < 30) return 'há ' + d + ' dias';
+  var m = Math.round(d/30);
+  return m < 12 ? 'há ' + m + (m === 1 ? ' mês' : ' meses') : 'há mais de um ano';
+}
+function renderProductSales(p){
+  var el = $('pd-sales');
+  if(!el) return;
+  var s = productSales(p.id);
+  var out = '';
+
+  if(!s.n && !s.openN){
+    out = '<div class="empty" style="margin-top:14px"><span class="et">Nenhuma venda ainda</span>' +
+      '<span class="es">Toque em <b>Vendi este produto</b> quando vender. A venda entra como pedido: ' +
+      'aparece no histórico do cliente, no extrato dele e no resultado do mês.</span></div>';
+  } else {
+    if(s.n){
+      out += '<div class="mini" style="margin-top:14px">' +
+        '<div><span class="k">Vendidos</span><span class="v">' + dec(s.qty,0) + '</span></div>' +
+        '<div><span class="k">Faturado</span><span class="v">' + brl(s.revenue) + '</span></div>' +
+        '<div><span class="k">Lucro</span><span class="v' + (s.profit < 0 ? ' neg' : ' pos') + '">' + brl(s.profit) + '</span></div>' +
+        '<div><span class="k">Última venda</span><span class="v">' + esc(relDay(s.last) || '—') + '</span></div>' +
+      '</div>';
+    } else {
+      out += '<p class="note" style="margin:14px 0 0">Este produto ainda não foi vendido.</p>';
+    }
+    if(s.openN){
+      out += '<p class="note" style="margin:12px 0 0"><b>' + dec(s.openQty,0) + '</b> ' +
+        (s.openQty === 1 ? 'unidade está' : 'unidades estão') + ' em orçamento aberto — orçamento ainda é ' +
+        'proposta, então não entra nos números acima. ' +
+        '<button type="button" class="golink" data-pdgo="1">Ver os pedidos</button></p>';
+    }
+    if(s.byClient.length){
+      out += '<h3 class="subhead">Quem já levou</h3><div class="card bare">' +
+        s.byClient.map(function(e){
+          return '<div class="toprow">' +
+            '<span class="rk" style="width:auto;border-radius:999px;padding:0 7px">' + dec(e.qty,0) + '&times;</span>' +
+            '<span class="mid"><span class="nm">' + esc(e.name) + '</span>' +
+            '<span class="sb">' + esc((e.n === 1 ? '1 pedido' : e.n + ' pedidos') +
+              (relDay(e.last) ? ' · ' + relDay(e.last) : '')) + '</span></span>' +
+            '<span class="vl"><b>' + brl(e.total) + '</b>' +
+            (e.id ? '<span><button type="button" class="linkbtn" data-pdc="' + esc(e.id) + '">ver ficha</button></span>' : '') +
+            '</span></div>';
+        }).join('') + '</div>';
+    }
+    out += '<p class="dashnote">Nada disto fica gravado dentro do produto: sai dos pedidos, ' +
+      'como o histórico do cliente. Mudar o status de um pedido muda estes números junto. ' +
+      'Desconto e frete são do pedido inteiro e não entram no valor por produto.</p>';
+  }
+
+  el.innerHTML = out;
+  each(qsa(el, '[data-pdc]'), function(b){
+    b.addEventListener('click', function(){ openClient(b.getAttribute('data-pdc')); });
+  });
+  each(qsa(el, '[data-pdgo]'), function(b){
+    b.addEventListener('click', function(){
+      jobClientFilter = ''; jobFilter = 'orcado';
+      go('saved');
+    });
+  });
+}
+
+/* ============ o bloco de produtos da ficha do cliente ============ */
+function renderClientProducts(c){
+  var el = $('cd-products');
+  if(!el) return;
+  var r = clientProducts(c.id);
+  var out = '';
+
+  if(!r.list.length){
+    out = '<div class="empty" style="margin-top:14px"><span class="et">Nada comprado ainda</span>' +
+      '<span class="es">Toque em <b>Vender produtos do catálogo</b> para montar um pedido para esta ' +
+      'pessoa sem passar peça por peça pela calculadora.</span></div>';
+  } else {
+    out += '<div class="card bare" style="margin-top:14px">' + r.list.map(function(e){
+      var sub = [];
+      if(e.n) sub.push(e.n === 1 ? '1 pedido' : e.n + ' pedidos');
+      if(e.last) sub.push(relDay(e.last));
+      if(e.openQty) sub.push(dec(e.openQty,0) + ' em orçamento');
+      return '<div class="toprow">' +
+        '<span class="rk" style="width:auto;border-radius:999px;padding:0 7px">' +
+          (e.qty ? dec(e.qty,0) + '&times;' : '—') + '</span>' +
+        '<span class="mid"><span class="nm">' + esc(e.name) + '</span>' +
+        '<span class="sb">' + esc(sub.join(' · ')) + '</span></span>' +
+        '<span class="vl"><b>' + brl(e.total) + '</b>' +
+        (e.pid && collById('products', e.pid)
+          ? '<span><button type="button" class="linkbtn" data-cdp="' + esc(e.pid) + '">abrir</button></span>'
+          : '') +
+        '</span></div>';
+    }).join('') + '</div>';
+    out += '<p class="dashnote">Somado por produto, de todos os pedidos desta ficha. Só conta o que ' +
+      'passou de <b>Orçado</b>' + (r.openQty ? ' — o que ainda é orçamento aparece à parte na linha' : '') + '. ' +
+      (r.discounted ? 'Algum pedido teve desconto: ele é do pedido inteiro, então não entra no valor por produto. ' : '') +
+      'O total que ela pagou continua sendo o do <b>Resumo</b>, acima.</p>';
+  }
+
+  el.innerHTML = out;
+  each(qsa(el, '[data-cdp]'), function(b){
+    b.addEventListener('click', function(){ openProduct(b.getAttribute('data-cdp')); });
+  });
+}
+
+/* ============ venda rápida ============
+   Uma venda é um PEDIDO. Esta tela existe para não obrigar ninguém a refazer
+   na calculadora uma peça que já está calculada e salva no catálogo: ela
+   pergunta só o que muda de uma venda para a outra — para quem, quantos, por
+   quanto, quando — e grava o pedido pela porta de sempre. */
+var sellPid = null, sellBack = 'productdetail', sellDone = null, sellClientId = '';
+function sellProduct(){ return collById('products', sellPid); }
+function openSell(pid, back){
+  if(!collById('products', pid)) return;
+  sellPid = pid;
+  sellBack = ROUTE[back] ? back : 'productdetail';
+  sellDone = null;
+  sellClientId = '';
+  go('sell');
+}
+function slQty(){
+  var el = $('sl-qty');
+  var q = el ? Math.round(num(el.value)) : 1;
+  return q > 0 ? Math.min(9999, q) : 1;
+}
+function slPrice(){
+  var el = $('sl-price');
+  return el ? num(el.value) : 0;
+}
+function slStatus(){
+  var el = $('sl-status');
+  return (el && STATUS[el.value]) ? el.value : 'pago';
+}
+function slDate(){
+  var el = $('sl-date');
+  return (el && el.value) ? el.value : todayISO();
+}
+/* a ficha escolhida na lista, ou o nome digitado — que vira ficha ao gravar,
+   exatamente como acontece ao salvar um orçamento */
+function slClient(){
+  var c = clientById(sellClientId);
+  if(c) return c;
+  return null;
+}
+function slTypedName(){
+  var el = $('sl-client');
+  return el ? String(el.value).trim() : '';
+}
+/* o resumo em português do que o botão vai fazer: ninguém confirma o que não
+   entendeu, e uma venda gravada errada suja o resultado do mês */
+function slNote(){
+  var p = sellProduct();
+  if(!p) return '';
+  var q = slQty(), price = slPrice(), st = slStatus();
+  var m = productMoneyAt(p, price);
+  var li = [];
+  li.push('Entra em <b>Pedidos</b> como <b>' + STATUS[st].n + '</b>: ' + q + ' &times; <b>' +
+    esc(p.name || 'produto') + '</b>' + (price > 0 ? ' por <b>' + brl(price * q) + '</b>' : ' <b>sem valor</b>') + '.');
+
+  var c = slClient(), typed = slTypedName();
+  if(c){
+    var stc = clientStats(c.id);
+    li.push('Vai para o histórico de <b>' + esc(clientName(c)) + '</b>' +
+      (stc.n ? ' — ' + esc(clientSubtitle(stc)) : ' (primeira compra dela)') + '.');
+  } else if(typed){
+    li.push('<b>' + esc(typed) + '</b> vira uma ficha de cliente agora, e a venda entra no histórico dela.');
+  } else {
+    li.push('<b>Sem cliente</b>, a venda entra em Pedidos mas não vai para o histórico de ninguém.');
+  }
+
+  if(st === 'pago') li.push('Conta no resultado de <b>' + esc(ymLabel(slDate().slice(0,7))) + '</b>, com a data de hoje ou a que você escolher.');
+  else li.push('Fica <b>em aberto</b> na ficha até você marcar como Pago.');
+
+  if(price > 0) li.push('Lucro estimado <b>' + brl(m.profit * q) + '</b>' +
+    (m.fee > 0 ? ', já descontada a taxa de recebimento' : '') + '.');
+  /* dito em voz alta porque é a diferença entre esta tela e salvar um
+     orçamento, que desconta o rolo */
+  li.push('O estoque do rolo <b>não</b> é descontado por aqui.');
+  return li.join(' ');
+}
+function slRefreshNote(){
+  var n = $('sl-note-live');
+  if(n) n.innerHTML = slNote();
+}
+function slClientMsg(){
+  var el = $('sl-client-msg');
+  if(el) el.innerHTML = '';
+}
+function sellFormHtml(){
+  var p = sellProduct();
+  var price = productPrice(p);
+  var ph = (p.photos || [])[0];
+  var cat = catById(p.category);
+
+  var opts = '<option value="">— sem cliente —</option>' +
+    (S.clients||[]).slice().sort(function(a,b){
+      return String(a.name||'').localeCompare(String(b.name||''), 'pt-BR', {sensitivity:'base'});
+    }).map(function(c){
+      return '<option value="' + esc(c.id) + '"' + (c.id === sellClientId ? ' selected' : '') + '>' +
+        esc(clientName(c)) + '</option>';
+    }).join('');
+
+  return '<div class="card">' +
+    '<p class="bnwhat">' +
+      '<span class="thumb44">' +
+        (ph ? '<img data-photo="' + esc(ph) + '" data-kind="thumb" alt="">' : '') +
+        '<span class="ph">' + BOXSVG + '</span>' +
+      '</span>' +
+      '<span class="mid"><span class="nm">' + esc(p.name || 'Sem nome') + '</span>' +
+      '<span class="sb">' + esc(cat ? cat.name : 'sem categoria') +
+        (price > 0 ? ' · ' + brl(price) + ' cada' : ' · sem preço salvo') + '</span></span>' +
+    '</p>' +
+
+    '<div class="field">' +
+      '<label for="sl-client">Cliente <span class="hint">— escolha na lista ou digite um nome novo</span></label>' +
+      '<input id="sl-client" type="text" placeholder="Ex.: Maria da papelaria" autocomplete="off">' +
+      '<select id="sl-client-pick" style="margin-top:9px">' + opts + '</select>' +
+      '<p class="note" id="sl-client-msg" style="margin:8px 0 0"></p>' +
+    '</div>' +
+
+    '<div class="row">' +
+      '<div class="field"><label for="sl-qty">Quantos</label>' +
+        '<div class="bnqty"><div class="qty">' +
+          '<button type="button" data-slq="-1" aria-label="Diminuir">&minus;</button>' +
+          '<input id="sl-qty" type="text" inputmode="numeric" value="1">' +
+          '<button type="button" data-slq="1" aria-label="Aumentar">+</button>' +
+        '</div><span class="un" id="sl-un">' + esc(unitWord(1, Math.round(num(p.parts)) || 1)) + '</span></div></div>' +
+      '<div class="field"><label for="sl-price">Preço de cada <span class="hint">R$</span></label>' +
+        '<input id="sl-price" type="text" inputmode="decimal" placeholder="0,00" value="' +
+          esc(price > 0 ? dec(price,2) : '') + '"></div>' +
+    '</div>' +
+
+    '<div class="row">' +
+      '<div class="field"><label for="sl-date">Data da venda</label>' +
+        '<input id="sl-date" type="date" value="' + esc(todayISO()) + '"></div>' +
+      '<div class="field"><label for="sl-status">Em que pé está</label>' +
+        '<select id="sl-status">' + STATUS_ORDER.map(function(k){
+          return '<option value="' + k + '"' + (k === 'pago' ? ' selected' : '') + '>' + esc(STATUS[k].n) + '</option>';
+        }).join('') + '</select></div>' +
+    '</div>' +
+
+    '<div class="field" style="margin-bottom:0">' +
+      '<label for="sl-note">Observação <span class="hint">— fica no pedido, só você vê</span></label>' +
+      '<input id="sl-note" type="text" placeholder="Ex.: levou em preto, entrega na quinta">' +
+    '</div>' +
+
+    '<p class="note" id="sl-note-live" style="margin-top:14px">' + slNote() + '</p>' +
+    '<div class="btnrow" style="margin-top:14px">' +
+      '<button type="button" class="btn primary" id="btn-sl-ok">Registrar venda</button>' +
+    '</div>' +
+    '<p class="savenote">Os números da peça — custo, gramas e tempo — são os que já estão salvos ' +
+      'neste produto. Para mudá-los, abra o produto na calculadora.</p>' +
+  '</div>';
+}
+function sellDoneHtml(){
+  var j = sellDone, c = clientById(j.clientId);
+  var t = jobTotals(j);
+  var li = [];
+  li.push('Entrou em <b>Pedidos</b> como <b>' + esc(STATUS[jobStatus(j)].n) + '</b>: ' +
+    esc(jobLabel(j)) + ' — <b>' + brl(t.total) + '</b>.');
+  if(c) li.push('Está no histórico de <b>' + esc(clientName(c)) + '</b> e no extrato dela.');
+  if(jobStatus(j) === 'pago') li.push('Conta no resultado de <b>' + esc(ymLabel(String(j.paidAt||'').slice(0,7))) + '</b>.');
+  return '<div class="gcok"><ul style="margin-top:0"><li>' + li.join('</li><li>') + '</li></ul></div>' +
+    (c ? '<div class="btnrow"><button type="button" class="btn primary" id="sl-cli">Ver a ficha de ' + esc(clientName(c)) + '</button></div>' : '') +
+    '<div class="btnrow">' +
+      '<button type="button" class="btn" id="sl-job">Ver o pedido</button>' +
+      '<button type="button" class="btn" id="sl-more">Registrar outra venda</button>' +
+    '</div>' +
+    '<div class="btnrow"><button type="button" class="btn ghost" id="sl-back">Voltar ao produto</button></div>';
+}
+function renderSell(){
+  var el = $('sell-body');
+  if(!el) return;
+  var p = sellProduct();
+  if(!p){ go('products'); return; }
+  var t = $('sl-title');
+
+  if(sellDone){
+    if(t) t.textContent = 'Venda registrada';
+    el.innerHTML = sellDoneHtml();
+    slWire(el);
+    return;
+  }
+  if(t) t.textContent = 'Vendi ' + (p.name || 'este produto');
+  el.innerHTML = sellFormHtml();
+  slWire(el);
+  /* slNote() lê os campos do formulário: no primeiro desenho eles ainda não
+     existiam, então o resumo nascia dizendo "sem valor" para uma venda que já
+     tinha preço. Redesenhá-lo agora é o que faz o texto bater com a tela. */
+  slRefreshNote();
+  hydratePhotos(el);
+  var f = $('sl-client');
+  if(f) f.focus();
+}
+function slWire(el){
+  each(qsa(el, '[data-slq]'), function(b){
+    b.addEventListener('click', function(){
+      var inp = $('sl-qty');
+      if(!inp) return;
+      inp.value = Math.max(1, slQty() + (+b.getAttribute('data-slq')));
+      var u = $('sl-un');
+      if(u) u.textContent = unitWord(slQty(), Math.round(num(sellProduct().parts)) || 1);
+      slRefreshNote();
+    });
+  });
+  if($('sl-qty')) $('sl-qty').addEventListener('input', function(){
+    var u = $('sl-un');
+    if(u) u.textContent = unitWord(slQty(), Math.round(num(sellProduct().parts)) || 1);
+    slRefreshNote();
+  });
+  if($('sl-price')) $('sl-price').addEventListener('input', slRefreshNote);
+  if($('sl-date'))  $('sl-date').addEventListener('change', slRefreshNote);
+  if($('sl-status'))$('sl-status').addEventListener('change', slRefreshNote);
+  /* escolher na lista preenche o nome; digitar um nome que não é de ninguém
+     solta o vínculo e a ficha nasce ao gravar */
+  if($('sl-client-pick')) $('sl-client-pick').addEventListener('change', function(){
+    sellClientId = this.value;
+    var c = clientById(sellClientId);
+    var inp = $('sl-client');
+    if(inp) inp.value = c ? clientName(c) : '';
+    slRefreshNote();
+  });
+  if($('sl-client')) $('sl-client').addEventListener('input', function(){
+    var c = clientByName(this.value);
+    sellClientId = c ? c.id : '';
+    var sel = $('sl-client-pick');
+    if(sel) sel.value = sellClientId;
+    slRefreshNote();
+  });
+  if($('btn-sl-ok')) $('btn-sl-ok').addEventListener('click', sellSave);
+  if($('sl-cli')) $('sl-cli').addEventListener('click', function(){
+    if(sellDone && sellDone.clientId) openClient(sellDone.clientId);
+  });
+  if($('sl-job')) $('sl-job').addEventListener('click', function(){
+    if(!sellDone) return;
+    jobOpen[sellDone.id] = true;
+    jobClientFilter = ''; jobFilter = 'all';
+    go('saved');
+    var b = $('jb-' + sellDone.id);
+    if(b) b.scrollIntoView({block:'center'});
+  });
+  if($('sl-more')) $('sl-more').addEventListener('click', function(){
+    sellDone = null; sellClientId = '';
+    renderSell();
+  });
+  if($('sl-back')) $('sl-back').addEventListener('click', function(){
+    var id = sellPid;
+    sellDone = null;
+    openProduct(id);
+  });
+}
+function sellSave(){
+  var p = sellProduct();
+  if(!p) return;
+  var q = slQty(), price = slPrice(), st = slStatus(), iso = slDate();
+  if(!(price > 0) && !confirm('Registrar esta venda sem valor, como brinde?\n' +
+      'Ela vai entrar no mês com R$ 0,00 e o lucro sai negativo, no custo da peça.')) return;
+
+  var c = clientById(sellClientId) || clientEnsure(slTypedName(), '');
+  var it = productItem(p, q, price);
+  var o = {discount:0, discountType:'brl', shipping:0};
+  var t = orderTotals([it], o);
+
+  var j = jobInsert({
+    id:uid(), createdAt:isoStamp(iso), date:brDate(iso),
+    status:st, due:'', paidAt: st === 'pago' ? iso : '',
+    clientId: c ? c.id : '',
+    client: c ? clientName(c) : '', contact: c ? (c.contact || '') : '',
+    note: ($('sl-note') ? $('sl-note').value : ''),
+    discount:0, discountType:'brl', shipping:0,
+    items:[it],
+    subtotal:t.sub, total:t.total, cost:t.cost, profit:t.profit,
+    grams:t.grams, hours:t.hours, qty:t.qty,
+    piece:it.name, price:num(it.unit), productId:p.id,
+    /* a venda rápida NÃO mexe no estoque: quem vende peça pronta já descontou
+       o rolo quando imprimiu, e descontar de novo aqui tiraria filamento duas
+       vezes do mesmo rolo */
+    stockApplied:false
+  });
+
+  sellDone = j;
+  persist();
+  renderClients(); fillClientSelect(); renderSaved(); paintNavCounts();
+  renderSell();
+  window.scrollTo(0,0);
+}
+
+/* ============ vender do catálogo ============
+   Montar um pedido de vários produtos sem passar pela calculadora uma vez por
+   peça. Não salva nada: entrega os itens ao ORÇAMENTO, que já sabe fazer
+   desconto, frete, PDF, WhatsApp e salvar. */
+var ppQty = {}, ppQuery = '', ppClientId = '';
+function openPickProd(clientId){
+  ppQty = {}; ppQuery = ''; ppClientId = clientId || '';
+  var s = $('pp-search');
+  if(s) s.value = '';
+  go('pickprod');
+}
+function ppChosen(){
+  var out = [];
+  Object.keys(ppQty).forEach(function(id){
+    var p = collById('products', id), q = Math.round(num(ppQty[id]));
+    if(p && q > 0) out.push({p:p, q:q});
+  });
+  return out;
+}
+function renderPickProd(){
+  var el = $('pp-list');
+  if(!el) return;
+  var c = clientById(ppClientId);
+  var intro = $('pp-intro');
+  if(intro){
+    intro.innerHTML = c
+      ? 'Marque quantos de cada produto <b>' + esc(clientName(c)) + '</b> vai levar. ' +
+        'Eles entram no orçamento com o preço do catálogo, já ligados à ficha dela — ' +
+        'desconto, frete e o envio continuam sendo feitos lá.'
+      : 'Marque quantos de cada produto entram no pedido. Eles vão para o orçamento com o preço do catálogo.';
+  }
+
+  var list = sortedProducts().filter(function(p){
+    return hitsQuery(ppQuery, [p.name || '', (catById(p.category)||{}).name || '', p.note || '']);
+  });
+
+  el.innerHTML = list.length ? '<div class="pick">' + list.map(function(p){
+    var price = productPrice(p);
+    var ph = (p.photos || [])[0];
+    var cat = catById(p.category);
+    var q = Math.round(num(ppQty[p.id])) || 0;
+    var thumb = '<span class="th">' + (ph ? '<img data-photo="' + esc(ph) + '" data-kind="thumb" alt="">' : '') +
+      '<span class="ph">' + BOXSVG + '</span></span>';
+    if(!(price > 0)){
+      return '<div class="prow">' + thumb +
+        '<span class="mid"><span class="nm">' + esc(p.name || 'Sem nome') + '</span>' +
+        '<span class="sb warn">sem preço de venda — defina na ficha para poder vender</span></span>' +
+        '<span class="vl"><button type="button" class="linkbtn" data-ppo="' + esc(p.id) + '">abrir</button></span></div>';
+    }
+    return '<div class="prow' + (q > 0 ? ' on' : '') + '">' + thumb +
+      '<span class="mid"><span class="nm">' + esc(p.name || 'Sem nome') + '</span>' +
+      '<span class="sb">' + brl(price) + ' cada · ' + esc(cat ? cat.name : 'sem categoria') + '</span></span>' +
+      '<span class="qty"><button type="button" data-ppm="' + esc(p.id) + '" aria-label="Tirar um">&minus;</button>' +
+      '<input type="text" inputmode="numeric" data-ppq="' + esc(p.id) + '" value="' + q + '">' +
+      '<button type="button" data-ppp="' + esc(p.id) + '" aria-label="Somar um">+</button></span></div>';
+  }).join('') + '</div>' : (S.products.length
+    ? (ppQuery ? emptyFind(ppQuery, ' produto') : '')
+    : emptyBox('Catálogo vazio',
+        'Só dá para vender do catálogo o que já está nele. Cadastre o primeiro produto — ele guarda foto, preço, custo e tempo.',
+        'btn-add-product', '+ Novo produto'));
+
+  each(qsa(el, '[data-ppo]'), function(b){
+    b.addEventListener('click', function(){ openProduct(b.getAttribute('data-ppo')); });
+  });
+  each(qsa(el, '[data-ppm]'), function(b){
+    b.addEventListener('click', function(){ ppBump(b.getAttribute('data-ppm'), -1); });
+  });
+  each(qsa(el, '[data-ppp]'), function(b){
+    b.addEventListener('click', function(){ ppBump(b.getAttribute('data-ppp'), 1); });
+  });
+  each(qsa(el, '[data-ppq]'), function(inp){
+    inp.addEventListener('input', function(){
+      var id = inp.getAttribute('data-ppq');
+      var v = Math.round(num(inp.value));
+      ppQty[id] = v > 0 ? Math.min(9999, v) : 0;
+      renderPickFoot();
+    });
+  });
+  hydratePhotos(el);
+  renderPickFoot();
+}
+function ppBump(id, d){
+  var v = (Math.round(num(ppQty[id])) || 0) + d;
+  ppQty[id] = v > 0 ? Math.min(9999, v) : 0;
+  var inp = qsa($('pp-list'), '[data-ppq="' + id + '"]')[0];
+  if(inp) inp.value = ppQty[id];
+  var row = inp && inp.closest ? inp.closest('.prow') : null;
+  if(row) row.classList.toggle('on', ppQty[id] > 0);
+  renderPickFoot();
+}
+function renderPickFoot(){
+  var el = $('pp-foot');
+  if(!el) return;
+  var chosen = ppChosen(), n = 0, tot = 0;
+  chosen.forEach(function(x){ n += x.q; tot += productPrice(x.p) * x.q; });
+  var c = clientById(ppClientId);
+
+  el.innerHTML = '<div class="card" style="margin-top:14px">' +
+    '<p class="note" style="margin:0">' + (n
+      ? '<b>' + n + (n === 1 ? ' peça' : ' peças') + '</b> · ' + brl(tot) +
+        (c ? ' para <b>' + esc(clientName(c)) + '</b>' : '') + '.'
+      : 'Nenhum produto marcado ainda.') + '</p>' +
+    '<div class="btnrow" style="margin-top:12px">' +
+      '<button type="button" class="btn primary" id="btn-pp-ok"' + (n ? '' : ' disabled') + '>' +
+        'Levar para o orçamento</button>' +
+    '</div>' +
+    '<p class="savenote">Nada é salvo aqui. Os itens vão para o orçamento em montagem, onde entram ' +
+      'desconto, frete e o botão de salvar — que é o que grava o pedido e desconta o rolo.</p>' +
+  '</div>';
+  var b = $('btn-pp-ok');
+  if(b) b.addEventListener('click', ppConfirm);
+}
+function ppConfirm(){
+  var chosen = ppChosen();
+  if(!chosen.length) return;
+  var c = clientById(ppClientId), o = S.order;
+  var same = c && o.clientId === c.id;
+  var dirty = o.items.length || String(o.client||'').trim() || String(o.contact||'').trim() ||
+              String(o.note||'').trim() || num(o.discount) || num(o.shipping);
+
+  if(!same && dirty){
+    if(!confirm('Já existe um orçamento em montagem' +
+      (String(o.client||'').trim() ? ' para ' + String(o.client).trim() : '') +
+      '.\nComeçar um novo' + (c ? ' para ' + clientName(c) : '') + ' descarta o que estava lá. Continuar?')) return;
+    S.order = JSON.parse(JSON.stringify(DEFAULTS.order));
+    editingItemId = null;
+    var sm = $('save-msg');
+    if(sm) sm.innerHTML = '';
+  }
+  if(c) orderSetClient(c);
+  chosen.forEach(function(x){
+    S.order.items.push(productItem(x.p, x.q, productPrice(x.p)));
+  });
+  ppQty = {};
+  persist();
+  refreshOrderInputs(); fillClientSelect(); renderOrder();
+  go('calc');
+  var el = $('ord-items');
+  if(el) el.scrollIntoView({block:'center'});
 }
 
 /* ============ link público (vitrine) ============
