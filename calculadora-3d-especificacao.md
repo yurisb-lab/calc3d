@@ -1043,3 +1043,112 @@ preço que um dia discorda do catálogo), sinal e pagamento parcial (a esteira d
 status é binária no que importa — pago ou não), fila de produção e aviso de
 cliente que sumiu. A venda rápida registra o que **já** aconteceu; decidir o
 que oferecer continua sendo de quem imprime.
+
+---
+
+# Adendo — v11 (setembro/2026)
+
+O link público da v8 resolveu o "manda uma foto?": um endereço com alguns
+produtos escolhidos a dedo. Não resolvia o "me manda tudo o que vocês têm" —
+e é isso que o cliente pede quando gosta da primeira peça. Quarenta produtos
+empilhados numa coluna só não são um catálogo: são rolagem. E o pedido que
+voltava dizia *o quê*, mas não dizia **quem**: nome, WhatsApp e e-mail
+ficavam para a conversa que ainda não tinha começado.
+
+Continua não sendo uma loja: não há pagamento, conta de cliente, cupom nem
+estoque reservado. É a vitrine da rua — organizada, com um carrinho e com o
+nome de quem tocou a campainha.
+
+## 42. O que entrou
+
+### 42.1 O catálogo inteiro num link (Negócio › Link público)
+O seletor *O que entra neste link* passou a ter dois lados: **Escolher
+produtos**, como sempre, e **Catálogo inteiro**.
+
+O inteiro não é uma lista com todos marcados: é a **ausência** de lista. O que
+você cadastrar depois entra junto no próximo *Atualizar link* — sem voltar
+aqui para marcar caixinha nova. Continua sendo você quem publica: nada vai ao
+ar sozinho.
+
+O que sai do app ganhou as **categorias** (só nome e cor, só as que têm produto
+publicado). Elas não são enfeite: são o que permite à página se arrumar em
+prateleiras e oferecer o filtro. A fronteira do que é publicado segue sendo uma
+função só, `linkPayload` — custo, margem, gramas, tempo, impressora, filamento,
+fornecedor e cliente continuam sem caminho até lá.
+
+### 42.2 A página do cliente vira catálogo
+`p.html` foi reescrita em três degraus, do menos para o mais compromisso:
+
+- **A prateleira** — grade de cartões (foto, nome, preço, um botão), com busca
+  e filtro por categoria colados no alto da tela. Sem filtro nenhum, o catálogo
+  se apresenta arrumado: cada categoria com o seu título. A busca ignora acento,
+  porque ninguém digita "decoração" com til no celular.
+- **A ficha** — o produto aberto: galeria que desliza, toque para ampliar,
+  descrição, vídeos que tocam ali dentro e a quantidade.
+- **O pedido** — o carrinho com as linhas, o total e, no segundo passo, quem
+  está pedindo.
+
+Escolher e preencher são dois humores diferentes: por isso o formulário só
+aparece depois da lista pronta, e nunca antes.
+
+### 42.3 Nome, WhatsApp e e-mail — obrigatórios
+Os três são pedidos com aviso que explica o que falta ("faltou o DDD ou um
+número"), não com um "campo inválido" vermelho. Ficam guardados no aparelho de
+quem pediu: o segundo pedido não redigita nada.
+
+Eles vão escritos na mensagem que abre no WhatsApp, junto com a lista, o total
+e o número do pedido. A mensagem **é** a entrega — o resto é comodidade.
+
+### 42.4 Pedidos do catálogo (Negócio › Pedidos do catálogo)
+A outra ponta. Além de abrir o WhatsApp, a página grava uma cópia do pedido em
+`pub/{código}/orders`, e a tela nova mostra o que chegou: quem é, como falar
+com a pessoa (WhatsApp e e-mail clicáveis), o recado dela e a lista.
+
+- **Levar para o orçamento** monta o orçamento em montagem com o cliente já
+  preenchido — criando a ficha se ela não existir, e aproveitando o e-mail, que
+  é o campo que ninguém volta na ficha para preencher. Os itens entram com o
+  preço que a pessoa **viu**; produto que saiu do catálogo aparece marcado e
+  fica de fora, escrito na observação.
+- Nada aqui grava venda. O pedido vira **orçamento**, e é salvar o orçamento
+  que registra a venda, desconta o rolo e alimenta o painel do mês. Duas portas
+  para o mesmo dinheiro seriam duas verdades sobre ele.
+- **Atendido** é uma marca no próprio pedido: os dois aparelhos veem a mesma
+  coisa sem ninguém avisar o outro.
+
+### 42.5 "Testar o recebimento"
+Gravar em `pub` sem conta é o único caminho que o app não consegue exercitar
+por dentro — ele está sempre logado. O botão faz exatamente o que o celular do
+cliente faz: uma escrita pela API REST, sem login, e apaga a sonda em seguida.
+Sem ele, uma regra faltando apareceria como silêncio, que é o pior jeito de um
+pedido se perder.
+
+## 43. Regras do Firestore
+
+`pub/{código}/orders` é a única regra do projeto que deixa **criar** sem conta.
+Ela é estreita: só criar (nunca ler, mudar ou apagar sem login), só os campos
+do pedido, nome obrigatório, no máximo 100 itens. O resto de `pub` continua
+como estava — documento e fotos abertos para leitura, escrita só sua.
+
+A pasta `pub/{código}/{document=**}` recursiva **saiu**: ela deixaria o pedido
+de um cliente à vista de qualquer pessoa com o link. As regras novas estão no
+`FIREBASE.md` e precisam ser publicadas para os pedidos aparecerem no app.
+
+## 44. Compatibilidade
+
+Links publicados antes continuam abrindo: sem `cats` no documento, as
+categorias saem dos próprios produtos. Nenhum preço, conta ou tela de cálculo
+mudou; nenhum campo novo entra em produto, cliente ou pedido salvo. O único
+campo novo do link é `all`, que nasce desligado — quem não tocar nele continua
+com os produtos que escolheu.
+
+Sem publicar as regras novas, nada quebra e nada se perde: o pedido continua
+chegando pelo WhatsApp, só não aparece na tela nova. É o que o *Testar o
+recebimento* diz, com todas as letras, em vez de deixar a tela vazia mentindo.
+
+## 45. Continua fora do escopo
+
+Tudo o que já estava fora, e, do lado do catálogo: pagamento, cupom, conta de
+cliente, estoque reservado, frete por CEP, domínio próprio, contador de visitas
+e resposta automática ao pedido. A venda continua terminando na conversa — o
+catálogo só evita que ela **comece** com vinte fotos soltas, o preço repetido
+de cabeça e um "com quem eu falo?".
