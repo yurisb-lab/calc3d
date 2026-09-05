@@ -968,6 +968,12 @@ body.menu-open{overflow:hidden}
 }
 .rail-foot button:hover{color:var(--on-chrome)}
 .rail-foot button svg{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+/* a data do arquivo que este aparelho está rodando: some no meio do rodapé
+   até alguém ir procurar por ela */
+.rail-ver{
+  margin:0;padding:2px 0 9px;
+  font-size:10.5px;letter-spacing:.02em;color:var(--on-chrome-2);opacity:.8;
+}
 
 /* cortina atras da gaveta */
 .scrim{
@@ -1829,6 +1835,7 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
       <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.2a2.5 2.5 0 114 2.1c-.9.6-1.6 1-1.6 2"/><line x1="12" y1="16.8" x2="12" y2="16.81"/></svg>
       Rever o tutorial
     </button>
+    <p class="rail-ver" id="rail-ver" hidden></p>
   </div>
 </aside>
 <div class="scrim" id="scrim"></div>
@@ -10105,6 +10112,31 @@ if('serviceWorker' in navigator && window.isSecureContext){
     navigator.serviceWorker.register('sw.js').catch(function(){});
   });
 }
+
+/* Marcador de versão, no pé do menu. Responde uma pergunta só: "este aparelho
+   já pegou a versão nova?". O service worker serve a página com rede primeiro,
+   então quase sempre a resposta é sim — mas quando não é (sem rede, ou o HTML
+   ainda preso alguns minutos no cache do navegador), esta linha diz sem rodeios
+   qual arquivo está rodando, e dá para comparar com a hora da última publicação.
+
+   A data vem do Last-Modified do próprio index.html: muda sozinha a cada
+   publicação, sem ninguém precisar lembrar de subir um número à mão. Se o
+   servidor não mandar o cabeçalho, o navegador devolve a hora de agora — e uma
+   data que é sempre "agora" mentiria justamente na hora de conferir. É o que a
+   janela de dez segundos descarta; ela é simétrica porque um relógio atrasado
+   no aparelho joga a publicação para o futuro sem que a data em si esteja
+   errada. */
+(function(){
+  var el = $('rail-ver');
+  if(!el) return;
+  var d = new Date(document.lastModified);
+  if(isNaN(d.getTime()) || Math.abs(Date.now() - d.getTime()) < 10000) return;
+  try{
+    el.textContent = 'versão ' + d.toLocaleDateString('pt-BR') + ' ' +
+      d.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+  }catch(e){ return; }
+  el.hidden = false;
+})();
 
 buildNav();
 placeStrip();
