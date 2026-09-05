@@ -50,12 +50,33 @@ service cloud.firestore {
     match /orgs/empresa/{document=**} {
       allow read, write: if request.auth != null;
     }
-    // vitrines: o link público que o cliente abre sem ter conta nenhuma.
+
+    // catálogos publicados: o link que o cliente abre sem ter conta nenhuma.
     // Só entra aqui o que VOCÊ mandou publicar, e só você pode escrever.
-    match /pub/{code}/{document=**} {
+    match /pub/{code} {
       allow read: if true;
       allow write: if request.auth != null;
+
+      // as fotos dos produtos publicados
+      match /photos/{id} {
+        allow read: if true;
+        allow write: if request.auth != null;
+      }
+
+      // os pedidos que o cliente monta e envia. Ele pode CRIAR o dele;
+      // ler, mudar e apagar continua sendo só seu — o pedido de um cliente
+      // não pode ficar à vista de quem tem o link.
+      match /orders/{id} {
+        allow read, update, delete: if request.auth != null;
+        allow create: if request.resource.data.keys().hasOnly(
+                           ['at','code','name','fone','mail','note','n','total','from','items','probe'])
+                      && request.resource.data.name is string
+                      && request.resource.data.name.size() > 0
+                      && request.resource.data.name.size() < 120
+                      && request.resource.data.items.size() <= 100;
+      }
     }
+
     // pasta antiga, de quando cada conta guardava tudo separado
     match /users/{uid}/{document=**} {
       allow read, write: if request.auth != null && request.auth.uid == uid;
@@ -70,11 +91,26 @@ precisa publicar estas regras **antes** de abrir o app atualizado — senão o
 app avisa que "o Firestore recusou o acesso".
 
 A pasta `pub` é a **única** aberta para a internet, e é assim de propósito: o
-link público precisa abrir no celular de quem não tem conta. O código da
-vitrine tem 10 letras sorteadas — quem não recebeu o link não acha a página —,
+link público precisa abrir no celular de quem não tem conta. O código do
+catálogo tem 10 letras sorteadas — quem não recebeu o link não acha a página —,
 e **nada** de custo, margem, gramas, tempo ou impressora é gravado ali: só nome,
-descrição, fotos, vídeos e o seu preço de venda dos produtos que você marcou.
-Tirou o link do ar, o documento é apagado e o endereço deixa de existir.
+descrição, fotos, vídeos, categorias e o seu preço de venda dos produtos que
+você publicou. Tirou o link do ar, o documento é apagado e o endereço deixa de
+existir.
+
+### Pedidos que chegam pelo link
+
+A regra de `pub/{code}/orders` é a única do projeto que deixa **criar** um
+documento sem conta — é ela que faz o carrinho do cliente chegar em **Negócio ›
+Pedidos do catálogo**. Ela é estreita de propósito: só criar (nunca ler, mudar
+ou apagar), só os campos do pedido, nome obrigatório e no máximo 100 itens.
+Quem tem o link manda o pedido dele; ninguém enxerga o pedido de ninguém.
+
+**Sem esta parte, nada se perde**: o pedido continua chegando no seu WhatsApp,
+que é como ele sempre chegou — só não aparece dentro do app. Para conferir sem
+depender de um cliente de verdade, use **Testar o recebimento**, naquela tela:
+o app manda um pedido de mentira exatamente como o celular do cliente manda,
+diz se passou e apaga a sonda em seguida.
 
 Sem esta parte das regras, o app avisa na hora de publicar que "o Firestore
 recusou a publicação".
@@ -123,23 +159,26 @@ Se cada conta já tinha dados da versão antiga: a primeira que entrar leva os
 dela para a empresa; o que estava na outra continua guardado na pasta antiga
 dela e pode ser trazido com **Backup › Exportar** e **Backup › Importar**.
 
-### O link público (vitrine)
+### O link público (catálogo)
 
-Em **Negócio › Link público** você escolhe produtos do catálogo e recebe um
-endereço para mandar no WhatsApp — algo como
-`https://yurisb-lab.github.io/calc3d/p.html?v=k7m2pq9xrb`. Quem abrir vê as
-fotos, os vídeos, a descrição e o preço, marca a quantidade que quer e devolve
-o pedido pronto no seu WhatsApp.
+Em **Negócio › Link público** você escolhe produtos do catálogo — ou marca
+**Catálogo inteiro** — e recebe um endereço para mandar no WhatsApp, algo como
+`https://yurisb-lab.github.io/calc3d/p.html?v=k7m2pq9xrb`. Quem abrir busca,
+filtra por categoria, vê as fotos, os vídeos, a descrição e o preço, monta o
+carrinho e envia o pedido com o nome, o WhatsApp e o e-mail dele. O pedido
+chega no seu WhatsApp e também em **Negócio › Pedidos do catálogo**, onde vira
+orçamento com um toque.
 
-- A vitrine é a página `p.html`, que fica ao lado do app. Ela não pede login,
-  não usa o SDK do Firebase (lê o Firestore direto, para abrir rápido no 4G) e
-  não instala nada no celular do cliente.
+- O catálogo é a página `p.html`, que fica ao lado do app. Ela não pede login,
+  não usa o SDK do Firebase (fala com o Firestore direto pela API REST, para
+  abrir rápido no 4G) e não instala nada no celular do cliente.
 - **Publicar** exige estar conectado à nuvem: é a sua conta que grava em `pub`.
 - **Tirar do ar** apaga o documento e as fotos publicadas; o endereço passa a
   mostrar "este link não está mais no ar".
-- Mudou a foto, o preço ou a descrição de um produto? Toque em **Atualizar
-  link** — a vitrine não acompanha o catálogo sozinha, para você não publicar
-  sem querer um preço que ainda estava sendo mexido.
+- Mudou a foto, o preço ou a descrição de um produto — ou cadastrou um produto
+  novo num link de **catálogo inteiro**? Toque em **Atualizar link**: a página
+  não acompanha o catálogo sozinha, para você não publicar sem querer um preço
+  que ainda estava sendo mexido.
 
 ### Sair da nuvem
 No mesmo painel, **"Usar só neste aparelho, sem nuvem"**. Nada é apagado, e o
@@ -166,8 +205,9 @@ orgs/empresa/
   photos/{id}            fotos: miniatura + imagem, em JPEG comprimido
   links/{id}             links públicos (quais produtos, título, WhatsApp)
 
-pub/{codigo}             a vitrine publicada, aberta para qualquer pessoa
+pub/{codigo}             o catálogo publicado, aberto para qualquer pessoa
   photos/{id}            cópia pública só das fotos dos produtos publicados
+  orders/{id}            pedidos enviados pelos clientes (só você lê)
 ```
 
 Cada foto é um documento separado, comprimido para caber com folga no limite de

@@ -1547,6 +1547,39 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
 }
 .airpill .d{width:7px;height:7px;border-radius:50%;background:currentColor;flex:none}
 .airpill.on{color:var(--ok-ink);background:var(--ok-bg);border-color:var(--ok-line)}
+.airpill.hot{color:var(--acc-ink);background:var(--acc-bg);border-color:var(--acc-line)}
+
+/* pedidos que chegaram pelo link público. Um pedido é uma pessoa querendo
+   comprar: o cartão põe primeiro o nome e como falar com ela, depois a lista.
+   O que ele NÃO faz é virar um segundo registro de venda — o pedido daqui
+   vira orçamento, e é o orçamento que grava a venda. */
+.inb{
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+  box-shadow:var(--sh-1);padding:14px var(--pad);margin-bottom:12px;
+}
+.inb.novo{border-color:var(--acc-line);box-shadow:var(--sh-2)}
+.inb-hd{display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap}
+.inb-hd .mid{flex:1;min-width:55%}
+.inb-nm{display:block;font-size:15.5px;font-weight:700;letter-spacing:-.01em}
+.inb-when{display:block;font-size:12px;color:var(--ink3);margin-top:2px}
+.inb-vl{flex:none;text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:15.5px}
+.inb-vl .s{display:block;font-size:11px;font-weight:600;color:var(--ink3);font-family:inherit;letter-spacing:.06em;text-transform:uppercase}
+.inb-con{display:flex;flex-wrap:wrap;gap:8px;margin-top:11px}
+.inb-con a,.inb-con span{
+  display:inline-flex;align-items:center;gap:6px;background:var(--surface2);
+  border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:12.5px;
+  font-weight:600;color:var(--ink2);text-decoration:none;
+}
+.inb-con a:hover{border-color:var(--line2);color:var(--ink)}
+.inb-it{margin-top:12px;border-top:1px dashed var(--line);padding-top:10px}
+.inb-it .r{display:flex;justify-content:space-between;gap:12px;font-size:13.5px;padding:3px 0;color:var(--ink2)}
+.inb-it .r b{font-weight:600;color:var(--ink)}
+.inb-it .r .q{font-family:'IBM Plex Mono',monospace;flex:none;color:var(--ink3)}
+.inb-it .r.gone b{color:var(--err-ink)}
+.inb-say{
+  margin-top:11px;background:var(--surface2);border:1px solid var(--line);border-left:3px solid var(--acc-line);
+  border-radius:var(--r-xs);padding:9px 12px;font-size:13.5px;color:var(--ink2);white-space:pre-wrap;
+}
 
 /* o endereço, para copiar com o polegar */
 .urlbox{
@@ -2419,7 +2452,7 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
     <section class="view" id="v-share" hidden>
       <div id="shr-list-wrap">
         <h2 class="section ptitle">Link público</h2>
-        <p class="viewintro">Escolha produtos do catálogo e gere um endereço para mandar no WhatsApp ou colar na bio. Quem abrir vê fotos, vídeos, descrição e preço, marca a quantidade que quer e devolve o pedido pronto para você. Ainda não é um site — é um link seu, que sai do ar quando você quiser.</p>
+        <p class="viewintro">Um endereço para mandar no WhatsApp ou colar na bio, com os produtos que você escolher — ou com o <b>catálogo inteiro</b>, separado por categoria. Quem abrir busca, filtra, vê fotos, vídeos, descrição e preço, monta o carrinho e devolve o pedido com o nome, o WhatsApp e o e-mail dele. O que chegar aparece em <button type="button" class="golink" data-go="inbox">Pedidos do catálogo</button>.</p>
         <div class="toolbar">
           <input id="shr-search" type="search" placeholder="Buscar link pelo nome...">
           <button type="button" class="btn primary" id="btn-add-link">+ Novo link</button>
@@ -2453,9 +2486,19 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
         <h2 class="section">Produtos no link</h2>
         <div class="card">
           <div class="field">
-            <input id="shr-pfind" type="search" placeholder="Buscar produto...">
+            <label>O que entra neste link</label>
+            <div class="seg" id="seg-shr-all">
+              <button type="button" data-v="pick" aria-pressed="true">Escolher produtos</button>
+              <button type="button" data-v="all" aria-pressed="false">Catálogo inteiro</button>
+            </div>
           </div>
-          <div id="shr-pick"></div>
+          <div id="shr-allnote" hidden></div>
+          <div id="shr-pickwrap">
+            <div class="field">
+              <input id="shr-pfind" type="search" placeholder="Buscar produto...">
+            </div>
+            <div id="shr-pick"></div>
+          </div>
         </div>
 
         <h2 class="section">Como o cliente pede</h2>
@@ -2487,6 +2530,23 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
           <button type="button" class="btn danger" id="btn-shr-del">Excluir link</button>
         </div>
       </div>
+    </section>
+
+    <!-- ============ PEDIDOS DO CATÁLOGO ============
+         A caixa de entrada do link público. O cliente monta o carrinho na
+         página, escreve nome, WhatsApp e e-mail e envia: a mensagem cai no
+         WhatsApp e o mesmo pedido é gravado na pasta pública, que só a sua
+         conta lê. Aqui ele vira orçamento com um toque — e nada é gravado
+         como venda antes disso. -->
+    <section class="view" id="v-inbox" hidden>
+      <h2 class="section ptitle">Pedidos do catálogo</h2>
+      <p class="viewintro">O que as pessoas montaram no seu <button type="button" class="golink" data-go="share">link público</button> e mandaram: quem é, como falar com ela e o que ela quer. Um toque leva tudo para o orçamento, com o cliente já preenchido.</p>
+      <div class="toolbar">
+        <button type="button" class="btn primary" id="btn-inb-load">Buscar pedidos</button>
+        <button type="button" class="btn" id="btn-inb-test">Testar o recebimento</button>
+      </div>
+      <div id="inb-msg"></div>
+      <div id="inb-list"></div>
     </section>
 
     <!-- ============ COMPRAS / NOTAS ============ -->
@@ -3512,6 +3572,7 @@ var ICO = {
   biz:'<line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="17" x2="20" y2="17"/><circle cx="9" cy="7" r="2.5"/><circle cx="15" cy="17" r="2.5"/>',
   app:'<rect x="6" y="2.5" width="12" height="19" rx="2.6"/><line x1="10.4" y1="18.4" x2="13.6" y2="18.4"/>',
   data:'<ellipse cx="12" cy="6" rx="7.6" ry="3"/><path d="M4.4 6v12c0 1.66 3.4 3 7.6 3s7.6-1.34 7.6-3V6"/><path d="M4.4 12c0 1.66 3.4 3 7.6 3s7.6-1.34 7.6-3"/>',
+  inbox:'<path d="M3.5 13.2L6 5.2a1.6 1.6 0 011.5-1.1h9a1.6 1.6 0 011.5 1.1l2.5 8"/><path d="M3.5 13.2h4l1.2 2.4h6.6l1.2-2.4h4v4.6a2 2 0 01-2 2H5.5a2 2 0 01-2-2z"/>',
   share:'<circle cx="18" cy="5.5" r="2.8"/><circle cx="6" cy="12" r="2.8"/><circle cx="18" cy="18.5" r="2.8"/><line x1="8.4" y1="10.7" x2="15.6" y2="6.8"/><line x1="8.4" y1="13.3" x2="15.6" y2="17.2"/>',
   add:'<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
   down:'<path d="M12 3.5v11"/><path d="M7.6 10.4L12 14.8l4.4-4.4"/><path d="M4.5 17v3.5h15V17"/>',
@@ -3534,7 +3595,8 @@ var NAV = [
   {g:'Negócio', items:[
     {id:'dash',      t:'Painel do mês',  s:'como o mês está indo',  kw:'painel dashboard faturamento resumo mes graficos'},
     {id:'products',  t:'Produtos',       s:'seu catálogo',          kw:'catalogo pecas itens produto'},
-    {id:'share',     t:'Link público',   s:'vitrine para o cliente', kw:'link publico vitrine compartilhar catalogo online site loja whatsapp pedido divulgar'},
+    {id:'share',     t:'Link público',   s:'catálogo para o cliente', kw:'link publico vitrine compartilhar catalogo online site loja whatsapp pedido divulgar'},
+    {id:'inbox',     t:'Pedidos do catálogo', s:'o que chegou pelo link', kw:'pedidos recebidos caixa entrada carrinho cliente vitrine link site encomenda'},
     {id:'buys',      t:'Compras',        s:'material que entrou',   kw:'compras gastos material nota entrada despesa'},
     {id:'clients',   t:'Clientes',       s:'sua agenda',            kw:'clientes agenda contatos whatsapp telefone'}
   ]},
@@ -3558,6 +3620,7 @@ var ROUTE = {
   dash:      {v:'dash'},
   products:  {v:'products'},
   share:     {v:'share'},
+  inbox:     {v:'inbox'},
   buys:      {v:'buys'},
   clients:   {v:'cadastros', cad:'clients'},
   printers:  {v:'cadastros', cad:'printers'},
@@ -3647,7 +3710,7 @@ function buildNav(){
 function paintNavCounts(){
   if(typeof S === 'undefined' || !S) return;
   var m = {saved:(S.jobs||[]).length, products:(S.products||[]).length, buys:(S.buys||[]).length,
-           share:(S.links||[]).length,
+           share:(S.links||[]).length, inbox:(INB && INB.list ? INB.list.length : 0),
            clients:(S.clients||[]).length, printers:(S.printers||[]).length,
            filaments:(S.filaments||[]).length, cats:(S.categories||[]).length};
   Object.keys(m).forEach(function(k){
@@ -3691,6 +3754,7 @@ function go(id, opt){
   if(r.v === 'saved') renderSaved();
   if(r.v === 'products'){ renderCatFilter(); renderProducts(); renderCats(); }
   if(r.v === 'share') renderShare();
+  if(r.v === 'inbox') openInbox();
   if(r.v === 'buys'){ renderBuyFilter(); renderBuys(); }
   if(r.v === 'buynew') renderBuyNew();
   if(r.v === 'cadastros'){ showCad(cadTab); renderPrinters(); renderFilaments(); renderCats(); renderClients(); }
@@ -9955,7 +10019,7 @@ function linkCode(){
   return out;
 }
 function newLink(){
-  return {id:uid(), code:linkCode(), title:'', intro:'', items:[], wa:'',
+  return {id:uid(), code:linkCode(), title:'', intro:'', items:[], all:false, wa:'',
           showPrices:true, publishedAt:0, pubPhotos:[],
           createdAt:Date.now(), updatedAt:Date.now()};
 }
@@ -9967,7 +10031,12 @@ function stampDate(ms){
   return brDate(d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'));
 }
 function curLink(){ return linkById(lnkId); }
+/* Um link é um punhado de produtos escolhidos a dedo — OU o catálogo inteiro.
+   O inteiro não é uma lista com todos marcados: é a ausência de lista. O que
+   entrou no catálogo depois vai junto no próximo *Atualizar link*, sem ter de
+   voltar aqui para marcar caixinha nenhuma. */
 function linkProducts(l){
+  if(l.all) return S.products.slice().sort(byProductName);
   return (l.items || []).map(function(pid){
     return S.products.filter(function(p){ return p.id === pid; })[0];
   }).filter(Boolean);
@@ -9975,6 +10044,7 @@ function linkProducts(l){
 function linkTitle(l){
   var t = String(l.title || '').trim();
   if(t) return t;
+  if(l.all) return 'Catálogo completo';
   var ps = linkProducts(l);
   if(ps.length === 1) return ps[0].name || 'Produto';
   if(ps.length > 1) return ps.length + ' produtos';
@@ -9996,28 +10066,40 @@ function pubPhotoDoc(code, id){ return SYNC.F.doc(SYNC.db, 'pub', code, 'photos'
 /* O QUE SAI DAQUI. Esta função é a fronteira: se um campo não está escrito
    aqui, ele não chega ao cliente. Vale reler antes de mexer. */
 function linkPayload(l){
-  var st = S.settings;
+  var st = S.settings, used = {};
   var items = linkProducts(l).map(function(p){
     var c = catById(p.category);
+    if(c) used[c.id] = true;
     return {
       id:        String(p.id),
       name:      String(p.name || 'Produto'),
       desc:      String(p.pubDesc || ''),
       cat:       c ? String(c.name) : '',
+      catId:     c ? String(c.id) : '',
       catColor:  c ? safeColor(c.color, '#8A95A2') : '',
       price:     l.showPrices ? num(productPrice(p)) : 0,
       photos:    (p.photos || []).slice(0, PHOTO_MAX).map(String),
       videos:    (p.videos || []).map(safeUrl).filter(Boolean)
     };
   });
+  /* as categorias viajam junto para o catálogo poder se arrumar em prateleiras
+     e oferecer o filtro. Só as que têm produto publicado, na ordem alfabética
+     que o cliente espera — nome e cor, nada além disso. */
+  var cats = S.categories.filter(function(c){ return used[c.id]; })
+    .map(function(c){
+      return {id:String(c.id), name:String(c.name || ''), color:safeColor(c.color, '#8A95A2')};
+    })
+    .sort(function(a,b){ return a.name.localeCompare(b.name, 'pt-BR', {sensitivity:'base'}); });
   return {
-    v:1, at:Date.now(),
-    title:      String(l.title || '').trim() || (items.length === 1 ? items[0].name : 'Catálogo'),
+    v:2, at:Date.now(),
+    title:      String(l.title || '').trim() ||
+                (l.all ? 'Catálogo completo' : (items.length === 1 ? items[0].name : 'Catálogo')),
     intro:      String(l.intro || ''),
     biz:        String(st.biz || ''),
     contact:    String(st.contact || ''),
     wa:         String(l.wa || ''),
     showPrices: !!l.showPrices,
+    cats:       cats,
     items:      items
   };
 }
@@ -10184,7 +10266,21 @@ function renderShareEdit(l){
   ['btn-shr-copy','btn-shr-open','btn-shr-wa','btn-shr-off'].forEach(function(id){ $(id).disabled = !on; });
   $('btn-shr-pub').disabled = !pubHosted();
 
-  renderPick(l);
+  setSeg('seg-shr-all', l.all ? 'all' : 'pick');
+  $('shr-pickwrap').hidden = !!l.all;
+  $('shr-allnote').hidden  = !l.all;
+  if(l.all){
+    var n = S.products.length;
+    $('shr-allnote').innerHTML = n
+      ? '<p class="note" style="margin:0">Os <b>' + n + (n === 1 ? ' produto</b> do catálogo entra' : ' produtos</b> do catálogo entram') +
+        ' neste link, separados por categoria na página do cliente. Cadastrou um produto novo? Ele entra no próximo <b>' +
+        (on ? 'Atualizar link' : 'Publicar link') + '</b>.</p>'
+      : emptyBox('Catálogo vazio',
+          'Este link publica o catálogo inteiro — e ele ainda não tem nenhum produto.',
+          'btn-add-product', '+ Novo produto');
+  } else {
+    renderPick(l);
+  }
 }
 
 function renderPick(l){
@@ -10293,6 +10389,15 @@ function bindShare(){
     pickQuery = this.value.trim();
     var l = curLink(); if(l) renderPick(l);
   });
+  each(qsa($('seg-shr-all'), 'button'), function(b){
+    b.addEventListener('click', function(){
+      var l = curLink(); if(!l) return;
+      l.all = b.getAttribute('data-v') === 'all';
+      l.updatedAt = Date.now();
+      persist();
+      renderShareEdit(l);
+    });
+  });
   each(qsa($('seg-shr-price'), 'button'), function(b){
     b.addEventListener('click', function(){
       var l = curLink(); if(!l) return;
@@ -10338,7 +10443,9 @@ function bindShare(){
 /* atalho da ficha do produto: um link só com aquele produto, pronto para mandar */
 function shareThisProduct(p){
   var l = S.links.filter(function(x){
-    return (x.items || []).length === 1 && x.items[0] === p.id;
+    /* um link de catálogo inteiro guarda os itens antigos por baixo: se ele
+       entrasse aqui, "gerar link deste produto" devolveria a loja toda */
+    return !x.all && (x.items || []).length === 1 && x.items[0] === p.id;
   })[0];
   if(!l){
     l = newLink();
@@ -10349,6 +10456,353 @@ function shareThisProduct(p){
     persist();
   }
   openLink(l.id);
+}
+
+/* ============ pedidos do catálogo (caixa de entrada) ============
+   A outra ponta do link público. A página do cliente manda o pedido pelo
+   WhatsApp E grava uma cópia em `pub/{código}/orders` — a mensagem é a
+   entrega, esta tela é a comodidade: o pedido chega escrito, com nome,
+   WhatsApp e e-mail, e vira orçamento sem ninguém redigitar.
+
+   Nada aqui grava venda: o pedido vira ORÇAMENTO, e é salvar o orçamento que
+   registra a venda, desconta o rolo e alimenta o painel do mês. Duas portas
+   para o mesmo registro seria duas verdades sobre o mesmo dinheiro. */
+var INB = {list:[], at:0, busy:false, msg:''};
+var INBSEEN = 'calc3d-pedidos-vistos';
+
+function inbSeen(){
+  try { return num(localStorage.getItem(INBSEEN)); } catch(e){ return 0; }
+}
+function inbMarkSeen(ms){
+  try { localStorage.setItem(INBSEEN, String(Math.round(num(ms)))); } catch(e){}
+}
+function inbMsg(html){
+  var el = $('inb-msg');
+  if(el) el.innerHTML = html || '';
+}
+function inbNo(o){ return String(o.id || '').slice(-6).toUpperCase(); }
+/* "hoje às 14:32" diz mais do que uma data completa para quem abre a tela
+   várias vezes por dia */
+function inbWhen(ms){
+  var t = num(ms);
+  if(!t) return 'sem data';
+  var d = new Date(t), now = new Date();
+  var hm = String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+  function dayKey(x){ return x.getFullYear() + '-' + x.getMonth() + '-' + x.getDate(); }
+  if(dayKey(d) === dayKey(now)) return 'hoje às ' + hm;
+  var y = new Date(now.getTime() - 86400000);
+  if(dayKey(d) === dayKey(y)) return 'ontem às ' + hm;
+  return String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0') +
+         (d.getFullYear() !== now.getFullYear() ? '/' + d.getFullYear() : '') + ' às ' + hm;
+}
+function inbTotal(o){
+  var v = num(o.total);
+  if(v > 0) return v;
+  return (o.items || []).reduce(function(a, it){ return a + num(it.price) * num(it.qty); }, 0);
+}
+function inbCount(o){
+  var n = Math.round(num(o.n));
+  if(n > 0) return n;
+  return (o.items || []).reduce(function(a, it){ return a + Math.round(num(it.qty)); }, 0);
+}
+function inbDoc(o){ return SYNC.F.doc(SYNC.db, 'pub', o.code, 'orders', o.id); }
+
+function openInbox(){
+  renderInbox();
+  /* buscar sozinho na primeira visita da sessão: quem abre esta tela quer ver
+     pedido, não apertar um botão para ver pedido */
+  if(!INB.at && !INB.busy && online() && (S.links || []).length) inbLoad();
+}
+
+function inbLoad(){
+  if(!online()){
+    inbMsg('<div class="alert">Para ver os pedidos é preciso estar conectado à nuvem. Entre na sua conta em <button type="button" class="golink" data-go="data">Ajustes › Meus dados</button>.</div>');
+    return;
+  }
+  var links = (S.links || []).slice();
+  if(!links.length){ renderInbox(); return; }
+  var F = SYNC.F, db = SYNC.db;
+  INB.busy = true;
+  inbMsg('<div class="gcok"><span class="spin"></span> Buscando pedidos...</div>');
+
+  Promise.all(links.map(function(l){
+    return F.getDocs(F.collection(db, 'pub', l.code, 'orders')).then(function(snap){
+      var out = [];
+      snap.forEach(function(d){
+        var o = d.data() || {};
+        o.id = d.id; o.code = l.code; o.linkId = l.id;
+        out.push(o);
+      });
+      return out;
+    }).catch(function(){ return []; });
+  })).then(function(rows){
+    var all = [];
+    rows.forEach(function(r){ all = all.concat(r); });
+    /* a sonda do "Testar o recebimento" não é pedido de ninguém: some daqui e
+       do banco assim que for vista */
+    all.filter(function(o){ return o.probe; }).forEach(function(o){
+      F.deleteDoc(inbDoc(o)).catch(function(){});
+    });
+    INB.list = all.filter(function(o){ return !o.probe; })
+                  .sort(function(a,b){ return num(b.at) - num(a.at); });
+    INB.at = Date.now();
+    INB.busy = false;
+    inbMsg('');
+    renderInbox();
+    paintNavCounts();
+    var newest = INB.list.length ? num(INB.list[0].at) : 0;
+    if(newest > inbSeen()) setTimeout(function(){ inbMarkSeen(newest); }, 1500);
+  }).catch(function(e){
+    INB.busy = false;
+    inbMsg('<div class="alert">Não deu para buscar os pedidos agora: ' +
+      esc((e && (e.code || e.message)) || 'erro') + '. Verifique a conexão e tente de novo.</div>');
+  });
+}
+
+function renderInbox(){
+  var el = $('inb-list');
+  if(!el) return;
+  $('btn-inb-load').textContent = INB.busy ? 'Buscando...' : (INB.at ? 'Buscar de novo' : 'Buscar pedidos');
+  $('btn-inb-load').disabled = INB.busy;
+  $('btn-inb-test').disabled = INB.busy || !(S.links || []).filter(function(l){ return num(l.publishedAt) > 0; }).length;
+
+  if(!(S.links || []).length){
+    el.innerHTML = emptyBox('Nenhum link no ar',
+      'Os pedidos desta tela nascem no link público: o cliente abre o endereço, monta o carrinho, escreve nome, WhatsApp e e-mail e envia. Crie o link primeiro.',
+      'btn-inb-go-share', 'Ir para o link público');
+    var b = qsa(el, '[data-empty-go="btn-inb-go-share"]')[0];
+    if(b) b.addEventListener('click', function(){ go('share'); });
+    return;
+  }
+  if(!INB.list.length){
+    el.innerHTML = INB.at
+      ? emptyBox('Nenhum pedido ainda',
+          'Ninguém enviou pedido pelo link até agora. Quando alguém enviar, ele aparece aqui — e a mensagem chega no seu WhatsApp na mesma hora. ' +
+          'Para conferir se o caminho está aberto, use <b>Testar o recebimento</b>.')
+      : emptyBox('Pedidos do catálogo',
+          'Toque em <b>Buscar pedidos</b> para ver o que chegou pelo seu link público.');
+    return;
+  }
+
+  var seen = inbSeen();
+  el.innerHTML = INB.list.map(function(o){ return inbCard(o, seen); }).join('');
+
+  each(qsa(el, '[data-inb-order]'), function(b){
+    b.addEventListener('click', function(){ inbToOrder(inbById(b.getAttribute('data-inb-order'))); });
+  });
+  each(qsa(el, '[data-inb-wa]'), function(b){
+    b.addEventListener('click', function(){ inbReply(inbById(b.getAttribute('data-inb-wa'))); });
+  });
+  each(qsa(el, '[data-inb-done]'), function(b){
+    b.addEventListener('click', function(){ inbDone(inbById(b.getAttribute('data-inb-done'))); });
+  });
+  each(qsa(el, '[data-inb-del]'), function(b){
+    b.addEventListener('click', function(){ inbDrop(inbById(b.getAttribute('data-inb-del'))); });
+  });
+}
+function inbById(id){
+  return INB.list.filter(function(o){ return o.id === id; })[0] || null;
+}
+
+function inbCard(o, seen){
+  var tot = inbTotal(o), n = inbCount(o), id = esc(o.id);
+  var novo = num(o.at) > seen && !o.done;
+  var wa = waPhone(o.fone);
+  var items = (o.items || []).map(function(it){
+    var p = S.products.filter(function(x){ return x.id === it.id; })[0];
+    var q = Math.round(num(it.qty)) || 1, pr = num(it.price);
+    return '<span class="r' + (p ? '' : ' gone') + '">' +
+        '<b>' + esc(it.name || 'Produto') + (p ? '' : ' — não está mais no catálogo') + '</b>' +
+        '<span class="q">' + q + (pr > 0 ? ' × ' + brl(pr) + ' = ' + brl(q * pr) : ' un.') + '</span>' +
+      '</span>';
+  }).join('');
+
+  return '<div class="inb' + (novo ? ' novo' : '') + '">' +
+    '<div class="inb-hd">' +
+      '<span class="mid">' +
+        '<span class="inb-nm">' + esc(o.name || 'Sem nome') + '</span>' +
+        '<span class="inb-when">' + esc(inbWhen(o.at)) + ' · nº ' + esc(inbNo(o)) + '</span>' +
+      '</span>' +
+      (novo ? '<span class="airpill hot"><span class="d"></span>Novo</span>' : '') +
+      (o.done ? '<span class="airpill on"><span class="d"></span>Atendido</span>' : '') +
+      '<span class="inb-vl">' + (tot > 0 ? brl(tot) : '—') +
+        '<span class="s">' + n + (n === 1 ? ' item' : ' itens') + '</span></span>' +
+    '</div>' +
+    '<div class="inb-con">' +
+      (o.fone ? (wa
+        ? '<a href="https://wa.me/' + esc(wa) + '" target="_blank" rel="noopener">' + esc(o.fone) + '</a>'
+        : '<span>' + esc(o.fone) + '</span>') : '') +
+      (o.mail ? '<a href="mailto:' + esc(o.mail) + '">' + esc(o.mail) + '</a>' : '') +
+    '</div>' +
+    (o.note ? '<div class="inb-say">' + esc(o.note) + '</div>' : '') +
+    '<div class="inb-it">' + items + '</div>' +
+    '<div class="btnrow" style="margin-top:12px">' +
+      '<button type="button" class="btn primary" data-inb-order="' + id + '">Levar para o orçamento</button>' +
+      (wa ? '<button type="button" class="btn" data-inb-wa="' + id + '">Responder</button>' : '') +
+    '</div>' +
+    '<div class="btnrow" style="margin-top:8px">' +
+      (o.done ? '' : '<button type="button" class="btn ghost" data-inb-done="' + id + '">Marcar como atendido</button>') +
+      '<button type="button" class="btn ghost" data-inb-del="' + id + '">Apagar</button>' +
+    '</div>' +
+  '</div>';
+}
+
+/* o pedido vira o orçamento em montagem: cliente preenchido, itens com o preço
+   que a pessoa VIU no catálogo, e o recado dela na observação */
+function inbToOrder(o){
+  if(!o) return;
+  var miss = [], rows = [];
+  (o.items || []).forEach(function(it){
+    var p = S.products.filter(function(x){ return x.id === it.id; })[0];
+    if(!p){ miss.push(it.name || 'produto'); return; }
+    rows.push({p:p, q:Math.max(1, Math.round(num(it.qty)) || 1), price:num(it.price)});
+  });
+  if(!rows.length){
+    inbMsg('<div class="alert">Nenhum produto deste pedido está no catálogo hoje — nada para levar. Monte o orçamento na calculadora.</div>');
+    return;
+  }
+  var od = S.order;
+  var dirty = od.items.length || String(od.client||'').trim() || String(od.contact||'').trim() ||
+              String(od.note||'').trim() || num(od.discount) || num(od.shipping);
+  if(dirty && !confirm('Já existe um orçamento em montagem' +
+      (String(od.client||'').trim() ? ' para ' + String(od.client).trim() : '') +
+      '.\nAbrir o pedido de ' + (o.name || 'cliente') + ' descarta o que estava lá. Continuar?')) return;
+
+  S.order = JSON.parse(JSON.stringify(DEFAULTS.order));
+  editingItemId = null;
+  var sm = $('save-msg');
+  if(sm) sm.innerHTML = '';
+
+  var c = clientEnsure(o.name, o.fone);
+  if(c){
+    /* o e-mail veio junto: a ficha do cliente tem esse campo e ele costuma
+       ficar vazio para sempre porque ninguém volta lá para preencher */
+    if(!String(c.email||'').trim() && String(o.mail||'').trim()){
+      c.email = String(o.mail).trim();
+      c.updatedAt = Date.now();
+    }
+    orderSetClient(c);
+  } else {
+    S.order.client = String(o.name || '');
+    S.order.contact = String(o.fone || '');
+  }
+  S.order.note = (String(o.note || '').trim() ? String(o.note).trim() + '\n' : '') +
+                 'Pedido nº ' + inbNo(o) + ', recebido pelo link público em ' + inbWhen(o.at) + '.' +
+                 (miss.length ? '\nFora do catálogo hoje: ' + miss.join(', ') + '.' : '');
+  rows.forEach(function(r){
+    S.order.items.push(productItem(r.p, r.q, r.price > 0 ? r.price : productPrice(r.p)));
+  });
+  persist();
+  refreshOrderInputs(); fillClientSelect(); renderOrder();
+  inbDone(o, true);
+  go('calc');
+  var el = $('ord-items');
+  if(el) el.scrollIntoView({block:'center'});
+}
+
+function inbReply(o){
+  if(!o) return;
+  var st = S.settings, tot = inbTotal(o);
+  var l = ['*' + (st.biz || 'L.Y.K.E 3D') + '*', ''];
+  l.push('Oi, ' + String(o.name || '').split(' ')[0] + '! Recebi o seu pedido nº ' + inbNo(o) + ':');
+  (o.items || []).forEach(function(it){
+    var q = Math.round(num(it.qty)) || 1, pr = num(it.price);
+    l.push('• ' + (it.name || 'Produto') + ' — ' + q + (pr > 0 ? ' × ' + brl(pr) + ' = ' + brl(q * pr) : ' un.'));
+  });
+  if(tot > 0) l.push('', '*Total: ' + brl(tot) + '*');
+  l.push('', 'Já vou confirmar prazo e forma de entrega com você.');
+  waOpen(l.join('\n'), o.fone);
+}
+
+/* atendido é uma marca no próprio pedido: os dois aparelhos veem a mesma coisa
+   sem que ninguém precise avisar o outro */
+function inbDone(o, quiet){
+  if(!o || o.done) return;
+  o.done = Date.now();
+  if(online()){
+    SYNC.F.setDoc(inbDoc(o), {done:o.done}, {merge:true}).catch(function(){});
+  }
+  renderInbox();
+  if(!quiet) inbMsg('<div class="gcok">Pedido de <b>' + esc(o.name || 'cliente') + '</b> marcado como atendido.</div>');
+}
+
+function inbDrop(o){
+  if(!o) return;
+  if(!confirm('Apagar o pedido de ' + (o.name || 'cliente') + '? Ele some daqui e da nuvem — a mensagem que chegou no seu WhatsApp continua lá.')) return;
+  if(!online()){
+    inbMsg('<div class="alert">Sem conexão com a nuvem não dá para apagar agora. Conecte-se e tente de novo.</div>');
+    return;
+  }
+  SYNC.F.deleteDoc(inbDoc(o)).then(function(){
+    INB.list = INB.list.filter(function(x){ return x.id !== o.id; });
+    renderInbox();
+    paintNavCounts();
+    inbMsg('<div class="gcok">Pedido apagado.</div>');
+  }).catch(function(e){
+    inbMsg('<div class="alert">Não deu para apagar: ' + esc((e && (e.code || e.message)) || 'erro') + '.</div>');
+  });
+}
+
+/* ---- o pedido chega mesmo? ----
+   Gravar em `pub` sem conta é o único caminho que o app não consegue testar
+   por dentro: ele SEMPRE está logado. Então este botão faz exatamente o que o
+   celular do cliente faz — uma escrita pela API REST, sem login — e apaga a
+   sonda em seguida. Sem ele, uma regra faltando só apareceria como silêncio. */
+function fsWrap(v){
+  if(typeof v === 'number')  return {doubleValue:v};
+  if(typeof v === 'boolean') return {booleanValue:v};
+  if(Object.prototype.toString.call(v) === '[object Array]') return {arrayValue:{values:v.map(fsWrap)}};
+  if(v && typeof v === 'object'){
+    var f = {};
+    Object.keys(v).forEach(function(k){ f[k] = fsWrap(v[k]); });
+    return {mapValue:{fields:f}};
+  }
+  return {stringValue:String(v == null ? '' : v)};
+}
+function inbTest(){
+  var l = (S.links || []).filter(function(x){ return num(x.publishedAt) > 0; })[0];
+  if(!l){
+    inbMsg('<div class="alert">Publique um link primeiro: é dentro dele que o pedido é gravado.</div>');
+    return;
+  }
+  var cfg = SYNC.cfg || {};
+  if(!cfg.apiKey || !cfg.projectId){
+    inbMsg('<div class="alert">Sem a configuração do Firebase não dá para testar. Entre na sua conta em <button type="button" class="golink" data-go="data">Ajustes › Meus dados</button>.</div>');
+    return;
+  }
+  var id = 'teste' + Date.now().toString(36);
+  var url = 'https://firestore.googleapis.com/v1/projects/' + encodeURIComponent(cfg.projectId) +
+            '/databases/(default)/documents/pub/' + encodeURIComponent(l.code) +
+            '/orders?documentId=' + encodeURIComponent(id) + '&key=' + encodeURIComponent(cfg.apiKey);
+  inbMsg('<div class="gcok"><span class="spin"></span> Mandando um pedido de mentira, do jeito que o cliente manda...</div>');
+
+  fetch(url, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({fields: fsWrap({
+      probe:true, at:Date.now(), code:l.code,
+      name:'Teste do app', fone:'', mail:'', note:'', n:0, total:0, items:[]
+    }).mapValue.fields})
+  }).then(function(r){
+    if(r.ok){
+      if(online()){
+        SYNC.F.deleteDoc(SYNC.F.doc(SYNC.db, 'pub', l.code, 'orders', id)).catch(function(){});
+      }
+      inbMsg('<div class="gcok"><b>Caminho aberto.</b> Um pedido enviado pelo link cai aqui nesta tela. (O teste já foi apagado.)</div>');
+      return;
+    }
+    inbMsg('<div class="alert"><b>O pedido do cliente não seria gravado.</b> ' +
+      'O Firestore recusou a escrita em <b>/pub/{código}/orders</b> — falta publicar as regras novas, ' +
+      'que estão no arquivo <b>FIREBASE.md</b>, em "Pedidos que chegam pelo link". ' +
+      'Enquanto isso o pedido continua chegando pelo <b>WhatsApp</b>, que é como ele sempre chegou: ' +
+      'só não aparece nesta tela.</div>');
+  }).catch(function(){
+    inbMsg('<div class="alert">Não deu para testar agora — parece falta de conexão. Tente de novo.</div>');
+  });
+}
+
+function bindInbox(){
+  $('btn-inb-load').addEventListener('click', inbLoad);
+  $('btn-inb-test').addEventListener('click', inbTest);
 }
 
 function bindBuys(){
@@ -10968,6 +11422,7 @@ bindProductImport();
 bindOrder();
 bindProducts();
 bindShare();
+bindInbox();
 bindClients();
 bindBuys();
 bindSaved();
