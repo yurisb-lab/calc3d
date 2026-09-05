@@ -937,3 +937,109 @@ insumos com estoque e baixa automática (o insumo continua sendo uma linha do
 cálculo, e o preço vem do que você pagou), leitura da nota fiscal por foto,
 pedido de compra e lista de reposição automática. O app registra o que **já**
 entrou — decidir o que comprar continua sendo de quem imprime.
+
+
+---
+
+# Adendo — v10 (setembro/2026)
+
+O app sabia calcular a peça, guardar o produto e guardar o cliente — e não
+ligava um no outro. A ficha do produto respondia *quanto ele deveria render por
+hora* e não sabia dizer se alguém já o tinha comprado. A ficha do cliente
+respondia *quanto essa pessoa pagou* e não sabia dizer **o quê** ela leva. E
+vender um produto já calculado exigia refazê-lo na calculadora, campo por
+campo, para chegar a um preço que já estava salvo ali.
+
+O dado que faltava não faltava: cada item de pedido guarda o `productId` desde
+que o catálogo existe. Ninguém nunca o tinha mostrado.
+
+A v10 fecha esse circuito nos dois sentidos, **sem criar registro novo**.
+
+## 38. O que entrou
+
+### 38.1 Venda rápida (ficha do produto › *Vendi este produto*)
+Uma tela com o que muda de uma venda para a outra — **para quem, quantos, por
+quanto, quando e em que pé está** — e nada mais. O produto já tem preço, custo,
+gramas e tempo salvos: refazer essa conta aqui criaria uma segunda verdade.
+
+O que sai daqui é um **pedido igual aos outros**. É isso que faz a venda
+aparecer sozinha no histórico do cliente, no extrato dele, na lista de Pedidos
+e no resultado do mês, sem uma linha de código nova em nenhum desses lugares.
+
+- **Cliente**: escolhe na lista ou digita um nome novo — que vira ficha ao
+  gravar, exatamente como já acontece ao salvar um orçamento.
+- **Data**: aceita venda de ontem. O carimbo, a data mostrada e a data de
+  pagamento saem todos do dia escolhido, então uma venda de julho conta em
+  julho no painel do mês.
+- **Preço**: começa no preço do catálogo e aceita o preço do dia. O preço
+  **cobrado** é o que viaja dentro do item — reabrir o item na calculadora
+  mostra o desconto que foi dado, em vez de desfazê-lo.
+- **Observação**: fica no pedido.
+
+Um resumo em português, abaixo dos campos, diz tudo o que o botão vai fazer
+antes de ele ser tocado — inclusive o que ele **não** faz.
+
+### 38.2 O estoque do rolo não é mexido aqui
+Salvar um **orçamento** desconta o filamento, e continua descontando. A venda
+rápida **não** desconta: quem vende peça pronta já gastou o rolo quando
+imprimiu, e descontar de novo tiraria o mesmo filamento duas vezes. A tela diz
+isso em voz alta, no resumo, para a diferença entre os dois caminhos não
+depender de ninguém adivinhar.
+
+### 38.3 *Quem já levou* (ficha do produto)
+Quantos saíram, quanto foi faturado, quanto sobrou de lucro, quando foi a
+última venda — e a lista de quem comprou, com a quantidade de cada um e um
+atalho para a ficha. **Orçado** aparece à parte: orçamento ainda é proposta, a
+mesma linha que o extrato e o painel do mês já traçam.
+
+### 38.4 *O que esta pessoa compra* (ficha do cliente)
+Os itens de todos os pedidos dela, somados por produto, do mais levado para o
+menos. O histórico logo abaixo responde **quando** ela comprou; este bloco
+responde **o quê** ela leva — que é o que decide o próximo produto a oferecer.
+
+### 38.5 *Vender produtos do catálogo* (ficha do cliente)
+Escolher no catálogo, marcar a quantidade de cada um e levar tudo para o
+orçamento de uma vez. Antes, um pedido de três produtos diferentes passava pela
+calculadora três vezes.
+
+A tela **não salva nada**: entrega os itens ao orçamento, que já sabe fazer
+desconto, frete, PDF, WhatsApp e salvar. Produto sem preço de venda aparece na
+lista marcado como tal e não pode ser marcado — uma linha a R$ 0,00 sujaria o
+mês em silêncio.
+
+## 39. Uma verdade só
+
+Nenhuma venda é gravada dentro do produto nem dentro do cliente. Os quatro
+blocos **leem os pedidos**, do mesmo jeito que a ficha do cliente sempre leu:
+
+- mudar o status de um pedido muda os dois blocos junto;
+- renomear um produto conserta a grafia em todo o histórico, como já acontecia
+  com o nome do cliente;
+- excluir um produto **não** apaga as vendas dele — o pedido é o histórico
+  financeiro do negócio e continua inteiro, só perde o atalho para a ficha.
+
+O item criado a partir de um produto tem a **mesma forma** do que a calculadora
+produz — por isso a lista de Pedidos, o PDF, o extrato e o painel do mês leem
+os dois sem saber a diferença. O escopo é normalizado para **uma peça**: um
+produto salvo *"a mesa toda"* com 4 por mesa, vendido em 3 unidades, viraria 3
+mesas se o escopo viajasse junto.
+
+## 40. Compatibilidade
+
+Nenhum preço, conta ou tela de cálculo mudou. Nenhum campo novo entra em
+produto ou cliente: as quatro telas são leitura dos pedidos que já existem.
+Pedido salvo antes da v10 aparece nos blocos novos se tiver `productId` — os
+anteriores ao catálogo continuam contando no cliente, como sempre contaram, sem
+se agrupar por produto.
+
+O corte da lista de pedidos em 200 passou a olhar a **data**, e não a ordem de
+digitação: sem isso, uma venda lançada com data retroativa poderia empurrar
+para fora um pedido mais novo.
+
+## 41. Continua fora do escopo
+
+Tudo o que já estava fora, e mais: preço por cliente (uma segunda tabela de
+preço que um dia discorda do catálogo), sinal e pagamento parcial (a esteira de
+status é binária no que importa — pago ou não), fila de produção e aviso de
+cliente que sumiu. A venda rápida registra o que **já** aconteceu; decidir o
+que oferecer continua sendo de quem imprime.
