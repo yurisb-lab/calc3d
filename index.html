@@ -1678,6 +1678,21 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
 .mattot b{font-family:'IBM Plex Mono',monospace;color:var(--ink)}
 .matnote{font-size:12px;color:var(--ink3);margin:0 0 10px;line-height:1.5}
 
+/* ---------- as mesas do produto ---------- */
+/* Cada mesa é um cartão de duas linhas: o nome dela em cima, os três números
+   embaixo. Num celular estreito três campos e um botão numa linha só ficariam
+   ilegíveis — e o peso e o tempo são justamente o que se confere olhando. */
+#plate-box,#pd-plate-box{margin:14px 0}
+.plrow{border:1px solid var(--line);border-radius:var(--r-sm);padding:10px;margin-bottom:8px;background:var(--surface2)}
+.plrow .top{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.plrow .nm{flex:1;min-width:0;font-size:12.5px;font-weight:700;color:var(--ink2);letter-spacing:.02em}
+.plrow .kill{flex:none;width:32px;height:32px;border:1px solid var(--line);background:var(--surface);border-radius:var(--r-sm);color:var(--red);font-size:17px;line-height:1;cursor:pointer}
+.plrow .kill:hover{background:var(--err-bg);border-color:var(--err-line)}
+.plrow .ins{display:flex;gap:8px}
+.plrow .n{flex:1;min-width:0;position:relative}
+.plrow .n input{text-align:right;padding-right:34px;min-height:44px}
+.plrow .n .u{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:11.5px;color:var(--ink3);pointer-events:none}
+
 /* ---------- faixas de quantidade ---------- */
 .tierrow{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px dashed var(--line)}
 .tierrow:last-child{border-bottom:0}
@@ -2010,6 +2025,13 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
           <input id="f-parts" type="text" inputmode="decimal" placeholder="quantas peças formam um produto">
           <p class="note" id="parts-note" style="margin:8px 0 0"></p>
         </div>
+        <div class="field" style="margin:14px 0 0">
+          <label>Quantas mesas o produto usa<button type="button" class="help" data-h="multimesa" aria-label="O que é isso?">?</button></label>
+          <div class="seg" id="seg-plates">
+            <button type="button" data-v="one" aria-pressed="true">Uma mesa só</button>
+            <button type="button" data-v="many" aria-pressed="false">Mais de uma mesa</button>
+          </div>
+        </div>
       </div>
 
       <h2 class="section">Do fatiador</h2>
@@ -2054,7 +2076,7 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
             <p class="note" style="margin-top:10px">Serve também para o cabeçalho do G-code copiado do fatiador. O peso maior é entendido como o total da mesa e a diferença para a soma das cores vira purga.</p>
           </div>
         </details>
-        <div class="row">
+        <div class="row" id="row-gh">
           <div class="field" id="fld-grams">
             <label for="f-grams">Gramas<button type="button" class="help" data-h="gramas" aria-label="O que é isso?">?</button></label>
             <input id="f-grams" type="text" inputmode="decimal" placeholder="82">
@@ -2067,6 +2089,15 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
             <label for="f-m">Minutos</label>
             <input id="f-m" type="text" inputmode="decimal" placeholder="0">
           </div>
+        </div>
+        <!-- as mesas do produto: uma linha por placa fatiada, com o peso e o
+             tempo que o fatiador mostrou para cada uma -->
+        <div id="plate-box" hidden>
+          <p class="matnote">Uma linha por <b>mesa</b> (a placa que o fatiador mostra). O peso e o tempo de cada uma somam o produto inteiro — e o <b>preparo</b> é cobrado uma vez por mesa, que é o custo que some quando tudo vira um número só.</p>
+          <div id="plate-rows"></div>
+          <button type="button" class="btn ghost" id="btn-plate-add">+ Adicionar mesa</button>
+          <div class="mattot" id="plate-tot"></div>
+          <p class="note" id="plate-note" style="margin:10px 0 0"></p>
         </div>
         <div id="mat-box" hidden>
           <p class="matnote">Uma linha por cor, com as gramas que cada filamento gasta na peça. A troca de cor gasta filamento que não vira peça — some a purga abaixo, em gramas.</p>
@@ -2082,14 +2113,14 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
           <label id="lbl-qty" for="f-qty">Quantidade de peças</label>
           <input id="f-qty" type="text" inputmode="decimal" value="1">
         </div>
-        <div class="field">
+        <div class="field" id="fld-scope">
           <label>Os valores acima são para<button type="button" class="help" data-h="escopo" aria-label="O que é isso?">?</button></label>
           <div class="seg" id="seg-scope">
             <button type="button" data-v="unit" aria-pressed="true">1 peça</button>
             <button type="button" data-v="plate" aria-pressed="false">A mesa toda</button>
           </div>
         </div>
-        <div class="field" style="margin-bottom:0">
+        <div class="field" id="fld-perplate" style="margin-bottom:0">
           <label for="f-perplate">Cabem por mesa <span class="hint" id="lbl-perplate-hint">peças — opcional</span><button type="button" class="help" data-h="pormesa" aria-label="O que é isso?">?</button></label>
           <input id="f-perplate" type="text" inputmode="decimal" placeholder="quantas cabem de uma vez">
           <p class="note" id="perplate-note" style="margin:8px 0 0"></p>
@@ -2320,7 +2351,7 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
         <div id="pd-params"></div>
       </div>
 
-      <h2 class="section">Números do fatiador</h2>
+      <h2 class="section">Calcular o preço aqui<button type="button" class="help" data-h="calcnaficha" aria-label="O que é isso?">?</button></h2>
       <div class="card">
         <div class="drop" id="pd-gc-drop" role="button" tabindex="0">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4"/><path d="M8 8l4-4 4 4"/><path d="M4 15v3a2 2 0 002 2h12a2 2 0 002-2v-3"/></svg>
@@ -2343,7 +2374,7 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
              mostra na barra de fatiamento, digitados aqui mesmo na ficha -->
         <div class="orline"><span>ou digite na mão</span></div>
         <p class="note">Depois de fatiar, o <b>Bambu Studio</b> mostra no rodapé o <b>peso total</b> em gramas e o <b>tempo estimado</b> — os mesmos números que o Handy mostra antes de mandar imprimir. Digite os dois aqui e o produto sai com gramas, tempo, custo e preço prontos, sem passar pela calculadora.</p>
-        <div class="row">
+        <div class="row" id="pd-row-gh">
           <div class="field">
             <label for="pd-m-grams">Peso total <span class="hint">g</span><button type="button" class="help" data-h="gramas" aria-label="O que é isso?">?</button></label>
             <input id="pd-m-grams" type="text" inputmode="decimal" placeholder="82">
@@ -2356,6 +2387,19 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
             <label for="pd-m-m">Minutos</label>
             <input id="pd-m-m" type="text" inputmode="decimal" placeholder="0">
           </div>
+        </div>
+        <div class="field" style="margin-bottom:14px">
+          <label>Quantas mesas o produto usa<button type="button" class="help" data-h="multimesa" aria-label="O que é isso?">?</button></label>
+          <div class="seg" id="seg-pd-plates">
+            <button type="button" data-v="one" aria-pressed="true">Uma mesa só</button>
+            <button type="button" data-v="many" aria-pressed="false">Mais de uma mesa</button>
+          </div>
+        </div>
+        <div id="pd-plate-box" hidden>
+          <p class="matnote">O peso e o tempo de cada mesa (placa). A soma vira o produto inteiro, e o <b>preparo</b> passa a ser cobrado uma vez por mesa.</p>
+          <div id="pd-plate-rows"></div>
+          <button type="button" class="btn ghost" id="btn-pd-plate-add">+ Adicionar mesa</button>
+          <div class="mattot" id="pd-plate-tot"></div>
         </div>
         <div class="row">
           <div class="field">
@@ -2372,12 +2416,12 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
             <label id="lbl-pd-qty" for="pd-m-qty">Quantidade de peças</label>
             <input id="pd-m-qty" type="text" inputmode="decimal" value="1">
           </div>
-          <div class="field">
+          <div class="field" id="fld-pd-perplate">
             <label for="pd-m-perplate">Cabem por mesa<button type="button" class="help" data-h="pormesa" aria-label="O que é isso?">?</button></label>
             <input id="pd-m-perplate" type="text" inputmode="decimal" placeholder="quantas cabem">
           </div>
         </div>
-        <div class="field">
+        <div class="field" id="fld-pd-scope">
           <label>Os valores acima são para<button type="button" class="help" data-h="escopo" aria-label="O que é isso?">?</button></label>
           <div class="seg" id="seg-pd-scope">
             <button type="button" data-v="unit" aria-pressed="true">1 peça</button>
@@ -2395,8 +2439,22 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
             <input id="pd-m-parts" type="text" inputmode="decimal" placeholder="quantas peças formam um produto">
           </div>
         </div>
+        <!-- a margem também mora aqui: sem ela a ficha mostraria o custo e ficaria
+             devendo justamente a resposta que se procura, que é o preço -->
+        <div class="field" style="margin:14px 0 0">
+          <label>Lucro<button type="button" class="help" data-h="margem" aria-label="O que é isso?">?</button></label>
+          <div class="seg" id="seg-pd-mode">
+            <button type="button" data-v="margem" aria-pressed="true">Margem</button>
+            <button type="button" data-v="markup" aria-pressed="false">Markup</button>
+          </div>
+        </div>
+        <div class="field" style="margin-bottom:0">
+          <label for="pd-m-margin" id="lbl-pd-margin">Margem sobre o preço <span class="hint">%</span></label>
+          <input id="pd-m-margin" type="text" inputmode="decimal" placeholder="40">
+        </div>
+        <div id="pd-prev"></div>
         <div class="btnrow" style="margin-top:14px">
-          <button type="button" class="btn" id="btn-pd-manual">Usar estes números no produto</button>
+          <button type="button" class="btn primary" id="btn-pd-manual">Usar este cálculo no produto</button>
         </div>
       </div>
 
@@ -3151,6 +3209,9 @@ function migrate(seed){
   /* produto salvo antes desta opção é peça única: 1 peça por produto mantém a
      conta, a mesa e o preço exatamente como estavam */
   S.products.forEach(function(p){ if(p.parts == null) p.parts = ''; });
+  /* produto salvo antes das mesas cabe numa mesa só: lista vazia é exatamente
+     a conta de antes, com "cabem por mesa" mandando no número de mesas */
+  S.products.forEach(function(p){ if(!Array.isArray(p.plates)) p.plates = []; });
   /* o que o CLIENTE vê no link público. Nasce vazio: a descrição interna
      (observações) é sua, e ninguém quer descobrir que ela virou vitrine. */
   S.products.forEach(function(p){
@@ -3460,6 +3521,7 @@ var HELP = {
   waped:{t:'WhatsApp que recebe o pedido', d:'Quando o cliente termina de marcar as quantidades, o botão da vitrine abre o WhatsApp com o pedido já escrito. Ponha o número com DDD; o app completa o 55 do Brasil. Deixe em branco e o botão passa a copiar o pedido para a pessoa colar onde quiser.', e:'(41) 99999-0000'},
   linkpub:{t:'Link público', d:'Um endereço na internet com os produtos que você escolher: foto, vídeo, descrição, preço e um marcador de quantidade. Ele fica no ar até você tirar. Não é uma loja — não cobra nem processa pagamento; o pedido chega pelo WhatsApp e a venda continua na conversa, como já é hoje.', e:''},
   margem:{t:'Margem × Markup', d:'Margem é a fatia do PREÇO que sobra pra você. Markup é o quanto você soma EM CIMA do custo. Os dois números são diferentes — 50% de markup dá só 33% de margem.', e:'Custo R$ 29,03\n50% de markup → R$ 43,55\n50% de margem → R$ 58,06'},
+  calcnaficha:{t:'Calcular o preço aqui', d:'A mesma conta da calculadora, dentro da ficha do produto: mude o peso, o tempo, as mesas, a quantidade ou a margem e o custo, o preço sugerido e o lucro aparecem na hora, sem precisar abrir a calculadora e voltar. Enquanto você não tocar em "Usar este cálculo no produto", nada é gravado — o que está na tela é uma simulação. Os outros números do produto (desperdício, falhas, preparo, acabamento e insumos) continuam vindo do que está salvo; para mexer neles, abra na calculadora.', e:''},
   precofinal:{t:'Preço que eu vou cobrar', d:'O app sugere um preço matemático. Aqui você grava o preço redondo que realmente vai praticar (R$ 49,90 em vez de R$ 48,38). A conferência recalcula o lucro real com o SEU preço, e ele fica salvo no produto.', e:''},
   gramas:{t:'Gramas da peça', d:'O número que o fatiador mostra depois de fatiar. Se o valor for da mesa cheia, marque "a mesa toda" abaixo que o app divide pela quantidade.', e:''},
   escopo:{t:'1 peça ou a mesa toda', d:'Se você fatiou uma peça só, deixe em "1 peça". Se fatiou a mesa cheia com várias, marque "a mesa toda" — o app divide gramas e horas pela quantidade.', e:''},
@@ -3467,6 +3529,7 @@ var HELP = {
   falhas:{t:'Reserva de falhas', d:'Peça que soltou da mesa, rolo embolado, arquivo com defeito. Referência: 5% a 15%. O app DIVIDE (custo ÷ 0,92), não soma — é assim que a peça boa paga a peça perdida.', e:'R$ 26,71 ÷ 0,92 = R$ 29,03'},
   preparo:{t:'Preparo (por lote)', d:'Minutos para fatiar, limpar a mesa, trocar filamento e ligar. É gasto uma vez por MESA, não por pedido: o app conta quantas mesas o lote precisa usando o campo "cabem por mesa" e divide pela quantidade de peças.', e:''},
   pormesa:{t:'Cabem por mesa', d:'Quantas peças DESTAS cabem juntas na mesa da impressora. É o campo que decide se o preço cai no lote: o preparo — fatiar, limpar a mesa, trocar o filamento e ligar — custa igual para uma mesa com 1 peça ou com 24. Se só uma cabe, um pedido de 30 são 30 mesas e 30 preparos, e o preço por peça não cai nada. Deixe em branco para não controlar: o app volta a contar um preparo só para o lote inteiro, como fazia antes.', e:'Chaveiro: cabem 24 por mesa\nVaso grande: cabe 1 por mesa'},
+  multimesa:{t:'Quantas mesas o produto usa', d:'Um vaso pequeno sai numa mesa só. Um dragão de 40 cm, uma luminária ou um kit grande saem em duas, três, cinco mesas — cada uma com o seu peso e o seu tempo. Marque "Mais de uma mesa" e liste as mesas: o app soma o peso e o tempo de todas para chegar ao produto inteiro e, mais importante, cobra o PREPARO uma vez por mesa. Fatiar, limpar a mesa, trocar o filamento e ligar custa igual em cada uma das três — somar tudo num número só faz esse custo desaparecer. Com a lista ligada, "cabem por mesa" sai da conta: quem já ocupa mesas inteiras não divide nenhuma com outro produto, e o preço deixa de cair no lote (porque na impressora ele não cai mesmo).', e:'Dragão grande: mesa 1 com 120 g e 4 h, mesa 2 com 80 g e 3 h, mesa 3 com 200 g e 6 h\nVaso pequeno: uma mesa só'},
   multipeca:{t:'Produto montado com várias peças', d:'Marque quando UM produto pronto só existe depois de juntar VÁRIAS peças impressas: caixa e tampa, boneco articulado, organizador em módulos. O app passa a separar duas coisas que até aqui eram a mesma: peça é o que ocupa lugar na mesa, produto é o que o cliente compra. Gramas, tempo e preço continuam sendo os do produto INTEIRO — o conjunto todo, com todas as peças —, e a quantidade passa a ser de produtos. O que muda na conta é a mesa: um produto de 5 peças ocupa 5 lugares, então ele enche a mesa cinco vezes mais rápido e o preparo se dilui bem menos. Deixe em "peça única" quando o que sai da mesa já é o produto pronto.', e:'Caixa com tampa: 2 peças por produto\nDragão articulado: 5 peças por produto'},
   acabamento:{t:'Acabamento (por peça)', d:'Minutos com a mão em CADA peça: tirar suporte, lixar, pintar, montar, embalar. Em produto montado, conte os minutos do produto inteiro: o suporte de todas as peças mais o tempo de juntar. Em peça pequena costuma ser o maior custo de todos.', e:''},
   extrato:{t:'Extrato do cliente', d:'A mesma coisa que está nesta ficha, num formato que dá para MANDAR: a lista de pedidos com data, o que foi, quanto deu e em que pé está. Serve para cobrar sem parecer cobrança, para lembrar quem sumiu do que já levou e para fechar o mês com quem compra todo mês. O extrato mostra só o que a pessoa já sabe — custo, margem, gramas e hora de máquina não saem daqui.', e:'12/03/2026 — 3x Chaveiro · R$ 36,00 · Pago\n28/03/2026 — 1x Vaso · R$ 80,00 · Entregue\nEm aberto: R$ 80,00'},
@@ -3923,9 +3986,10 @@ function matFil(m){
   return S.filaments.filter(function(x){ return x.id === id; })[0] || null;
 }
 function matRows(){ return mats.filter(function(m){ return matFil(m); }); }
-function matGramsTotal(){
-  return matRows().reduce(function(a,m){ return a + Math.max(0, num(m.g)); }, 0);
+function matSum(rows){
+  return (rows||[]).reduce(function(a,m){ return a + Math.max(0, num(m.g)); }, 0);
 }
+function matGramsTotal(){ return matSum(matRows()); }
 function purgeGrams(){ return Math.max(0, num(purgeStr)); }
 function defaultMatId(){
   var el = $('f-filament');
@@ -3992,25 +4056,79 @@ function unitWord(n, parts){
 }
 function pieceWord(n){ return n === 1 ? '1 peça' : dec(n,0) + ' peças'; }
 
-function compute(){
-  var p = curPrinter(), f = curFilament(), st = S.settings;
-  var qty = Math.max(1, Math.round(num($('f-qty').value) || 1));
-  var rows = multi ? matRows() : [];
+/* ============ produto que sai em mais de uma mesa ============ */
+/* Um dragão de 40 cm não sai de uma mesa só: sai de três, cada uma com o seu
+   peso e o seu tempo. Até aqui o app pedia um número só, e quem imprimia tinha
+   de somar as mesas de cabeça — e ainda assim o preparo era cobrado uma vez,
+   como se as três mesas fossem uma. Listando mesa por mesa, o peso e o tempo
+   somam sozinhos e o preparo é cobrado quantas vezes a impressora for montada,
+   que é o custo que estava faltando aparecer.
+
+   Fora deste modo nada muda: lista vazia é o app de antes, com "cabem por mesa"
+   deduzindo quantas mesas o lote pede. */
+var multiPlate = false;   /* o produto usa mais de uma mesa */
+var mesas = [];           /* [{g:'', h:'', m:''}] — uma linha por mesa */
+
+function cloneMesas(list){
+  return (list||[]).map(function(x){
+    return {g:(x.g == null ? '' : String(x.g)), h:(x.h == null ? '' : String(x.h)),
+            m:(x.m == null ? '' : String(x.m))};
+  });
+}
+/* mesa contada é a que tem algum número: a linha em branco recém-adicionada não
+   pode virar uma mesa a mais no preço enquanto ninguém digitou nada nela */
+function mesaFilled(x){ return num(x.g) > 0 || num(x.h) > 0 || num(x.m) > 0; }
+/* a lista como o motor a recebe: só existe enquanto a opção estiver ligada */
+function plateList(){ return multiPlate ? mesas : []; }
+/* soma das mesas: quantas são, quanto pesam e quanto demoram juntas */
+function plateSet(list){
+  var rows = (list||[]).filter(mesaFilled).map(function(x){
+    return {g:Math.max(0, num(x.g)), h:Math.max(0, num(x.h) + num(x.m)/60)};
+  });
+  var g = 0, h = 0;
+  rows.forEach(function(x){ g += x.g; h += x.h; });
+  return {n:rows.length, g:g, h:h, rows:rows};
+}
+/* quantas mesas um LOTE precisa. Com a lista, cada produto traz as suas e
+   ninguém adivinha; sem ela, continua saindo do "cabem por mesa". Encaixar a
+   sobra de uma mesa na seguinte é nesting, e nesting está fora do escopo. */
+function platesOf(n, r){
+  var q = Math.max(1, Math.round(n) || 1);
+  return r.plateN > 0 ? q * r.plateN : platesFor(q, r.perPlate, r.parts);
+}
+
+/* ============ o motor da conta ============ */
+/* A fórmula mora aqui, num lugar só, e recebe tudo pronto: ninguém lê tela
+   dentro dela. É o que permite a ficha do produto responder "quanto custa e
+   por quanto vendo" sem passar pela calculadora — mesma conta, dois lugares,
+   uma verdade só. A calculadora entrega o que está nos campos (calcInput) e a
+   ficha entrega o que está na tela dela (pdInput). */
+function computeCore(inp){
+  var p = inp.printer || {watts:0,price:0,life:1,maint:0,hoursYear:1,override:''};
+  var f = inp.filament || {spoolPrice:0,spoolWeight:1000};
+  var st = S.settings;
+  var qty = Math.max(1, Math.round(num(inp.qty) || 1));
+  var rows = inp.multi ? (inp.mats || []).filter(function(m){ return matFil(m); }) : [];
   var useMulti = rows.length > 0;
-  var purge = useMulti ? purgeGrams() : 0;
-  var gAll = useMulti ? matGramsTotal() + purge : num($('f-grams').value);
-  var hAll = num($('f-h').value) + num($('f-m').value)/60;
-  var div = scope === 'plate' ? qty : 1;
+  var purge = useMulti ? Math.max(0, num(inp.purge)) : 0;
+  /* o produto que sai em mais de uma mesa traz o peso e o tempo de CADA uma: a
+     soma é o produto inteiro e o número de mesas deixa de ser adivinhado */
+  var set = plateSet(inp.plates);
+  var gAll = useMulti ? matSum(rows) + purge : (set.n ? set.g : num(inp.grams));
+  var hAll = set.n ? set.h : num(inp.hours);
+  /* "a mesa toda" só é pergunta quando existe uma mesa só: quem listou as mesas
+     já escreveu o produto inteiro */
+  var div = (inp.scope === 'plate' && !set.n) ? qty : 1;
   var g = gAll/div;
   var h = hAll/div;
 
-  var waste = num($('f-waste').value)/100;
+  var waste = num(inp.waste)/100;
   var perGram = num(f.spoolWeight) > 0 ? num(f.spoolPrice)/num(f.spoolWeight) : 0;
   /* use = o que cada rolo entrega nesta peça, já com desperdício e purga.
      É a mesma lista que dá baixa no estoque e que aparece na memória de cálculo. */
   var material = 0, use = [];
   if(useMulti){
-    var modeled = matGramsTotal();
+    var modeled = matSum(rows);
     rows.forEach(function(m){
       var fl = matFil(m), mg = Math.max(0, num(m.g));
       /* a purga é filamento de todas as cores misturado: cada rolo entra nela
@@ -4040,21 +4158,22 @@ function compute(){
   var overhead = fixedHour() * h;
   /* preparo é por lote e acabamento é por peça: separar os dois é o que permite
      montar a tabela por faixa de quantidade sem recalcular a tela inteira */
-  var prepTotal = num($('f-prep').value)/60 * num(st.hour);
-  var finishCost = num($('f-finish').value)/60 * num(st.hour);
+  var prepTotal = num(inp.prep)/60 * num(st.hour);
+  var finishCost = num(inp.finish)/60 * num(st.hour);
   /* uma mesa por vez: se só cabe uma peça, um lote de 30 são 30 preparos.
-     Produto montado ocupa a mesa por peça: 5 peças enchem a mesa 5x mais rápido */
-  var parts    = partsCount();
-  var perPlate = plateFit();
-  var plates   = platesFor(qty, perPlate, parts);
+     Produto montado ocupa a mesa por peça: 5 peças enchem a mesa 5x mais rápido.
+     E produto que já nasce em N mesas paga N preparos por unidade. */
+  var parts    = Math.max(1, Math.round(num(inp.parts)) || 1);
+  var perPlate = set.n ? 0 : Math.max(0, Math.round(num(inp.perPlate)));
+  var plates   = set.n ? qty * set.n : platesFor(qty, perPlate, parts);
   var prepLot  = prepTotal * plates;
   var labor    = prepLot/qty + finishCost;
-  var supplies = extrasTotal(extras);
+  var supplies = extrasTotal(inp.extras);
 
   var batch = material + energy + machine + overhead + finishCost + supplies;
   var subtotal = batch + prepLot/qty;
   var notes = [];
-  var failIn = num($('f-fail').value)/100;
+  var failIn = num(inp.fail)/100;
   var failR = Math.min(0.95, Math.max(0, failIn));
   if(failIn > 0.95) notes.push('A reserva de falhas foi limitada a 95%: acima disso o custo cresce sem limite.');
   var cost = subtotal/(1 - failR);
@@ -4063,21 +4182,21 @@ function compute(){
   var feeIn = num(st.fee)/100;
   var feeR = Math.min(0.95, Math.max(0, feeIn));
   if(feeIn > 0.95) notes.push('A taxa sobre a venda foi limitada a 95%.');
-  var mR = Math.max(0, margin/100);
+  var mR = Math.max(0, num(inp.margin)/100);
   var suggested, warn = '';
 
-  if(mode === 'margem'){
+  if(inp.mode === 'markup'){
+    suggested = (cost * (1 + mR))/(1 - feeR);
+  } else {
     if(mR + feeR >= 0.95){
       warn = 'Margem e taxa somam ' + dec((mR+feeR)*100,0) + '%. Não existe preço possível acima de 95% — reduza a margem.';
       suggested = 0;
     } else {
       suggested = cost/(1 - mR - feeR);
     }
-  } else {
-    suggested = (cost * (1 + mR))/(1 - feeR);
   }
 
-  var chosen = num($('f-final').value);
+  var chosen = num(inp.chosen);
   var usedChosen = chosen > 0;
   var price = usedChosen ? chosen : suggested;
 
@@ -4097,10 +4216,12 @@ function compute(){
     profitHour: h > 0 ? profit/h : 0,
     machineHour:machineHour(p), fixedHour:fixedHour(),
     waste:waste, failR:failR, watts:num(p.watts), kwh:num(st.kwh), hourRate:num(st.hour),
-    prep:num($('f-prep').value), finish:num($('f-finish').value),
+    prep:num(inp.prep), finish:num(inp.finish),
     /* quantas peças cabem juntas, quantas peças formam um produto e quantas
        mesas este lote precisa */
     perPlate:perPlate, parts:parts, plates:plates,
+    /* as mesas do produto, uma a uma: 0 quer dizer "cabe numa mesa só" */
+    plateN:set.n, plateRows:set.rows,
     /* multicolor: o que cada rolo entrega nesta peça */
     multi:useMulti, use:use, purge:purge/div, mR:mR,
     /* base da tabela por faixa: tudo que não depende do lote, e o preparo do
@@ -4108,6 +4229,22 @@ function compute(){
     batch:batch, prepTotal:prepTotal
   };
 }
+
+/* o que está na tela da calculadora, no formato que o motor entende */
+function calcInput(){
+  return {
+    printer:curPrinter(), filament:curFilament(),
+    qty:num($('f-qty').value), scope:scope,
+    grams:num($('f-grams').value), hours:num($('f-h').value) + num($('f-m').value)/60,
+    multi:multi, mats:mats, purge:purgeGrams(),
+    plates:plateList(),
+    waste:num($('f-waste').value), fail:num($('f-fail').value),
+    prep:num($('f-prep').value), finish:num($('f-finish').value),
+    extras:extras, perPlate:plateFit(), parts:partsCount(),
+    mode:mode, margin:margin, chosen:num($('f-final').value)
+  };
+}
+function compute(){ return computeCore(calcInput()); }
 
 /* ============ cálculo rápido ============ */
 /* O modo emergência responde uma pergunta só: "nesse preço eu estou perdendo
@@ -4283,6 +4420,14 @@ function fxRow(n,f,v){
 }
 function fxHtml(r){
   var out = '';
+  /* as mesas abrem a conta: o peso e o tempo cobrados são a soma delas, uma
+     a uma, e é aqui que dá para conferir se alguma ficou faltando */
+  if(r.plateN > 0){
+    out += '<div class="r"><span class="nm">'+plateWord(r.plateN)+' por '+unitWord(1, r.parts)+
+      '<span class="f">'+r.plateRows.map(function(x, i){
+        return 'mesa '+(i+1)+': '+dec(x.g,1)+' g / '+hmWord(x.h);
+      }).join(' · ')+'</span></span><span class="vl">'+dec(r.g,1)+' g · '+hmWord(r.h)+'</span></div>';
+  }
   if(r.multi){
     r.use.forEach(function(u){
       out += fxRow('Filamento — '+esc(u.name), dec(u.g,1)+' g × '+brl(u.perGram)+'/g', u.cost);
@@ -4375,7 +4520,7 @@ function renderParts(r){
     var fit = Math.floor(r.perPlate/r.parts);
     txt += fit >= 1
       ? ' Na mesa cabem '+pieceWord(r.perPlate)+', ou seja <b>'+fit+' '+unitWord(fit, r.parts)+' por mesa</b>.'
-      : ' Cabem só '+pieceWord(r.perPlate)+' por mesa, então <b>um produto sozinho já usa '+plateWord(platesFor(1, r.perPlate, r.parts))+'</b>.';
+      : ' Cabem só '+pieceWord(r.perPlate)+' por mesa, então <b>um produto sozinho já usa '+plateWord(platesOf(1, r))+'</b>.';
   }
   /* a reserva de falhas é cobrada uma vez sobre o conjunto, mas quem falha é
      cada peça: num conjunto de 5, a chance de perder alguma é bem maior */
@@ -4384,6 +4529,131 @@ function renderParts(r){
     txt += ' Atenção à <b>reserva de falhas</b>: '+dec(r.failR*100,0)+'% por peça vira <b>'+dec(conj*100,0)+'%</b> de chance de alguma das '+dec(r.parts,0)+' sair errada e atrasar o conjunto.';
   }
   el.innerHTML = txt;
+}
+
+/* ============ as mesas do produto na tela ============ */
+/* Três campos por mesa e nada mais: peso, horas e minutos, do jeito que o
+   fatiador mostra cada placa. A soma aparece embaixo — ninguém deveria precisar
+   de calculadora para usar a calculadora. */
+function hmWord(h){
+  var mins = Math.max(0, Math.round(num(h)*60));
+  var hh = Math.floor(mins/60), mm = mins % 60;
+  if(!hh) return mm + ' min';
+  return hh + ' h' + (mm ? ' ' + mm + ' min' : '');
+}
+function renderMesas(){
+  var el = $('plate-rows');
+  if(!el) return;
+  el.innerHTML = mesas.map(function(x, i){
+    function fld(k, u, lab){
+      return '<div class="n"><input type="text" inputmode="decimal" placeholder="0" value="'+
+        esc(x[k] == null ? '' : x[k])+'" data-mesa="'+k+'" data-i="'+i+'" aria-label="'+lab+' da mesa '+(i+1)+
+        '"><span class="u">'+u+'</span></div>';
+    }
+    return '<div class="plrow">'+
+      '<div class="top"><span class="nm">MESA '+(i+1)+'</span>'+
+        '<button type="button" class="kill" data-mesadel="'+i+'" aria-label="Remover a mesa '+(i+1)+'">×</button></div>'+
+      '<div class="ins">'+fld('g','g','Gramas')+fld('h','h','Horas')+fld('m','min','Minutos')+'</div>'+
+    '</div>';
+  }).join('') || '<div class="oempty">Nenhuma mesa na lista.</div>';
+
+  each(qsa(el,'[data-mesa]'), function(inp){
+    inp.addEventListener('input', function(){
+      var i = +inp.getAttribute('data-i');
+      if(!mesas[i]) return;
+      mesas[i][inp.getAttribute('data-mesa')] = inp.value;
+      render();
+    });
+  });
+  each(qsa(el,'[data-mesadel]'), function(b){
+    b.addEventListener('click', function(){
+      mesas.splice(+b.getAttribute('data-mesadel'), 1);
+      renderMesas(); render();
+    });
+  });
+}
+/* a soma e o recado: quantas mesas, quanto pesam, quanto demoram e o que isso
+   faz com o preparo — que é o custo que sumia quando tudo virava um número só */
+function paintPlates(r){
+  var box = $('plate-box');
+  if(!box) return;
+  box.hidden = !multiPlate;
+  var rowGh = $('row-gh');
+  if(rowGh) rowGh.hidden = multiPlate;
+  var fs = $('fld-scope');
+  if(fs) fs.hidden = multiPlate;
+  var fp = $('fld-perplate');
+  if(fp) fp.hidden = multiPlate;
+  if(!multiPlate) return;
+
+  var tot = $('plate-tot');
+  if(tot) tot.innerHTML =
+    '<span>'+(r.plateN ? plateWord(r.plateN)+' · <b>'+dec(r.g,1)+' g</b> · <b>'+hmWord(r.h)+'</b>' : 'nenhuma mesa preenchida')+'</span>'+
+    '<span>Custo <b>'+brl(r.cost)+'</b></span>';
+
+  var el = $('plate-note');
+  if(!el) return;
+  if(!r.plateN){
+    el.innerHTML = 'Digite o <b>peso</b> e o <b>tempo</b> de cada mesa. Enquanto nenhuma tiver número, a conta segue pelo peso e pelo tempo únicos de antes.';
+    return;
+  }
+  var txt;
+  if(r.plateN === 1){
+    txt = 'Uma mesa por ' + unitWord(1, r.parts) + ': o lote de ' + r.qty + ' ' + unitWord(r.qty, r.parts) +
+      (r.qty === 1 ? ' é ' : ' são ') + '<b>' + plateWord(r.plates) + '</b>' +
+      (r.prep > 0 ? ' e ' + dec(r.prep*r.plates,0) + ' min de preparo' : '') +
+      '. Se mais de ' + (r.parts > 1 ? 'um produto cabe' : 'uma peça cabe') + ' junto na mesma mesa, volte para <b>Uma mesa só</b> e diga quantas cabem por mesa — é ali que o preço cai no lote.';
+  } else {
+    txt = 'Cada ' + unitWord(1, r.parts) + ' usa <b>' + plateWord(r.plateN) + '</b>, somando <b>' + dec(r.g,1) +
+      ' g</b> e <b>' + hmWord(r.h) + '</b>' +
+      (r.prep > 0
+        ? '. O preparo de ' + dec(r.prep,0) + ' min é pago <b>' + dec(r.plateN,0) + ' vezes</b> por ' +
+          unitWord(1, r.parts) + ' (' + dec(r.prep*r.plateN,0) + ' min), e o lote de ' + r.qty + ' ' +
+          unitWord(r.qty, r.parts) + ' pede <b>' + plateWord(r.plates) + '</b>.'
+        : '. O lote de ' + r.qty + ' ' + unitWord(r.qty, r.parts) + ' pede <b>' + plateWord(r.plates) + '</b>.') +
+      ' Com a lista de mesas, <b>cabem por mesa</b> sai da conta: quem já ocupa mesas inteiras não divide nenhuma com outro produto.';
+  }
+  /* multicolor e mesas ao mesmo tempo: o peso é das cores, o tempo é das mesas.
+     Se os dois discordam, quem imprime precisa saber por qual o app está indo. */
+  if(r.multi){
+    var som = plateSet(plateList()).g;
+    txt += ' <b>Multicolor ligado:</b> o peso cobrado é o das cores (' + dec(r.g,1) +
+      ' g); as mesas aqui dizem o tempo e quantas vezes o preparo é pago' +
+      (Math.abs(som - r.g) > 0.5 ? ', e a soma dos pesos das mesas (' + dec(som,1) + ' g) não bate com ela.' : '.');
+  }
+  el.innerHTML = txt;
+}
+/* entrar e sair do modo sem perder o que já está na tela: a primeira mesa nasce
+   com o peso e o tempo que já estavam digitados, e ao voltar para uma mesa só a
+   soma das mesas volta para os campos únicos */
+function mesaSeed(){
+  if(plateSet(mesas).n) return;
+  var q = scope === 'plate' ? Math.max(1, Math.round(num($('f-qty').value)) || 1) : 1;
+  var g = (multi ? matGramsTotal() + purgeGrams() : num($('f-grams').value))/q;
+  var h = (num($('f-h').value) + num($('f-m').value)/60)/q;
+  var mins = Math.round(h*60);
+  mesas = [{g: g > 0 ? dec(g,1) : '', h: mins >= 60 ? String(Math.floor(mins/60)) : '',
+            m: mins % 60 ? String(mins % 60) : ''},
+           {g:'', h:'', m:''}];
+}
+function setMultiPlate(on, seed){
+  var was = multiPlate;
+  multiPlate = !!on;
+  setSeg('seg-plates', multiPlate ? 'many' : 'one');
+  if(multiPlate){
+    if(seed !== false) mesaSeed();
+    /* a lista já é do produto inteiro: "a mesa toda" deixa de ser pergunta */
+    if(scope === 'plate'){ scope = 'unit'; setSeg('seg-scope', scope); }
+  } else if(was && seed !== false){
+    var set = plateSet(mesas);
+    if(set.n){
+      if(!multi) $('f-grams').value = set.g > 0 ? dec(set.g,1) : '';
+      $('f-h').value = Math.floor(set.h) || 0;
+      $('f-m').value = Math.round((set.h - Math.floor(set.h))*60) || 0;
+    }
+  }
+  renderMesas();
+  render();
 }
 
 function render(){
@@ -4470,6 +4740,7 @@ function render(){
 
   paintMulti(r);
   renderParts(r);
+  paintPlates(r);
   renderPerPlate(r);
   renderTiers(r);
   renderActiveBanner();
@@ -4492,8 +4763,9 @@ function tierList(){
 }
 function tierAt(r, n){
   /* o preparo se paga por mesa cheia: com 24 por mesa, um lote de 50 são 3
-     preparos, não um — e não 50 */
-  var plates = platesFor(n, r.perPlate, r.parts);
+     preparos, não um — e não 50. Produto que sai em várias mesas já traz as
+     suas, e aí o lote só multiplica. */
+  var plates = platesOf(n, r);
   var subtotal = r.batch + r.prepTotal*plates/n;
   var cost = subtotal/(1 - r.failR);
   var price;
@@ -4528,7 +4800,7 @@ function renderTiers(r){
       '<span class="qt">'+t.n+' un</span>'+
       '<span class="mid"><span class="un">'+brl(t.unit)+'</span>'+
         '<span class="sb">total '+brl(t.total)+' · lucro '+brl(t.profit)+
-          (r.perPlate > 0 ? ' · '+plateWord(t.plates) : '')+'</span></span>'+
+          (r.perPlate > 0 || r.plateN > 0 ? ' · '+plateWord(t.plates) : '')+'</span></span>'+
       '<span class="off">'+(off > 0.0005 ? '−'+dec(off*100,0)+'%' : 'base')+'</span></div>';
   }).join('');
   var same = (r.usedChosen ? 'As faixas mantêm o mesmo multiplicador do preço que você escolheu.'
@@ -4536,6 +4808,15 @@ function renderTiers(r){
   var note;
   if(!(r.prepTotal > 0)){
     note = 'Todas as faixas dão o mesmo preço porque o <b>preparo</b> está em 0 min. Preencha os minutos de fatiar, limpar a mesa e ligar no <b>Ajuste fino</b> — é ele que se dilui no lote.';
+  } else if(r.plateN > 0){
+    /* quem já ocupa mesas inteiras não divide mesa com ninguém: o preparo não
+       se dilui no lote, ele se multiplica. Prometer desconto aqui seria mentira. */
+    note = r.plateN === 1
+      ? 'Cada ' + unitWord(1, r.parts) + ' usa <b>uma mesa inteira</b>: o preparo de <b>'+dec(r.prep,0)+
+        ' min</b> é pago em cada uma e o preço <b>não cai</b> por lote — '+r.qty+' são '+plateWord(r.plates)+'.'
+      : 'Cada ' + unitWord(1, r.parts) + ' sai em <b>'+plateWord(r.plateN)+'</b>: o preparo de <b>'+dec(r.prep,0)+
+        ' min</b> é pago '+dec(r.plateN,0)+' vezes por unidade e o preço <b>não cai</b> por lote. '+
+        'O desconto por volume só existe quando cabe mais de um na mesma mesa — e aqui um sozinho já ocupa várias.';
   } else if(r.parts > 1 && r.perPlate > 0){
     /* o conjunto ocupa a mesa por peça: um produto de 5 peças enche a mesa
        cinco vezes mais rápido, e é aí que o desconto de lote acaba */
@@ -4543,7 +4824,7 @@ function renderTiers(r){
     note = 'Cada produto sai em <b>'+pieceWord(r.parts)+'</b> e na mesa cabem <b>'+pieceWord(r.perPlate)+'</b>: ' +
       (fit >= 1
         ? 'dá <b>'+fit+' '+unitWord(fit, r.parts)+' por mesa</b>, e é até aí que o preparo de <b>'+dec(r.prep,0)+' min</b> se dilui. '+same
-        : 'nem um produto inteiro cabe de uma vez — cada um já pede <b>'+plateWord(platesFor(1, r.perPlate, r.parts))+
+        : 'nem um produto inteiro cabe de uma vez — cada um já pede <b>'+plateWord(platesOf(1, r))+
           '</b>, e o pouco que o preço cai no lote vem só da última mesa, que deixa de sobrar pela metade.');
   } else if(r.perPlate === 1){
     /* uma peça por mesa: cada unidade carrega um preparo inteiro e não existe
@@ -4569,6 +4850,12 @@ function tierText(){
   if(st.biz) out.push(st.biz);
   out.push('');
   if(r.parts > 1){ out.push('Cada unidade é montada com ' + pieceWord(r.parts) + ' impressas.'); out.push(''); }
+  /* quantas mesas de impressão cada unidade ocupa é o prazo que o cliente
+     pergunta em seguida — e é a razão de o preço não cair por lote aqui */
+  if(r.plateN > 1){
+    out.push('Cada unidade ocupa ' + plateWord(r.plateN) + ' de impressão (' + hmWord(r.h) + ' no total).');
+    out.push('');
+  }
   list.forEach(function(t){
     var off = base.unit > 0 ? 1 - t.unit/base.unit : 0;
     out.push('• ' + t.n + ' un — ' + brl(t.unit) + ' cada' +
@@ -4610,11 +4897,17 @@ function calcPayload(){
   var r = compute();
   return {
     piece:$('f-piece').value || '',
-    grams:num($('f-grams').value), hours:num($('f-h').value) + num($('f-m').value)/60,
+    /* com a lista de mesas, o peso e o tempo que viajam são a SOMA delas: os
+       campos únicos ficaram para trás e mandá-los aqui seria mandar o que a
+       tela nem mostra mais */
+    grams:r.plateN > 0 ? plateSet(plateList()).g : num($('f-grams').value),
+    hours:r.plateN > 0 ? plateSet(plateList()).h : num($('f-h').value) + num($('f-m').value)/60,
     qty:r.qty, waste:num($('f-waste').value), fail:num($('f-fail').value),
     prep:num($('f-prep').value), finish:num($('f-finish').value),
     extras:cloneExtras(extras), printer:$('f-printer').value, filament:$('f-filament').value,
-    scope:scope, perPlate:plateFit() > 0 ? String(plateFit()) : '',
+    scope:r.plateN > 0 ? 'unit' : scope, perPlate:plateFit() > 0 ? String(plateFit()) : '',
+    /* as mesas do produto, uma a uma, para o item poder voltar inteiro */
+    plates:r.plateN > 0 ? cloneMesas(mesas) : [],
     parts:partsCount() > 1 ? String(partsCount()) : '', mode:mode, margin:margin,
     /* multicolor: as cores como o usuário digitou e, já resolvido, quanto sai
        de cada rolo por peça — é o que dá baixa no estoque depois */
@@ -4691,6 +4984,8 @@ function restoreCalc(c){
   $('f-qty').value = c.qty;
   $('f-perplate').value = num(c.perPlate) > 0 ? String(Math.round(num(c.perPlate))) : '';
   setParts(num(c.parts));
+  mesas = cloneMesas(c.plates);
+  setMultiPlate(plateSet(mesas).n > 0, false);
   $('f-waste').value = c.waste; $('f-fail').value = c.fail;
   $('f-prep').value = c.prep; $('f-finish').value = c.finish;
   extras = cloneExtras(c.extras);
@@ -5117,9 +5412,11 @@ function paintMulti(r){
   $('fld-filament').hidden = multi;
   if(!multi) return;
   var modeled = matGramsTotal(), pg = purgeGrams(), tot = modeled + pg;
-  var mult = scope === 'plate' ? r.qty : 1;
+  /* com a lista de mesas, o escopo é sempre o produto inteiro */
+  var plate = scope === 'plate' && !multiPlate;
+  var mult = plate ? r.qty : 1;
   $('mat-tot').innerHTML =
-    '<span>'+(scope === 'plate' ? 'Total da mesa' : 'Total por peça')+': <b>'+dec(tot,1)+' g</b>'+
+    '<span>'+(plate ? 'Total da mesa' : 'Total por '+unitWord(1, r.parts))+': <b>'+dec(tot,1)+' g</b>'+
       (pg > 0 ? ' <span style="color:var(--ink3)">('+dec(modeled,1)+' g de peça + '+dec(pg,1)+
                 ' g de purga = '+dec(tot > 0 ? pg/tot*100 : 0,0)+'% do peso)</span>' : '')+'</span>'+
     '<span>Filamento <b>'+brl(r.material*mult)+'</b></span>';
@@ -5493,11 +5790,53 @@ function matchFilament(it){
 function gcMsgHtml(html, box){ var el = $(box || 'gc-msg'); if(el) el.innerHTML = html; }
 function gcErr(t, box){ gcMsgHtml('<div class="alert bad">' + esc(t) + '</div>', box); }
 
+/* nome de peça tirado do arquivo: "dragao_plate_2.gcode.3mf" vira "dragao" */
+function nameFromFile(res, fileName){
+  return String(res && res.name || fileName || '').replace(/\.(gcode|gco|g|gz|3mf)$/gi,'')
+    .replace(/\.gcode$/i,'').replace(/[_-]?plate[_ -]?\d+$/i,'').replace(/[_]+/g,' ').trim();
+}
+/* ---- o arquivo do fatiador como MAIS UMA MESA ---- */
+/* O Bambu exporta uma placa por vez: quem imprime um dragão em três mesas tem
+   três arquivos, não um. Com a lista de mesas ligada, cada arquivo entra como
+   uma linha nova em vez de apagar o peso e o tempo do anterior. */
+function addMesaFromSliced(res, fileName, box){
+  var g = res.items.reduce(function(a, it){ return a + Math.max(0, num(it.g)); }, 0) + Math.max(0, num(res.purge));
+  var mins = res.seconds > 0 ? Math.round(res.seconds/60) : 0;
+  /* a linha em branco que estiver sobrando recebe o arquivo: senão o app
+     mostraria a mesa nova ao lado de uma mesa vazia que ninguém pediu */
+  var i = -1;
+  for(var k = 0; k < mesas.length; k++){ if(!mesaFilled(mesas[k])){ i = k; break; } }
+  if(i < 0){ mesas.push({g:'', h:'', m:''}); i = mesas.length - 1; }
+  mesas[i] = {g: g > 0 ? dec(g,1) : '', h: mins >= 60 ? String(Math.floor(mins/60)) : '',
+              m: mins % 60 ? String(mins % 60) : ''};
+  var hadWaste = g > 0 && num($('f-waste').value) > 0;
+  if(g > 0) $('f-waste').value = 0;
+  if(!$('f-piece').value){
+    var nm = nameFromFile(res, fileName);
+    if(nm) $('f-piece').value = nm;
+  }
+  renderMesas();
+  render();
+
+  var set = plateSet(mesas);
+  var li = ['Entrou como a <b>mesa ' + (i+1) + '</b> da lista. Mande o arquivo da próxima placa para somar a seguinte.'];
+  li.push('O produto está em <b>' + plateWord(set.n) + '</b>, somando <b>' + dec(set.g,1) + ' g</b> e <b>' + hmWord(set.h) + '</b>.');
+  if(res.items.length > 1) li.push('As <b>' + res.items.length + ' cores</b> deste arquivo viraram um peso só: nesta lista cada mesa é um peso e um tempo. Para separar as cores, volte para <b>Uma mesa só</b>.');
+  if(hadWaste) li.push('Desperdício zerado: esses números já contam brim, suporte e purga.');
+  if(!(res.seconds > 0)) li.push('Não veio o tempo desta mesa — preencha as horas na linha dela.');
+  (res.notes || []).forEach(function(t){ li.push(esc(t)); });
+  gcMsgHtml('<div class="gcok"><span class="src">Lido do ' + esc(res.source || 'fatiador') + '</span>' +
+    '<b>' + dec(g,1) + ' g</b>' +
+    (mins > 0 ? ' · <b>' + Math.floor(mins/60) + ' h ' + (mins % 60) + ' min</b>' : '') +
+    '<ul><li>' + li.join('</li><li>') + '</li></ul></div>', box);
+}
 function applySliced(res, fileName, box){
   if(!res || (!res.items.length && !(res.seconds > 0))){
     gcErr('Não achei gramas nem tempo neste arquivo. Ele foi mesmo gerado pelo fatiador?', box);
     return;
   }
+  /* com a lista de mesas ligada o arquivo não sobrescreve nada: ele é uma mesa */
+  if(multiPlate){ addMesaFromSliced(res, fileName, box); return; }
   var items = res.items.slice(0, 16);
   var lost = [], derived = false;
 
@@ -5540,8 +5879,7 @@ function applySliced(res, fileName, box){
   var totalG = multi ? matGramsTotal() + purgeGrams() : num($('f-grams').value);
 
   if(!$('f-piece').value){
-    var nm = res.name || String(fileName || '').replace(/\.(gcode|gco|g|gz|3mf)$/gi,'').replace(/\.gcode$/i,'')
-      .replace(/[_-]?plate[_ -]?\d+$/i,'').replace(/[_]+/g,' ').trim();
+    var nm = nameFromFile(res, fileName);
     if(nm) $('f-piece').value = nm;
   }
 
@@ -6565,6 +6903,8 @@ function productCalc(p, qty, unitPrice){
     scope: 'unit',
     perPlate: num(p.perPlate) > 0 ? String(Math.round(num(p.perPlate))) : '',
     parts: num(p.parts) > 1 ? String(Math.round(num(p.parts))) : '',
+    /* as mesas são do produto inteiro: elas não se dividem por quantidade */
+    plates: cloneMesas(p.plates),
     mode: p.mode || 'margem', margin: num(p.margin),
     multi: !!p.multi,
     mats: cloneMats((p.mats||[]).map(function(m){ return {f:m.f, g:num(m.g)/div}; })),
@@ -6778,7 +7118,7 @@ function renderProducts(){
 }
 function newProduct(){
   return {id:uid(), name:'', category:'', note:'', stlUrl:'', photos:[], pubDesc:'', videos:[],
-    grams:0, hours:0, qty:1, scope:'unit', perPlate:'', parts:'', printer:'', filament:'',
+    grams:0, hours:0, qty:1, scope:'unit', perPlate:'', parts:'', plates:[], printer:'', filament:'',
     waste:num(S.settings.waste), fail:num(S.settings.fail), prep:0, finish:0, extras:[],
     mode:'margem', margin:40, price:0, cost:0, priceSet:0,
     createdAt:Date.now(), updatedAt:Date.now()};
@@ -6821,6 +7161,7 @@ function renderParams(p){
   /* peça e produto deixam de ser sinônimos quando o produto é montado */
   var pParts = Math.max(1, Math.round(num(p.parts)) || 1);
   var pq = Math.max(1, Math.round(num(p.qty)) || 1);
+  var pSet = plateSet(p.plates);
   var pr = S.printers.filter(function(x){return x.id===p.printer;})[0];
   var fl = S.filaments.filter(function(x){return x.id===p.filament;})[0];
   $('pd-params').innerHTML =
@@ -6832,8 +7173,13 @@ function renderParams(p){
       (p.scope === 'plate'
         ? 'da mesa toda, com ' + dec(pq,0) + ' ' + unitWord(pq, pParts) + (pParts > 1 ? ' (' + pieceWord(pq * pParts) + ')' : '')
         : 'de 1 ' + unitWord(1, pParts) + (pParts > 1 ? ' (' + pieceWord(pParts) + ')' : ''))+'</span></div>'+
-    '<div class="kv"><span>Cabem por mesa</span><span class="v">'+
-      (num(p.perPlate) > 0 ? dec(num(p.perPlate),0) + (num(p.perPlate) > 1 ? ' peças' : ' peça') : 'não informado')+'</span></div>'+
+    /* mesas do produto: o que o preço cobra de preparo sai daqui */
+    (pSet.n
+      ? '<div class="kv"><span>Mesas por '+unitWord(1, pParts)+'</span><span class="v">'+plateWord(pSet.n)+'</span></div>'+
+        '<div class="kv"><span>Peso e tempo de cada</span><span class="v">'+
+          esc(pSet.rows.map(function(x){ return dec(x.g,0)+' g / '+hmWord(x.h); }).join(' · '))+'</span></div>'
+      : '<div class="kv"><span>Cabem por mesa</span><span class="v">'+
+          (num(p.perPlate) > 0 ? dec(num(p.perPlate),0) + (num(p.perPlate) > 1 ? ' peças' : ' peça') : 'não informado')+'</span></div>')+
     '<div class="kv"><span>Como é montado</span><span class="v">'+
       (num(p.parts) > 1 ? 'montado com ' + dec(num(p.parts),0) + ' peças' : 'peça única')+'</span></div>'+
     '<div class="kv"><span>Impressora</span><span class="v">'+esc(pr ? pr.name : '—')+'</span></div>'+
@@ -6906,6 +7252,8 @@ function loadProduct(p){
   $('f-qty').value = p.qty || 1;
   $('f-perplate').value = num(p.perPlate) > 0 ? String(Math.round(num(p.perPlate))) : '';
   setParts(num(p.parts));
+  mesas = cloneMesas(p.plates);
+  setMultiPlate(plateSet(mesas).n > 0, false);
   $('f-waste').value = p.waste; $('f-fail').value = p.fail;
   $('f-prep').value = p.prep; $('f-finish').value = p.finish;
   extras = cloneExtras(p.extras);
@@ -6920,10 +7268,13 @@ function loadProduct(p){
 }
 function fillProductFromCalc(p){
   var r = compute();
-  /* gramas no mesmo escopo da tela: no multicolor, a soma das cores mais a purga */
-  p.grams = r.multi ? matGramsTotal() + purgeGrams() : num($('f-grams').value);
-  p.hours = num($('f-h').value) + num($('f-m').value)/60;
-  p.qty = r.qty; p.scope = scope;
+  var set = plateSet(plateList());
+  /* gramas no mesmo escopo da tela: no multicolor, a soma das cores mais a
+     purga; com a lista de mesas, a soma das mesas — que já é o produto inteiro */
+  p.grams = r.multi ? matGramsTotal() + purgeGrams() : (set.n ? set.g : num($('f-grams').value));
+  p.hours = set.n ? set.h : num($('f-h').value) + num($('f-m').value)/60;
+  p.qty = r.qty; p.scope = set.n ? 'unit' : scope;
+  p.plates = set.n ? cloneMesas(mesas) : [];
   p.perPlate = r.perPlate > 0 ? String(r.perPlate) : '';
   p.parts = r.parts > 1 ? String(r.parts) : '';
   p.printer = $('f-printer').value; p.filament = $('f-filament').value;
@@ -6951,7 +7302,12 @@ function applySlicedToProduct(res, fileName, box){
     gcErr('Não achei gramas nem tempo aqui. Isso saiu mesmo do fatiador?', box);
     return;
   }
-  if(!confirm('Atualizar "' + (p.name || 'sem nome') + '" com estes números? As gramas, o tempo e as cores salvas são substituídas.')){
+  /* produto em várias mesas: o arquivo é uma placa, então ele SOMA uma mesa em
+     vez de apagar o que as outras já disseram */
+  var addsMesa = plateSet(p.plates).n > 0;
+  if(!confirm(addsMesa
+      ? 'Somar este arquivo como MAIS UMA MESA de "' + (p.name || 'sem nome') + '"? O peso e o tempo dele entram na lista de mesas.'
+      : 'Atualizar "' + (p.name || 'sem nome') + '" com estes números? As gramas, o tempo e as cores salvas são substituídas.')){
     gcMsgHtml('', box);
     return;
   }
@@ -6962,14 +7318,172 @@ function applySlicedToProduct(res, fileName, box){
   openProduct(p.id);                 /* volta para a ficha, já atualizada */
 }
 
-/* ---- digitar na mão o que o Bambu Studio mostra ---- */
+/* ---- calcular na própria ficha ---- */
 /* Nem todo mundo tem o arquivo à mão: no Handy ele nem existe, e no Studio o
-   peso e o tempo estão ali na tela, prontos para copiar. Estes dois números
-   entram pelo mesmo caminho do arquivo — passam pela calculadora e voltam com
-   custo e preço refeitos — para o produto nunca ter duas verdades. */
+   peso e o tempo estão ali na tela, prontos para copiar. Estes números entram
+   pelo mesmo caminho do arquivo — passam pela mesma conta e voltam com custo e
+   preço refeitos — para o produto nunca ter duas verdades.
+
+   E, porque a conta agora mora num lugar só (computeCore), a ficha pode
+   RESPONDER antes de gravar: mudar o peso, o tempo, as mesas, a quantidade ou a
+   margem mostra o custo, o preço sugerido e o lucro na hora, sem a ida e volta
+   à calculadora. Enquanto o botão não é tocado, nada é salvo — o que está na
+   tela é simulação, e é isso que a nota embaixo diz. */
 var pdScope = 'unit';
 var pdParts = 'single';
-var PD_MAN = ['pd-m-grams','pd-m-h','pd-m-m','pd-m-qty','pd-m-perplate','pd-m-parts','pd-m-printer','pd-m-filament'];
+var pdMultiPlate = false;
+var pdMesas = [];
+var pdMode = 'margem';
+var PD_MAN = ['pd-m-grams','pd-m-h','pd-m-m','pd-m-qty','pd-m-perplate','pd-m-parts','pd-m-printer','pd-m-filament','pd-m-margin'];
+
+/* as mesas da ficha: a mesma lista da calculadora, na tela do produto */
+function renderPdMesas(){
+  var el = $('pd-plate-rows');
+  if(!el) return;
+  el.innerHTML = pdMesas.map(function(x, i){
+    function fld(k, u, lab){
+      return '<div class="n"><input type="text" inputmode="decimal" placeholder="0" value="'+
+        esc(x[k] == null ? '' : x[k])+'" data-pdmesa="'+k+'" data-i="'+i+'" aria-label="'+lab+' da mesa '+(i+1)+
+        '"><span class="u">'+u+'</span></div>';
+    }
+    return '<div class="plrow">'+
+      '<div class="top"><span class="nm">MESA '+(i+1)+'</span>'+
+        '<button type="button" class="kill" data-pdmesadel="'+i+'" aria-label="Remover a mesa '+(i+1)+'">×</button></div>'+
+      '<div class="ins">'+fld('g','g','Gramas')+fld('h','h','Horas')+fld('m','min','Minutos')+'</div>'+
+    '</div>';
+  }).join('') || '<div class="oempty">Nenhuma mesa na lista.</div>';
+  each(qsa(el,'[data-pdmesa]'), function(inp){
+    inp.addEventListener('input', function(){
+      var i = +inp.getAttribute('data-i');
+      if(!pdMesas[i]) return;
+      pdMesas[i][inp.getAttribute('data-pdmesa')] = inp.value;
+      renderPdPreview();
+    });
+  });
+  each(qsa(el,'[data-pdmesadel]'), function(b){
+    b.addEventListener('click', function(){
+      pdMesas.splice(+b.getAttribute('data-pdmesadel'), 1);
+      renderPdMesas(); renderPdPreview();
+    });
+  });
+}
+function setPdMultiPlate(on, seed){
+  var was = pdMultiPlate;
+  pdMultiPlate = !!on;
+  setSeg('seg-pd-plates', pdMultiPlate ? 'many' : 'one');
+  if(pdMultiPlate){
+    if(seed !== false && !plateSet(pdMesas).n){
+      var q = pdScope === 'plate' ? Math.max(1, Math.round(num($('pd-m-qty').value)) || 1) : 1;
+      var g = num($('pd-m-grams').value)/q;
+      var mins = Math.round((num($('pd-m-h').value) + num($('pd-m-m').value)/60)*60/q);
+      pdMesas = [{g: g > 0 ? dec(g,1) : '', h: mins >= 60 ? String(Math.floor(mins/60)) : '',
+                  m: mins % 60 ? String(mins % 60) : ''}, {g:'', h:'', m:''}];
+    }
+    if(pdScope === 'plate'){ pdScope = 'unit'; setSeg('seg-pd-scope', pdScope); }
+  } else if(was && seed !== false){
+    /* a soma das mesas volta para os campos únicos: nada do que foi digitado
+       some por trocar de opção */
+    var set = plateSet(pdMesas);
+    if(set.n){
+      $('pd-m-grams').value = set.g > 0 ? dec(set.g,1) : '';
+      $('pd-m-h').value = String(Math.floor(set.h) || 0);
+      $('pd-m-m').value = String(Math.round((set.h - Math.floor(set.h))*60) || 0);
+    }
+  }
+  var box = $('pd-plate-box');
+  if(box) box.hidden = !pdMultiPlate;
+  var rg = $('pd-row-gh');
+  if(rg) rg.hidden = pdMultiPlate;
+  var fs = $('fld-pd-scope');
+  if(fs) fs.hidden = pdMultiPlate;
+  var fp = $('fld-pd-perplate');
+  if(fp) fp.hidden = pdMultiPlate;
+  renderPdMesas();
+  renderPdPreview();
+}
+/* Peso digitado DIFERENTE do salvo é número novo, trazido do fatiador agora — e
+   o fatiador já contou brim, suporte e purga, então a porcentagem de desperdício
+   cobraria o mesmo material duas vezes. Peso igual ao que já estava não é
+   notícia nenhuma: zerar o desperdício aí mudaria o custo de um produto que
+   ninguém pediu para mudar, logo ao abrir a ficha. */
+function pdFreshWeight(p, g){ return g > 0 && Math.abs(g - num(p.grams)) > 0.05; }
+/* o que a ficha está mostrando, no formato do motor: os números digitados aqui
+   mais os parâmetros que o produto já tem salvos (desperdício, falhas, preparo,
+   acabamento e insumos continuam sendo os dele) */
+function pdInput(p){
+  var set = plateSet(pdMultiPlate ? pdMesas : []);
+  var g = set.n ? set.g : num($('pd-m-grams').value);
+  var hrs = set.n ? set.h : num($('pd-m-h').value) + num($('pd-m-m').value)/60;
+  var pr = S.printers.filter(function(x){ return x.id === $('pd-m-printer').value; })[0];
+  var fl = S.filaments.filter(function(x){ return x.id === $('pd-m-filament').value; })[0];
+  var keepMulti = !pdFreshWeight(p, g) && !!p.multi && (p.mats || []).length > 0;
+  return {
+    printer: pr || S.printers[0], filament: fl || S.filaments[0],
+    qty: num($('pd-m-qty').value), scope: set.n ? 'unit' : pdScope,
+    grams: g, hours: hrs,
+    /* um peso só não separa cor: quando o peso é novo, o multicolor sai (como
+       no arquivo). Enquanto o peso for o mesmo que está salvo, as cores ficam:
+       mexer só na margem não pode apagar o que o AMS informou. */
+    multi: keepMulti, mats: keepMulti ? p.mats : [], purge: keepMulti ? num(p.purge) : 0,
+    plates: pdMultiPlate ? pdMesas : [],
+    waste: pdFreshWeight(p, g) ? 0 : num(p.waste), fail: num(p.fail),
+    prep: num(p.prep), finish: num(p.finish), extras: p.extras,
+    perPlate: set.n ? 0 : num($('pd-m-perplate').value),
+    parts: pdParts === 'set' ? num($('pd-m-parts').value) : 1,
+    mode: pdMode, margin: num($('pd-m-margin').value),
+    /* o preço escolhido é o que está no campo lá em cima: é com ele que o lucro
+       da prévia tem de bater */
+    chosen: num($('pd-price').value)
+  };
+}
+/* a resposta na hora: custo, preço sugerido e lucro do que está na tela */
+function renderPdPreview(){
+  var el = $('pd-prev');
+  if(!el) return;
+  var p = S.products.filter(function(x){ return x.id === pdId; })[0];
+  if(!p){ el.innerHTML = ''; return; }
+  var lm = $('lbl-pd-margin');
+  if(lm) lm.innerHTML = (pdMode === 'markup' ? 'Markup sobre o custo' : 'Margem sobre o preço') + ' <span class="hint">%</span>';
+  var tot = $('pd-plate-tot');
+  var set = plateSet(pdMultiPlate ? pdMesas : []);
+  var r = computeCore(pdInput(p));
+  if(tot) tot.innerHTML =
+    '<span>'+(set.n ? plateWord(set.n)+' · <b>'+dec(set.g,1)+' g</b> · <b>'+hmWord(set.h)+'</b>' : 'nenhuma mesa preenchida')+'</span>'+
+    '<span>Preparo <b>'+dec(r.prep*(set.n || 1),0)+' min</b></span>';
+
+  if(!(r.g > 0) && !(r.h > 0)){
+    el.innerHTML = '<p class="note" style="margin:14px 0 0">Digite o <b>peso</b> e o <b>tempo</b> acima — ou mande o arquivo do fatiador — e o custo, o preço sugerido e o lucro aparecem aqui.</p>';
+    return;
+  }
+  var saved = num(p.cost), diff = saved > 0 ? r.cost - saved : 0;
+  el.innerHTML =
+    '<div class="mini" style="margin-top:16px">'+
+      '<div><span class="k">Custo '+(r.parts > 1 ? 'do produto' : 'da peça')+'</span><span class="v">'+brl(r.cost)+'</span></div>'+
+      '<div><span class="k">Preço sugerido</span><span class="v">'+(r.suggested > 0 ? brl(r.suggested) : '—')+'</span></div>'+
+      '<div><span class="k">'+(r.usedChosen ? 'Lucro no seu preço' : 'Lucro no sugerido')+'</span><span class="v'+
+        (r.profit < 0 ? ' neg' : ' pos')+'">'+brl(r.profit)+'</span></div>'+
+      '<div><span class="k">Margem real</span><span class="v'+(r.realMargin < 0 ? ' neg' : '')+'">'+dec(r.realMargin*100,1)+'%</span></div>'+
+    '</div>'+
+    (r.warn ? '<div class="alert bad" style="margin-top:12px">'+esc(r.warn)+'</div>' : '')+
+    (r.price > 0 && r.profit < 0 ? '<div class="alert" style="margin-top:12px">Neste preço o produto sai no prejuízo.</div>' : '')+
+    '<details class="fold" style="margin:12px 0 0"><summary>Como o custo se forma</summary><div class="body">'+
+      '<div class="fx">'+fxHtml(r)+'</div>'+
+      '<p class="note" style="margin:10px 0 0">Desperdício, reserva de falhas, preparo, acabamento e insumos são os que estão salvos no produto. Para mexer neles, use <b>Abrir na calculadora</b>.</p>'+
+    '</div></details>'+
+    '<p class="note" style="margin:12px 0 0">'+
+      /* o peso daqui vem do fatiador, que já contou brim, suporte e purga:
+         manter a porcentagem por cima cobraria o mesmo material duas vezes */
+      (pdFreshWeight(p, r.g) && num(p.waste) > 0
+        ? 'O peso mudou, então o <b>desperdício de '+dec(num(p.waste),0)+'%</b> sai da conta: número novo vem do fatiador, que já contou brim, suporte e purga. '
+        : '')+
+      (r.suggested > 0 && num(p.priceSet) > 0 && Math.abs(num(p.priceSet) - r.suggested) > 0.005
+        ? 'Seu preço de venda é <b>'+brl(num(p.priceSet))+'</b> e o sugerido por esta conta é <b>'+brl(r.suggested)+'</b>. '
+        : '')+
+      (saved > 0 && Math.abs(diff) > 0.005
+        ? 'O custo salvo hoje é <b>'+brl(saved)+'</b>: gravar esta conta '+(diff > 0 ? 'sobe' : 'desce')+' o custo em <b>'+brl(Math.abs(diff))+'</b>. '
+        : '')+
+      'Nada disto está salvo ainda — toque em <b>Usar este cálculo no produto</b> para gravar.</p>';
+}
 /* a ficha fala a mesma língua da calculadora: montado, "1 peça" vira "1 produto" */
 function pdPartsUi(){
   var on = pdParts === 'set';
@@ -6985,7 +7499,10 @@ function pdManualFill(p){
   var a = document.activeElement;
   /* sincronização com a nuvem redesenha a ficha a qualquer momento: quem está
      digitando os números não pode ver o campo voltar sozinho ao que estava */
-  if(a && PD_MAN.indexOf(a.id) > -1) return;
+  if(a && (PD_MAN.indexOf(a.id) > -1 || (a.hasAttribute && a.hasAttribute('data-pdmesa')))){
+    renderPdPreview();
+    return;
+  }
   function set(id, v){ var el = $(id); if(el) el.value = v; }
   set('pd-m-grams', num(p.grams) > 0 ? dec(num(p.grams), 1) : '');
   var hrs = num(p.hours);
@@ -7002,29 +7519,43 @@ function pdManualFill(p){
   if(fl && fid && S.filaments.some(function(x){ return x.id === fid; })) fl.value = fid;
   pdScope = p.scope === 'plate' ? 'plate' : 'unit';
   setSeg('seg-pd-scope', pdScope);
+  pdMode = p.mode === 'markup' ? 'markup' : 'margem';
+  setSeg('seg-pd-mode', pdMode);
+  set('pd-m-margin', num(p.margin) > 0 ? String(num(p.margin)).replace('.', ',') : '');
   pdPartsUi();
+  pdMesas = cloneMesas(p.plates);
+  setPdMultiPlate(plateSet(pdMesas).n > 0, false);   /* já redesenha a prévia */
 }
 function pdApplyManual(){
   var box = 'pd-gc-msg';
   var p = S.products.filter(function(x){ return x.id === pdId; })[0];
   if(!p){ gcErr('Abra um produto antes de digitar os números.', box); return; }
-  var g = num($('pd-m-grams').value);
-  var hrs = num($('pd-m-h').value) + num($('pd-m-m').value) / 60;
+  /* com a lista de mesas ligada, o peso e o tempo são a soma delas */
+  var set = plateSet(pdMultiPlate ? pdMesas : []);
+  var g = set.n ? set.g : num($('pd-m-grams').value);
+  var hrs = set.n ? set.h : num($('pd-m-h').value) + num($('pd-m-m').value) / 60;
   if(!(g > 0) && !(hrs > 0)){
-    gcErr('Digite pelo menos o peso ou o tempo que o fatiador mostrou.', box);
+    gcErr(set.n ? 'Preencha o peso ou o tempo de pelo menos uma mesa.'
+                : 'Digite pelo menos o peso ou o tempo que o fatiador mostrou.', box);
     return;
   }
   var had = num(p.grams) > 0 || num(p.hours) > 0;
-  if(had && !confirm('Substituir as gramas, o tempo e as cores salvas de "' + (p.name || 'sem nome') + '" por estes números?')) return;
+  if(had && pdFreshWeight(p, g) &&
+     !confirm('Substituir as gramas, o tempo e as cores salvas de "' + (p.name || 'sem nome') + '" por estes números?')) return;
 
   var wasMulti = !!p.multi && (p.mats || []).length > 1;
   var qty = Math.max(1, Math.round(num($('pd-m-qty').value)) || 1);
+  /* peso novo é peso do fatiador: ele não vem separado por cor, e já conta
+     brim, suporte e purga. Peso igual ao salvo não mexe em nenhum dos dois. */
+  var fresh = pdFreshWeight(p, g);
 
   loadProduct(p);                 /* o produto vai inteiro para a calculadora */
-  /* um peso só não separa cor: quem quiser multicolor manda o arquivo ou cola as linhas */
-  multi = false; mats = []; purgeStr = '';
-  $('f-purge').value = '';
-  setSeg('seg-multi', 'one'); renderMats();
+  if(fresh){
+    /* um peso só não separa cor: quem quiser multicolor manda o arquivo ou cola as linhas */
+    multi = false; mats = []; purgeStr = '';
+    $('f-purge').value = '';
+    setSeg('seg-multi', 'one'); renderMats();
+  }
   $('f-grams').value = g > 0 ? dec(g, 1) : '';
   $('f-h').value = Math.floor(hrs) || 0;
   $('f-m').value = Math.round((hrs - Math.floor(hrs)) * 60) || 0;
@@ -7033,11 +7564,18 @@ function pdApplyManual(){
     ? String(Math.round(num($('pd-m-perplate').value))) : '';
   setParts(pdParts === 'set' ? num($('pd-m-parts').value) : 0);
   scope = pdScope; setSeg('seg-scope', scope);
+  /* as mesas da ficha são as mesas da conta */
+  mesas = cloneMesas(pdMultiPlate ? pdMesas : []);
+  setMultiPlate(set.n > 0, false);
+  /* a margem escolhida na ficha é a margem do produto */
+  mode = pdMode; setSeg('seg-mode', mode);
+  margin = num($('pd-m-margin').value); $('f-margin').value = $('pd-m-margin').value; syncMarginLabel();
   if($('pd-m-printer').value)  $('f-printer').value  = $('pd-m-printer').value;
   if($('pd-m-filament').value) $('f-filament').value = $('pd-m-filament').value;
-  /* o fatiador já contou brim, suporte e purga no peso da tela */
-  var hadWaste = g > 0 && num($('f-waste').value) > 0;
-  if(g > 0) $('f-waste').value = 0;
+  /* o fatiador já contou brim, suporte e purga no peso da tela — mas só quando
+     o peso é novo: repetir o que já estava salvo não zera desperdício nenhum */
+  var hadWaste = fresh && num($('f-waste').value) > 0;
+  if(fresh) $('f-waste').value = 0;
   render();
 
   fillProductFromCalc(p);
@@ -7046,13 +7584,18 @@ function pdApplyManual(){
 
   var li = [];
   var np = partsCount();
-  li.push(scope === 'plate'
-    ? 'Contados como a <b>mesa toda</b>, com ' + qty + ' ' + unitWord(qty, np) +
-      (np > 1 ? ' — ' + pieceWord(qty * np) + ' impressas.' : '.')
-    : 'Contados como <b>1 ' + unitWord(1, np) + '</b>.');
+  li.push(set.n
+    ? 'Somados de <b>' + plateWord(set.n) + '</b>, que é o que cada ' + unitWord(1, np) + ' usa.'
+    : (scope === 'plate'
+        ? 'Contados como a <b>mesa toda</b>, com ' + qty + ' ' + unitWord(qty, np) +
+          (np > 1 ? ' — ' + pieceWord(qty * np) + ' impressas.' : '.')
+        : 'Contados como <b>1 ' + unitWord(1, np) + '</b>.'));
   if(np > 1) li.push('Produto <b>montado com ' + pieceWord(np) + '</b>: o peso e o tempo acima valem pelo conjunto inteiro, e na mesa ele ocupa ' + pieceWord(np) + '.');
   var fit = plateFit();
-  if(!(fit > 0)){
+  if(set.n){
+    li.push('O <b>preparo</b> é cobrado uma vez por mesa: ' + dec(num(p.prep),0) + ' min × ' + dec(set.n,0) +
+      ' = <b>' + dec(num(p.prep)*set.n,0) + ' min</b> por ' + unitWord(1, np) + '. Com a lista de mesas, "cabem por mesa" fica fora da conta.');
+  } else if(!(fit > 0)){
     li.push('Sem "cabem por mesa", a tabela por faixa segue contando um preparo só para o lote inteiro.');
   } else if(np > 1){
     /* o que cabe na mesa é contado em peças; o que se dilui é o produto */
@@ -7067,7 +7610,8 @@ function pdApplyManual(){
   if(!(g > 0)) li.push('Sem o peso, só o tempo entrou: o filamento continua fora do custo.');
   if(!(hrs > 0)) li.push('Sem o tempo, a máquina e a energia ficam fora do custo — preencha as horas.');
   if(hadWaste) li.push('Desperdício zerado: o peso do fatiador já conta brim, suporte e purga.');
-  if(wasMulti) li.push('O multicolor saiu: um peso só não separa as cores. Para tê-las de volta, mande o arquivo fatiado ou cole as linhas de cada material.');
+  if(wasMulti && fresh) li.push('O multicolor saiu: um peso só não separa as cores. Para tê-las de volta, mande o arquivo fatiado ou cole as linhas de cada material.');
+  if(wasMulti && !fresh) li.push('O <b>multicolor continua</b>: o peso não mudou, então as cores salvas seguem as mesmas.');
   li.push('Custo e preço sugerido foram refeitos com estes números.');
   gcMsgHtml('<div class="gcok"><span class="src">Digitado do fatiador</span>' +
     (g > 0 ? '<b>' + dec(g, 1) + ' g</b>' : '') +
@@ -7630,7 +8174,7 @@ function jobItems(j){
     waste:num(j.waste), fail:num(j.fail), prep:num(j.prep), finish:num(j.finish),
     extras:cloneExtras(j.extras), printer:j.printer || '', filament:j.filament || '',
     scope:j.scope || 'unit', perPlate:j.perPlate == null ? '' : j.perPlate,
-    parts:j.parts == null ? '' : j.parts,
+    parts:j.parts == null ? '' : j.parts, plates:[],
     mode:j.mode || 'margem', margin:num(j.margin),
     priceSet:num(j.priceSet), suggested:num(j.suggested), productId:j.productId || ''
   };
@@ -8961,7 +9505,13 @@ function bindCalc(){
       render();
     });
   });
+  each(qsa($('seg-plates'),'button'), function(b){
+    b.addEventListener('click', function(){ setMultiPlate(b.getAttribute('data-v') === 'many'); });
+  });
   $('btn-mat-add').addEventListener('click', function(){ matAdd(); renderMats(); render(); });
+  $('btn-plate-add').addEventListener('click', function(){
+    mesas.push({g:'', h:'', m:''}); renderMesas(); render();
+  });
   $('f-purge').addEventListener('input', function(){ purgeStr = this.value; render(); });
   $('btn-tier-copy').addEventListener('click', function(){
     if(!(compute().price > 0)){ alert('Preencha gramas e tempo antes de copiar a tabela.'); return; }
@@ -9047,6 +9597,7 @@ function bindCalc(){
     multi = false; mats = []; purgeStr = '';
     setSeg('seg-multi', 'one');
     setParts(0);
+    mesas = []; setMultiPlate(false, false);
     $('save-msg').innerHTML = ''; $('gc-msg').innerHTML = '';
     renderMats(); renderExtras(); render();
   });
@@ -9310,7 +9861,7 @@ function bindProducts(){
         $('pd-stl-go').setAttribute('aria-disabled', safeUrl(this.value) ? 'false' : 'true');
         renderParams(p);
       }
-      if(field === 'pd-price') renderMoneyBox(p, productMoney(p));
+      if(field === 'pd-price'){ renderMoneyBox(p, productMoney(p)); renderPdPreview(); }
     });
   }
   upd('pd-name',  function(p,v){ p.name = v; });
@@ -9396,6 +9947,7 @@ function bindProducts(){
     b.addEventListener('click', function(){
       pdScope = b.getAttribute('data-v');
       setSeg('seg-pd-scope', pdScope);
+      renderPdPreview();
     });
   });
   each(qsa($('seg-pd-parts'),'button'), function(b){
@@ -9406,9 +9958,30 @@ function bindProducts(){
       if(pdParts === 'set' && !(num(el.value) > 1)) el.value = '2';
       if(pdParts !== 'set') el.value = '';
       pdPartsUi();
+      renderPdPreview();
     });
   });
-  $('pd-m-parts').addEventListener('input', pdPartsUi);
+  each(qsa($('seg-pd-plates'),'button'), function(b){
+    b.addEventListener('click', function(){ setPdMultiPlate(b.getAttribute('data-v') === 'many'); });
+  });
+  each(qsa($('seg-pd-mode'),'button'), function(b){
+    b.addEventListener('click', function(){
+      pdMode = b.getAttribute('data-v');
+      setSeg('seg-pd-mode', pdMode);
+      renderPdPreview();
+    });
+  });
+  $('btn-pd-plate-add').addEventListener('click', function(){
+    pdMesas.push({g:'', h:'', m:''}); renderPdMesas(); renderPdPreview();
+  });
+  $('pd-m-parts').addEventListener('input', function(){ pdPartsUi(); renderPdPreview(); });
+  /* a prévia responde a cada tecla: é ela que faz da ficha um lugar onde dá
+     para calcular, e não só um lugar onde o resultado aparece depois */
+  PD_MAN.forEach(function(id){
+    var el = $(id);
+    if(!el) return;
+    el.addEventListener(el.tagName === 'SELECT' ? 'change' : 'input', renderPdPreview);
+  });
   $('btn-pd-manual').addEventListener('click', pdApplyManual);
   $('btn-pd-save').addEventListener('click', function(){
     var p = S.products.filter(function(x){return x.id===pdId;})[0];
@@ -11352,7 +11925,7 @@ function boot(reload){
   $('f-waste').value = S.settings.waste;
   $('f-fail').value  = S.settings.fail;
   $('f-margin').value = margin;
-  renderPrinters(); renderFilaments(); renderSupplyPresets(); renderExtras(); renderMats();
+  renderPrinters(); renderFilaments(); renderSupplyPresets(); renderExtras(); renderMats(); renderMesas();
   renderCats(); renderCatFilter(); renderProducts();
   renderClients(); fillClientSelect();
   renderBuyFilter(); renderBuys();

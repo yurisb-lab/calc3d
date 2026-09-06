@@ -1152,3 +1152,87 @@ cliente, estoque reservado, frete por CEP, domínio próprio, contador de visita
 e resposta automática ao pedido. A venda continua terminando na conversa — o
 catálogo só evita que ela **comece** com vinte fotos soltas, o preço repetido
 de cabeça e um "com quem eu falo?".
+
+---
+
+# Adendo — v12 (setembro/2026)
+
+Da v6 em diante o app conta **mesas**, porque é por mesa que se paga o preparo.
+Mas ele só sabia contar mesas de um jeito: dividindo peças pequenas num espaço
+grande — *cabem 24 por mesa, 50 peças são 3 mesas*. O caso inverso, que é o do
+produto grande, não tinha como ser dito. Um dragão de 40 cm não sai de uma mesa
+só: sai de três, cada uma com o seu peso e o seu tempo. Quem imprime assim tinha
+de somar as três de cabeça, digitar o total num campo só — e ainda assim o app
+cobrava **um** preparo, como se as três mesas fossem uma. Fatiar, limpar a mesa,
+trocar o filamento e ligar custa igual nas três; o custo que sumia era esse.
+
+E havia um segundo caminho torto: o preço nascia sempre na calculadora. A ficha
+do produto tinha os campos do peso e do tempo, mas para ver o que eles faziam
+com o custo era preciso gravar, ir para a calculadora e voltar.
+
+## 46. O que entrou
+
+### 46.1 Quantas mesas o produto usa
+Opção nova na calculadora (logo abaixo de *Como o produto é montado*) e na ficha
+do produto: **Uma mesa só** ou **Mais de uma mesa**. Marcando a segunda, entra
+uma lista com **peso e tempo de cada mesa**, uma linha por placa fatiada.
+
+- O peso e o tempo do produto passam a ser a **soma das mesas**, e os campos
+  únicos de gramas e horas somem da tela: eles diriam a mesma coisa duas vezes.
+  Voltar para *Uma mesa só* devolve a soma para eles — nada do que foi digitado
+  se perde na troca.
+- O **preparo é cobrado uma vez por mesa**: 20 min em três mesas são 60 min por
+  produto, e não 20. É o custo que este adendo existe para fazer aparecer. Um
+  lote de 5 produtos são 15 mesas.
+- **Cabem por mesa sai da conta** enquanto a lista estiver ligada, junto com o
+  escopo *1 peça / a mesa toda*: quem já ocupa mesas inteiras não divide nenhuma
+  com outro produto, e o que está listado já é o produto inteiro. A tabela por
+  faixa passa a dizer, com todas as letras, que aqui **o preço não cai no lote**
+  — porque na impressora ele não cai mesmo.
+- A **memória de cálculo** abre a lista: `mesa 1: 120 g / 4 h · mesa 2: 80 g /
+  3 h`, e o total ao lado. O texto do WhatsApp diz quantas mesas cada unidade
+  ocupa, que é o prazo que o cliente pergunta em seguida.
+- **Arrastar o arquivo fatiado soma uma mesa** em vez de sobrescrever o peso e o
+  tempo: o Bambu exporta uma placa por vez, então três placas são três arquivos.
+  A linha em branco que estiver sobrando recebe o arquivo.
+- Multicolor e mesas convivem: as cores continuam mandando no **peso**, as mesas
+  no **tempo** e no número de preparos. Quando as duas somas não batem, o app
+  diz por qual está indo, em vez de escolher em silêncio.
+
+### 46.2 Calcular o preço na ficha do produto
+A conta saiu de dentro da calculadora e virou uma função que recebe os números
+prontos (`computeCore`). Com isso a **ficha do produto responde sozinha**: mudar
+o peso, o tempo, as mesas, a quantidade ou a margem mostra na hora o **custo, o
+preço sugerido, o lucro e a margem real**, com a memória de cálculo inteira
+embaixo — sem abrir a calculadora e voltar.
+
+- A margem (ou markup) também mora ali agora: sem ela a ficha mostraria o custo
+  e ficaria devendo justamente a resposta que se procura.
+- Enquanto o botão **Usar este cálculo no produto** não for tocado, nada é
+  gravado — e a nota embaixo diz o que mudaria: "o custo salvo hoje é R$ 25,98;
+  gravar esta conta sobe o custo em R$ 16,08".
+- Desperdício, reserva de falhas, preparo, acabamento e insumos continuam sendo
+  os que estão salvos no produto; para mexer neles, *Abrir na calculadora*. A
+  ficha responde a pergunta do dia a dia — "quanto custa e por quanto vendo" —,
+  não substitui o cadastro inteiro.
+- **Uma conta só, dois lugares.** A ficha não refaz a fórmula: ela chama a mesma
+  que a calculadora chama. Duas cópias um dia discordariam, e o preço sairia de
+  uma e o custo da outra.
+
+## 47. Compatibilidade
+
+Produto salvo antes da v12 sobe com a lista de mesas **vazia**, e lista vazia é
+exatamente a conta de antes: *cabem por mesa* continua decidindo quantas mesas o
+lote pede, e nenhum preço muda sozinho. Marcar *Mais de uma mesa* também não
+mexe em preço nenhum enquanto as mesas não tiverem números.
+
+O campo `plates` viaja no documento do produto, no item do orçamento e no backup
+`.json` como os demais. Pedido e orçamento salvos antes sobem sem ele.
+
+## 48. Continua fora do escopo
+
+Tudo o que já estava fora. E, aqui: encaixar a sobra de uma mesa na mesa
+seguinte (nesting) segue de fora — se um produto pede três mesas, dez produtos
+pedem trinta, e adivinhar o contrário erraria mais do que acertaria. Cor por
+mesa também fica de fora: a lista de mesas guarda peso e tempo, que é o que
+muda o preço; qual cor entra em qual placa é outro assunto.
