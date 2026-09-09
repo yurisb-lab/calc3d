@@ -3428,12 +3428,67 @@ function hydratePhotos(root){
       img.setAttribute('data-done','1');
       var ph = img.parentNode.querySelector('.ph');
       if(ph) ph.style.display = 'none';
+      if(kind === 'thumb'){
+        photoRethumb(p, function(np){ if(img.parentNode) img.src = np.thumb; });
+      }
     });
   });
 }
 
+/* Foto tirada antes desta versão tem miniatura de 320 px: nos cartões de hoje
+   ela aparece esticada, com o serrilhado que faz a peça parecer mal impressa. A
+   original não existe mais, mas a foto grande está guardada — dela sai uma
+   miniatura bem melhor que a de 320 px ampliada. Refaz uma por vez, só quando a
+   foto aparece na tela, e grava só neste aparelho: ninguém reenvia o acervo
+   inteiro para a nuvem por causa de miniatura. */
+var RTQ = [], RTBUSY = false, RTSEEN = {};
+function photoRethumb(p, after){
+  if(!p || !p.id || !p.full || (p.v || 1) >= 2 || RTSEEN[p.id]) return;
+  RTSEEN[p.id] = 1;
+  RTQ.push([p, after]);
+  rethumbPump();
+}
+function rethumbPump(){
+  if(RTBUSY || !RTQ.length) return;
+  RTBUSY = true;
+  var job = RTQ.shift(), p = job[0], after = job[1];
+  function next(){ RTBUSY = false; setTimeout(rethumbPump, 150); }
+  var im = new Image();
+  im.onload = function(){
+    var t;
+    try { t = photoEncode(photoScale(im, THUMB_DIM), THUMB_Q); } catch(e){ return next(); }
+    t.then(function(url){
+      if(url && url.length > 64){
+        p.thumb = url; p.v = 2;
+        pcacheSet(p.id, p);
+        photoLocalPut(p.id, p);
+        if(after) after(p);
+      }
+      next();
+    }, next);
+  };
+  im.onerror = next;
+  im.src = p.full;
+}
+
 /* ---- captura e compressão ---- */
-var PHOTO_MAX = 3, FULL_BUDGET = 210 * 1024;
+/* WebP quando o navegador sabe codificar: a mesma foto sai com cerca de um terço
+   menos bytes que JPEG, e no mesmo orçamento isso compra mais pixels e menos
+   artefato. Navegador antigo cai no JPEG e nada quebra. */
+var PHOTO_FMT = (function(){
+  try {
+    var t = document.createElement('canvas'); t.width = t.height = 1;
+    if(t.toDataURL('image/webp').indexOf('data:image/webp') === 0) return 'image/webp';
+  } catch(e){}
+  return 'image/jpeg';
+})();
+var PHOTO_MAX = 3;
+/* A foto grande é a que o cliente abre em tela cheia no catálogo: 1600 px de
+   lado maior, com folga para a tela retina do celular dele. A miniatura alimenta
+   os cartões da grade — 320 px ficavam borrados em qualquer tela moderna. */
+var FULL_DIM = 1600, FULL_Q = 0.84, FULL_BUDGET = 380 * 1024;
+var THUMB_DIM = 640, THUMB_Q = 0.72;
+
 function loadImageFile(file){
   return new Promise(function(res, rej){
     function fallback(){
@@ -3449,39 +3504,113 @@ function loadImageFile(file){
     fallback();
   });
 }
-function drawTo(img, maxDim, q){
+/* Descer de 4000 px para 640 px numa passada só faz o navegador pegar um pixel
+   e pular os outros: a foto sai serrilhada, com o granulado que parece foto
+   "estourada". Reduzindo pela metade de cada vez, cada passo vira média dos
+   vizinhos — é o que devolve a textura da peça impressa. */
+function photoScale(img, maxDim){
   var w = img.width || img.naturalWidth, h = img.height || img.naturalHeight;
   var s = Math.min(1, maxDim / Math.max(w, h));
   var cw = Math.max(1, Math.round(w * s)), ch = Math.max(1, Math.round(h * s));
-  var c = document.createElement('canvas'); c.width = cw; c.height = ch;
-  var ctx = c.getContext('2d');
-  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cw, ch);
-  ctx.drawImage(img, 0, 0, cw, ch);
-  return c.toDataURL('image/jpeg', q);
-}
-/* Antes varria 5 dimensões × 4 qualidades — até 20 codificações de canvas em
-   sequência, o que trava a thread principal por segundos numa foto de 12 MP.
-   Agora estima o próximo passo a partir do tamanho obtido (bytes ≈ área) e
-   devolve o controle ao navegador entre as tentativas: 3 a 6 codificações,
-   com a interface respondendo. */
-function encodeFull(img){
-  var dim = 1080, q = 0.74, tries = 0;
-  function step(){
-    var full = drawTo(img, dim, q);
-    if(full.length <= FULL_BUDGET || tries >= 4) return full;
-    tries++;
-    if(q > 0.46) q = Math.max(0.44, q - 0.14);
-    else dim = Math.max(420, Math.round(dim * Math.min(0.9, Math.sqrt(FULL_BUDGET / full.length) * 0.94)));
-    return new Promise(function(res){ setTimeout(function(){ res(step()); }, 0); });
+  var src = img, sw = w, sh = h;
+  while(sw >= cw * 2 && sh >= ch * 2 && sw > 1 && sh > 1){
+    var nw = Math.max(cw, Math.round(sw / 2)), nh = Math.max(ch, Math.round(sh / 2));
+    if(nw === sw && nh === sh) break;
+    src = photoPaint(src, nw, nh, false); sw = nw; sh = nh;
   }
-  return Promise.resolve(step());
+  return photoPaint(src, cw, ch, true);
+}
+var OFFOK = !!(window.OffscreenCanvas && OffscreenCanvas.prototype.convertToBlob);
+/* Reduzir com createImageBitmap tira o peso da thread da interface: quem decide
+   o tamanho é o próprio navegador, com o filtro dele, enquanto o app continua
+   respondendo ao toque. Nem todo navegador respeita as opções — se voltar num
+   tamanho diferente do pedido, a redução por metades assume. */
+function photoScaleAsync(src, maxDim){
+  var w = src.width || src.naturalWidth, h = src.height || src.naturalHeight;
+  var s = Math.min(1, maxDim / Math.max(w, h));
+  var cw = Math.max(1, Math.round(w * s)), ch = Math.max(1, Math.round(h * s));
+  if(!window.createImageBitmap || s === 1) return Promise.resolve(photoScale(src, maxDim));
+  var pr;
+  try { pr = createImageBitmap(src, {resizeWidth:cw, resizeHeight:ch, resizeQuality:'high'}); }
+  catch(e){ return Promise.resolve(photoScale(src, maxDim)); }
+  return pr.then(function(bm){
+    if(bm.width !== cw || bm.height !== ch){ try { bm.close(); } catch(e){} return photoScale(src, maxDim); }
+    var c = photoPaint(bm, cw, ch, true);
+    try { bm.close(); } catch(e){}
+    return c;
+  }, function(){ return photoScale(src, maxDim); });
+}
+function photoPaint(src, w, h, opaque){
+  var c;
+  if(OFFOK) c = new OffscreenCanvas(w, h);
+  else { c = document.createElement('canvas'); c.width = w; c.height = h; }
+  var ctx = c.getContext('2d');
+  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+  /* fundo branco só na última passada: o JPEG não guarda transparência, e sem
+     isso um PNG recortado sai com fundo preto */
+  if(opaque){ ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h); }
+  ctx.drawImage(src, 0, 0, w, h);
+  return c;
+}
+/* Codificar trava a tela: no celular, uma foto de 12 MP é quase um segundo de
+   app parado — e são até três por vez. convertToBlob devolve o controle ao
+   navegador e, onde existe, codifica fora da thread da interface. */
+function photoEncode(canvas, q){
+  if(canvas.convertToBlob){
+    return canvas.convertToBlob({type:PHOTO_FMT, quality:q}).then(function(bl){
+      /* codec recusado devolve PNG calado, que ocuparia megabytes: volta para o
+         caminho clássico em vez de guardar isso */
+      if(!bl || bl.type !== PHOTO_FMT) return photoEncodeDom(canvas, q);
+      return blobURL(bl);
+    }, function(){ return photoEncodeDom(canvas, q); });
+  }
+  return Promise.resolve(canvas.toDataURL(PHOTO_FMT, q));
+}
+function photoEncodeDom(src, q){
+  var c = document.createElement('canvas'); c.width = src.width; c.height = src.height;
+  c.getContext('2d').drawImage(src, 0, 0);
+  return c.toDataURL(PHOTO_FMT, q);
+}
+function blobURL(bl){
+  return new Promise(function(res, rej){
+    var fr = new FileReader();
+    fr.onload = function(){ res(fr.result); };
+    fr.onerror = function(){ rej(new Error('blob')); };
+    fr.readAsDataURL(bl);
+  });
+}
+/* Estima o próximo passo pelo tamanho obtido (bytes ≈ área) e devolve o controle
+   ao navegador entre as tentativas: 1 a 5 codificações, com a interface
+   respondendo, em vez das 20 em sequência que travavam o celular. */
+function photoEncodeFull(base){
+  var q = FULL_Q, cur = base, dim = FULL_DIM, tries = 0;
+  function step(){
+    return photoEncode(cur, q).then(function(full){
+      if(full.length <= FULL_BUDGET || tries >= 4) return full;
+      tries++;
+      if(q > 0.66) q = Math.max(0.64, q - 0.1);
+      else {
+        dim = Math.max(1024, Math.round(dim * Math.min(0.9, Math.sqrt(FULL_BUDGET / full.length) * 0.94)));
+        cur = photoScale(base, dim);
+      }
+      return new Promise(function(res){ setTimeout(function(){ res(step()); }, 0); });
+    });
+  }
+  return step();
 }
 function makePhoto(file){
   return loadImageFile(file).then(function(img){
-    return encodeFull(img).then(function(full){
-      var thumb = drawTo(img, 320, 0.6);
+    /* uma redução só, reaproveitada pela miniatura e por cada tentativa da foto
+       grande — a foto de 12 MP é lida uma vez, não cinco */
+    return photoScaleAsync(img, FULL_DIM).then(function(base){
       if(img.close) { try { img.close(); } catch(e){} }
-      return {id:uid(), thumb:thumb, full:full, at:Date.now()};
+      return photoScaleAsync(base, THUMB_DIM).then(function(small){
+        return photoEncode(small, THUMB_Q).then(function(thumb){
+          return photoEncodeFull(base).then(function(full){
+            return {id:uid(), thumb:thumb, full:full, v:2, at:Date.now()};
+          });
+        });
+      });
     });
   });
 }
@@ -7236,7 +7365,9 @@ function renderGallery(elId, target, after){
   var el = $(elId);
   var ids = target.photos || [];
   el.innerHTML = ids.length ? ids.map(function(id){
-    return '<div class="gitem"><img data-photo="'+esc(id)+'" data-kind="full" alt="">'+
+    /* a moldura tem 130 px: a miniatura de 640 já sobra nela, e carregar a foto
+       grande só para isso enchia a memória do celular com três fotos abertas */
+    return '<div class="gitem"><img data-photo="'+esc(id)+'" data-kind="thumb" alt="">'+
       '<button type="button" data-rmphoto="'+esc(id)+'" aria-label="Remover foto">×</button></div>';
   }).join('') : '<div class="none">Nenhuma foto ainda.</div>';
   each(qsa(el,'[data-rmphoto]'), function(b){
@@ -8950,13 +9081,13 @@ function cloudPhotoGet(id){
   return SYNC.F.getDoc(oref('photos',id)).then(function(s){
     if(!s.exists()) return null;
     var d = s.data();
-    return {id:id, thumb:d.thumb, full:d.full, at:d.at||0};
+    return {id:id, thumb:d.thumb, full:d.full, v:d.v || 1, at:d.at||0};
   }).catch(function(){ return null; });
 }
 function cloudPhotoPut(id, v){
   if(!online()) return;
   SYNC.F.setDoc(oref('photos',id),
-    {thumb:v.thumb, full:v.full, at:v.at || Date.now()}).catch(function(){});
+    {thumb:v.thumb, full:v.full, v:v.v || 1, at:v.at || Date.now()}).catch(function(){});
 }
 function cloudPhotoDel(id){
   if(!online()) return;
@@ -10056,7 +10187,7 @@ function bindProducts(){
       return photoGet(sid).then(function(ph){
         if(!ph) return null;
         var nid = uid();
-        photoPut(nid, {id:nid, thumb:ph.thumb, full:ph.full, at:Date.now()});
+        photoPut(nid, {id:nid, thumb:ph.thumb, full:ph.full, v:ph.v || 1, at:Date.now()});
         return nid;
       });
     })).then(function(ids){
@@ -11549,7 +11680,7 @@ function bindSettings(){
     S.buys.forEach(function(p){ (p.photos||[]).forEach(function(x){ ids.push(x); }); });
     Promise.all(ids.map(function(id){ return photoGet(id).then(function(v){ return [id, v]; }); })).then(function(pairs){
       var photos = {};
-      pairs.forEach(function(p){ if(p[1]) photos[p[0]] = {thumb:p[1].thumb, full:p[1].full}; });
+      pairs.forEach(function(p){ if(p[1]) photos[p[0]] = {thumb:p[1].thumb, full:p[1].full, v:p[1].v || 1}; });
       var out = JSON.parse(JSON.stringify(S));
       out.photos = photos;
       out.exportedAt = new Date().toISOString();
@@ -11585,7 +11716,7 @@ function bindSettings(){
       Object.keys(photos).forEach(function(id){
         var ph = photos[id];
         if(!ph || !ph.thumb) return;
-        photoPut(id, {id:id, thumb:ph.thumb, full:ph.full || ph.thumb, at:Date.now()});
+        photoPut(id, {id:id, thumb:ph.thumb, full:ph.full || ph.thumb, v:ph.v || 1, at:Date.now()});
       });
       persist();
       boot(true);

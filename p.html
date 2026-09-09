@@ -614,8 +614,8 @@ function wrap(v){
   }
   return {stringValue:String(v == null ? '' : v)};
 }
-function getDoc(path){
-  return fetch(API + path + '?key=' + encodeURIComponent(CFG.apiKey), {cache:'no-store'})
+function getDoc(path, qs){
+  return fetch(API + path + '?key=' + encodeURIComponent(CFG.apiKey) + (qs || ''), {cache:'no-store'})
     .then(function(r){
       if(r.status === 404) return null;
       if(!r.ok) throw new Error('http ' + r.status);
@@ -624,11 +624,22 @@ function getDoc(path){
 }
 
 /* ---- fotos: uma por documento, buscadas só quando entram na tela ---- */
-var PH = {};
+/* Cada documento guarda a miniatura E a foto grande. Baixar o documento inteiro
+   para preencher um cartão de 200 px trazia centenas de KB por produto que a
+   grade nem usava. A máscara pede só a miniatura; a foto grande vem depois,
+   quando a pessoa abre a ficha ou o zoom, e fica em cache. */
+var PH = {}, PHFULL = {};
 function photo(id){
+  if(PHFULL[id]) return PHFULL[id];
   if(PH[id]) return PH[id];
-  PH[id] = getDoc('pub/' + CODE + '/photos/' + id).catch(function(){ return null; });
+  PH[id] = getDoc('pub/' + CODE + '/photos/' + id, '&mask.fieldPaths=thumb')
+    .catch(function(){ return null; });
   return PH[id];
+}
+function photoFull(id){
+  if(PHFULL[id]) return PHFULL[id];
+  PHFULL[id] = getDoc('pub/' + CODE + '/photos/' + id).catch(function(){ return null; });
+  return PHFULL[id];
 }
 var seer = null;
 if(window.IntersectionObserver){
@@ -644,9 +655,14 @@ function fill(img){
   var id = img.getAttribute('data-photo');
   if(!id || img.getAttribute('data-done') === '1') return;
   img.setAttribute('data-done','1');
-  photo(id).then(function(p){
-    if(!p || !p.thumb) return;
-    img.src = p.thumb;
+  /* a foto da ficha ocupa a largura da tela: ali a miniatura aparece esticada e
+     borrada, então essa é a única que pede a versão grande */
+  var big = img.getAttribute('data-kind') === 'full';
+  (big ? photoFull(id) : photo(id)).then(function(p){
+    if(!p) return;
+    var src = big ? (p.full || p.thumb) : (p.thumb || p.full);
+    if(!src) return;
+    img.src = src;
     var ph = img.parentNode && img.parentNode.querySelector('.ph');
     if(ph) ph.style.display = 'none';
   });
@@ -1032,7 +1048,7 @@ function openSheet(id){
     html += '<div class="shots" id="sh-shots">' + it.photos.map(function(pid){
       return '<button type="button" class="shot" data-full="' + esc(pid) + '">' +
                '<span class="ph">' + BOXSVG + '</span>' +
-               '<img data-photo="' + esc(pid) + '" alt="' + esc(it.name) + '">' +
+               '<img data-photo="' + esc(pid) + '" data-kind="full" alt="' + esc(it.name) + '">' +
              '</button>';
     }).join('') + '</div>';
     if(it.photos.length > 1){
@@ -1365,7 +1381,7 @@ function copy(txt){
 
 /* ---- foto grande ---- */
 function lens(id){
-  photo(id).then(function(p){
+  photoFull(id).then(function(p){
     if(!p) return;
     $('lens-img').src = p.full || p.thumb || '';
     $('lens').hidden = false;
