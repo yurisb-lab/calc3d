@@ -1208,9 +1208,9 @@ embaixo — sem abrir a calculadora e voltar.
 
 - A margem (ou markup) também mora ali agora: sem ela a ficha mostraria o custo
   e ficaria devendo justamente a resposta que se procura.
-- Enquanto o botão **Usar este cálculo no produto** não for tocado, nada é
-  gravado — e a nota embaixo diz o que mudaria: "o custo salvo hoje é R$ 25,98;
-  gravar esta conta sobe o custo em R$ 16,08".
+- Enquanto o botão **Gravar no produto** não for tocado, nada é gravado — e a
+  nota embaixo diz o que mudaria: "o custo salvo hoje é R$ 25,98; gravar esta
+  conta sobe o custo em R$ 16,08".
 - Desperdício, reserva de falhas, preparo, acabamento e insumos continuam sendo
   os que estão salvos no produto; para mexer neles, *Abrir na calculadora*. A
   ficha responde a pergunta do dia a dia — "quanto custa e por quanto vendo" —,
@@ -1236,3 +1236,84 @@ seguinte (nesting) segue de fora — se um produto pede três mesas, dez produto
 pedem trinta, e adivinhar o contrário erraria mais do que acertaria. Cor por
 mesa também fica de fora: a lista de mesas guarda peso e tempo, que é o que
 muda o preço; qual cor entra em qual placa é outro assunto.
+
+## 49. A ficha do produto por assuntos
+
+A ficha cresceu por adição — cada recurso novo virou mais um bloco no fim — e
+chegou num ponto em que ela tinha três botões primários quase colados, dois
+deles falando do mesmo cálculo, e um retângulo de importar arquivo no meio do
+caminho de quem só queria mudar o preço. Ela foi reordenada por **assunto**, na
+sequência em que a pergunta aparece na cabeça de quem vende:
+
+1. **Identificação** — fotos, nome, categoria, link do modelo, observações.
+2. **Produção e custo** — peso, tempo, mesas, máquina, quantidade, montagem e
+   margem, com a prévia respondendo a cada tecla. É o único bloco que fala de
+   custo, e ele fala dele inteiro.
+3. **Preço e lucro** — o preço praticado e o que sobra depois do custo.
+4. **Vendas** — o histórico do produto.
+5. **Página do cliente** — descrição pública, vídeos e o link.
+6. **Concluir** — salvar e voltar, duplicar, excluir.
+
+### 49.1 Um botão que grava, um botão que fecha
+
+Os *Parâmetros salvos* deixaram de ser uma seção própria: eles diziam, em outro
+lugar da tela, os mesmos números que o bloco de produção deixa editar. Agora são
+um *Ver todos os parâmetros salvos* dobrado dentro do próprio bloco — perto do
+que os muda.
+
+*Abrir na calculadora* também saiu do rodapé. Ele não grava nada: é uma porta
+para os campos que a ficha não tem (desperdício, falhas, preparo, acabamento,
+insumos). Colado no botão de salvar, parecia uma segunda maneira de salvar. Ele
+agora mora no fim do bloco de produção, sob **ajustes avançados**, explicado.
+
+Sobraram dois botões, e eles não se encostam:
+
+- **Gravar no produto**, dentro de *Produção e custo*, grava o cálculo.
+- **Salvar e voltar ao catálogo**, no rodapé, fecha a ficha.
+
+### 49.2 O "cliquei e não salvou"
+
+Nome, categoria, preço e textos sempre gravaram a cada tecla. Os números do
+cálculo, não: eles só existiam na tela até alguém tocar no botão do bloco. Quem
+digitava o peso e apertava *Salvar produto* — o botão grande, primário, logo
+abaixo — saía da ficha com o peso jogado fora, sem aviso nenhum.
+
+Duas coisas resolvem isso, e as duas são visíveis:
+
+- `pdCalcDirty()` compara o que está na tela com o que está gravado. Enquanto
+  houver diferença, o botão do bloco fica marcado e diz **"Gravar no produto —
+  há mudanças"**. Sair sem tocar nele passa a ser uma escolha, não um descuido.
+- **Salvar e voltar ao catálogo** grava o cálculo pendente antes de fechar, e o
+  aviso no catálogo conta que gravou. *Abrir na calculadora* faz o mesmo antes
+  de trocar de tela. Quem apertou "salvar" quis salvar o que estava na tela.
+
+### 49.3 O arquivo fatiado tem um lugar só
+
+O retângulo de arrastar o `.gcode` saiu da ficha do produto, junto com o *colar
+os números do Handy* que vinha embaixo dele. No celular ele quase nunca chegava
+a funcionar — o seletor de arquivos do Android e do iOS esconde extensão que não
+tem tipo MIME conhecido, e `.gcode` não tem — e no meio de uma ficha de produto
+ele era um convite a uma tarefa que falhava.
+
+A importação continua existindo, inteira, **na calculadora**, que é onde a
+pessoa está quando o assunto é fatiar. A ficha resolve o que precisa resolver
+com o peso e o tempo digitados, que é o que todo fatiador mostra na tela. Soltar
+um arquivo em qualquer tela leva para a calculadora, em vez de importar escondido
+onde ninguém está olhando.
+
+## 50. Compatibilidade
+
+Nada muda no dado. `grams`, `hours`, `plates`, `margin`, `mode`, `scope`,
+`parts`, `perPlate`, `printer` e `filament` continuam os mesmos campos, gravados
+pelo mesmo caminho (`fillProductFromCalc`). A reorganização é de tela e de
+rótulo: um produto salvo antes abre com todos os números no lugar, e o botão de
+gravar aparece limpo — porque a tela e o que está salvo são iguais.
+
+## 51. Continua fora do escopo
+
+Tudo o que já estava fora. E, aqui: importar arquivo fatiado pela ficha do
+produto não volta enquanto o seletor do celular continuar escondendo `.gcode` —
+o caminho para trazer um arquivo é a calculadora. Gravar o cálculo sozinho, a
+cada tecla, também fica de fora: mudar o peso muda o custo e o preço sugerido de
+um produto que já está no catálogo e pode já ter sido vendido, e isso é uma
+decisão, não um efeito colateral de digitar.
