@@ -712,6 +712,10 @@ select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns=
 .btn.ghost:hover{background:var(--surface2);box-shadow:none}
 .btn:active{transform:translateY(1px);box-shadow:var(--sh-1)}
 .btn:disabled{opacity:.35;pointer-events:none}
+/* botão com trabalho pendente: um cálculo digitado que ainda não foi gravado.
+   O anel existe para que sair da tela sem tocar nele seja uma escolha, e não um
+   descuido — junto com o rótulo, que passa a dizer que há mudanças. */
+.btn.pend{border-color:var(--hot);box-shadow:var(--sh-2),0 0 0 3px var(--hot-soft)}
 .btnrow{display:flex;gap:10px;margin-top:8px}
 
 /* ---------- sticky result strip ---------- */
@@ -2268,13 +2272,28 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
       <p class="gohint">As categorias que aparecem aqui em cima são criadas em <button type="button" class="golink" data-go="cadastros" data-cad="cats">Cadastros › Categorias</button>.</p>
     </section>
 
-    <!-- ============ PRODUTO (detalhe) ============ -->
+    <!-- ============ PRODUTO (detalhe) ============
+         A ficha é longa porque um produto tem muita coisa: o que ele é, como é
+         impresso, quanto custa, por quanto sai, o que já vendeu e o que o
+         cliente enxerga. Ela é lida de cima para baixo nessa ordem, um bloco
+         por assunto, e cada bloco resolve o seu assunto inteiro — em vez de
+         espalhar o mesmo tema em dois lugares da tela.
+
+         Só existem DOIS botões que gravam, e de propósito eles não se encostam:
+         o de dentro de "Produção e custo", que grava o cálculo, e o do rodapé,
+         que fecha a ficha e volta ao catálogo. O do rodapé grava o cálculo
+         pendente antes de sair — quem digitou o peso e apertou "Salvar" quis
+         salvar o peso. "Abrir na calculadora" não grava nada: é uma porta, e
+         por isso mora junto dos ajustes avançados, longe dos dois. -->
     <section class="view" id="v-productdetail" hidden>
       <div class="detailhead">
         <button type="button" class="btn ghost back" id="btn-back-products">‹ Voltar</button>
         <span class="t" id="pd-title">Produto</span>
       </div>
 
+      <!-- ---- 1. o que o produto é ---- -->
+      <h2 class="section">Identificação</h2>
+      <p class="suphint">Como o produto aparece para você no catálogo: fotos, nome, categoria e as suas anotações.</p>
       <div class="card">
         <div class="field">
           <label>Fotos <span class="hint">— até 3, ficam salvas e sincronizadas</span></label>
@@ -2308,72 +2327,15 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
         </div>
       </div>
 
-      <h2 class="section">Para o cliente<button type="button" class="help" data-h="paracliente" aria-label="O que é isso?">?</button></h2>
+      <!-- ---- 2. como é impresso e quanto custa ----
+           Tudo o que forma o custo mora aqui dentro, na ordem em que a pessoa
+           pensa: quanto pesa e quanto demora, em quantas mesas, em que máquina,
+           quantas peças e com qual lucro. A prévia responde a cada tecla e o
+           botão de gravar é o último item — nada some por descuido. -->
+      <h2 class="section">Produção e custo<button type="button" class="help" data-h="calcnaficha" aria-label="O que é isso?">?</button></h2>
+      <p class="suphint">Os números do fatiador e o jeito de imprimir. O custo e o preço sugerido aparecem na hora, mas <b>só ficam gravados quando você tocar em “Gravar no produto”</b>, no fim do bloco.</p>
       <div class="card">
-        <div class="field">
-          <label for="pd-pubdesc">Descrição do produto <span class="hint">— aparece no link público</span></label>
-          <textarea id="pd-pubdesc" placeholder="Ex.: Vaso hexagonal de 18 cm, impresso em PLA. Escolha a cor na hora do pedido."></textarea>
-          <p class="note" id="pd-pubfrom" style="margin:8px 0 0" hidden>Você já escreveu algo nas observações. <button type="button" class="golink" id="btn-pd-pubfrom">Usar aquele texto aqui</button> — depois é só ajustar.</p>
-        </div>
-        <div class="field" style="margin-bottom:0">
-          <label>Vídeos <span class="hint">— YouTube, Instagram, TikTok ou link direto</span></label>
-          <div id="pd-vids"></div>
-          <div class="linkrow" style="margin-top:8px">
-            <div class="field"><input id="pd-vid-new" type="url" inputmode="url" placeholder="https://youtube.com/..."></div>
-            <button type="button" class="go" id="btn-pd-vid-add" aria-label="Adicionar vídeo"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
-          </div>
-          <p class="note" style="margin:10px 0 0">As fotos, o nome, a descrição e o <b>seu preço de venda</b> são o que o cliente enxerga. Custo, margem, gramas e tempo nunca saem daqui.</p>
-        </div>
-        <div class="btnrow" style="margin-top:14px">
-          <button type="button" class="btn" id="btn-pd-share">Gerar link público deste produto</button>
-        </div>
-      </div>
-
-      <h2 class="section">Preço</h2>
-      <div class="card">
-        <div class="field">
-          <label for="pd-price">Meu preço de venda <span class="hint">R$</span><button type="button" class="help" data-h="precofinal" aria-label="O que é isso?">?</button></label>
-          <input id="pd-price" type="text" inputmode="decimal" placeholder="0,00">
-        </div>
-        <div id="pd-money"></div>
-      </div>
-
-      <h2 class="section">Vendas<button type="button" class="help" data-h="vendas" aria-label="O que é isso?">?</button></h2>
-      <div class="card">
-        <div class="btnrow" style="margin-top:0">
-          <button type="button" class="btn primary" id="btn-pd-sell">Vendi este produto</button>
-        </div>
-        <div id="pd-sales"></div>
-      </div>
-
-      <h2 class="section">Parâmetros salvos</h2>
-      <div class="card">
-        <div id="pd-params"></div>
-      </div>
-
-      <h2 class="section">Calcular o preço aqui<button type="button" class="help" data-h="calcnaficha" aria-label="O que é isso?">?</button></h2>
-      <div class="card">
-        <div class="drop" id="pd-gc-drop" role="button" tabindex="0">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4"/><path d="M8 8l4-4 4 4"/><path d="M4 15v3a2 2 0 002 2h12a2 2 0 002-2v-3"/></svg>
-          <span class="t">Arraste aqui o arquivo fatiado</span>
-          <span class="s">Refaz as gramas, o tempo e as cores deste produto — e o preço junto</span>
-        </div>
-        <p class="suphint" style="margin:-4px 0 12px">Ou toque na área acima para escolher o arquivo.<button type="button" class="help" data-h="importar" aria-label="O que é isso?">?</button></p>
-        <input type="file" id="pd-gc-file" hidden>
-        <div id="pd-gc-msg"></div>
-        <details class="fold" id="pd-gc-paste" style="margin:0 0 16px">
-          <summary>Colar os números do Handy ou do fatiador</summary>
-          <div class="body">
-            <p class="note">O Bambu Handy não exporta arquivo. Copie da tela dele o peso, o tempo e os materiais e cole aqui — o produto é atualizado do mesmo jeito.</p>
-            <textarea id="pd-gc-text" placeholder="Mesa&#10;1.9h&#10;0.4mm&#10;32g&#10;PLA 21g&#10;PLA 11g"></textarea>
-            <div class="btnrow" style="margin-top:10px"><button type="button" class="btn" id="btn-pd-gc-text">Ler o texto colado</button></div>
-          </div>
-        </details>
-
-        <!-- sem arquivo e sem copiar e colar: os dois números que o Bambu Studio
-             mostra na barra de fatiamento, digitados aqui mesmo na ficha -->
-        <div class="orline"><span>ou digite na mão</span></div>
-        <p class="note">Depois de fatiar, o <b>Bambu Studio</b> mostra no rodapé o <b>peso total</b> em gramas e o <b>tempo estimado</b> — os mesmos números que o Handy mostra antes de mandar imprimir. Digite os dois aqui e o produto sai com gramas, tempo, custo e preço prontos, sem passar pela calculadora.</p>
+        <p class="note" style="margin:0 0 14px">Depois de fatiar, o <b>Bambu Studio</b>, o <b>Orca</b>, o <b>Prusa</b> ou o <b>Handy</b> mostram o <b>peso total</b> em gramas e o <b>tempo estimado</b>. Digite os dois aqui e o produto sai com gramas, tempo, custo e preço prontos.</p>
         <div class="row" id="pd-row-gh">
           <div class="field">
             <label for="pd-m-grams">Peso total <span class="hint">g</span><button type="button" class="help" data-h="gramas" aria-label="O que é isso?">?</button></label>
@@ -2428,7 +2390,7 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
             <button type="button" data-v="plate" aria-pressed="false">A mesa toda</button>
           </div>
         </div>
-        <div class="field" style="margin-bottom:0">
+        <div class="field">
           <label>Como o produto é montado<button type="button" class="help" data-h="multipeca" aria-label="O que é isso?">?</button></label>
           <div class="seg" id="seg-pd-parts">
             <button type="button" data-v="single" aria-pressed="true">Peça única</button>
@@ -2441,7 +2403,7 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
         </div>
         <!-- a margem também mora aqui: sem ela a ficha mostraria o custo e ficaria
              devendo justamente a resposta que se procura, que é o preço -->
-        <div class="field" style="margin:14px 0 0">
+        <div class="field">
           <label>Lucro<button type="button" class="help" data-h="margem" aria-label="O que é isso?">?</button></label>
           <div class="seg" id="seg-pd-mode">
             <button type="button" data-v="margem" aria-pressed="true">Margem</button>
@@ -2453,20 +2415,81 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
           <input id="pd-m-margin" type="text" inputmode="decimal" placeholder="40">
         </div>
         <div id="pd-prev"></div>
+        <div id="pd-calc-msg"></div>
         <div class="btnrow" style="margin-top:14px">
-          <button type="button" class="btn primary" id="btn-pd-manual">Usar este cálculo no produto</button>
+          <button type="button" class="btn primary" id="btn-pd-manual">Gravar no produto</button>
+        </div>
+
+        <details class="fold" style="margin:18px 0 0">
+          <summary>Ver todos os parâmetros salvos</summary>
+          <div class="body"><div id="pd-params"></div></div>
+        </details>
+
+        <!-- a porta para a conta inteira. Ela não grava nada — por isso está
+             aqui embaixo, explicada, e não colada no botão de salvar -->
+        <div class="orline" style="margin:18px 0 12px"><span>ajustes avançados</span></div>
+        <p class="note" style="margin:0 0 12px">Desperdício, reserva de falhas, preparo, acabamento e insumos não se mexem aqui: eles moram na calculadora, onde a conta fica aberta inteira. Abrir a calculadora <b>não salva</b> esta tela — grave o cálculo antes, se mudou algo.</p>
+        <div class="btnrow" style="margin-top:0">
+          <button type="button" class="btn" id="btn-pd-calc">Abrir na calculadora</button>
         </div>
       </div>
 
-      <div class="btnrow" style="margin-top:16px">
-        <button type="button" class="btn primary" id="btn-pd-save">Salvar produto</button>
-        <button type="button" class="btn" id="btn-pd-calc">Abrir na calculadora</button>
+      <!-- ---- 3. por quanto sai ---- -->
+      <h2 class="section">Preço e lucro</h2>
+      <p class="suphint">O preço que você realmente cobra, e o que sobra depois do custo lá de cima.</p>
+      <div class="card">
+        <div class="field">
+          <label for="pd-price">Meu preço de venda <span class="hint">R$</span><button type="button" class="help" data-h="precofinal" aria-label="O que é isso?">?</button></label>
+          <input id="pd-price" type="text" inputmode="decimal" placeholder="0,00">
+        </div>
+        <div id="pd-money"></div>
       </div>
-      <div id="pd-save-msg" style="margin-top:10px"></div>
-      <p class="note" style="margin:8px 0 0">O app já vai salvando sozinho a cada tecla — o botão confirma e leva você de volta ao catálogo.</p>
-      <div class="btnrow" style="margin-top:14px">
-        <button type="button" class="btn" id="btn-pd-dup">Duplicar</button>
-        <button type="button" class="btn danger" id="btn-pd-del">Excluir</button>
+
+      <!-- ---- 4. o que já vendeu ---- -->
+      <h2 class="section">Vendas<button type="button" class="help" data-h="vendas" aria-label="O que é isso?">?</button></h2>
+      <p class="suphint">O histórico deste produto. Registrar uma venda aqui cria um pedido igual aos outros.</p>
+      <div class="card">
+        <div class="btnrow" style="margin-top:0">
+          <button type="button" class="btn primary" id="btn-pd-sell">Vendi este produto</button>
+        </div>
+        <div id="pd-sales"></div>
+      </div>
+
+      <!-- ---- 5. o que o cliente enxerga ---- -->
+      <h2 class="section">Página do cliente<button type="button" class="help" data-h="paracliente" aria-label="O que é isso?">?</button></h2>
+      <p class="suphint">Só o que está neste bloco, mais as fotos e o seu preço, sai no link público. Custo, margem, gramas e tempo nunca saem daqui.</p>
+      <div class="card">
+        <div class="field">
+          <label for="pd-pubdesc">Descrição do produto <span class="hint">— aparece no link público</span></label>
+          <textarea id="pd-pubdesc" placeholder="Ex.: Vaso hexagonal de 18 cm, impresso em PLA. Escolha a cor na hora do pedido."></textarea>
+          <p class="note" id="pd-pubfrom" style="margin:8px 0 0" hidden>Você já escreveu algo nas observações. <button type="button" class="golink" id="btn-pd-pubfrom">Usar aquele texto aqui</button> — depois é só ajustar.</p>
+        </div>
+        <div class="field" style="margin-bottom:0">
+          <label>Vídeos <span class="hint">— YouTube, Instagram, TikTok ou link direto</span></label>
+          <div id="pd-vids"></div>
+          <div class="linkrow" style="margin-top:8px">
+            <div class="field"><input id="pd-vid-new" type="url" inputmode="url" placeholder="https://youtube.com/..."></div>
+            <button type="button" class="go" id="btn-pd-vid-add" aria-label="Adicionar vídeo"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+          </div>
+        </div>
+        <div class="btnrow" style="margin-top:14px">
+          <button type="button" class="btn" id="btn-pd-share">Gerar link público deste produto</button>
+        </div>
+      </div>
+
+      <!-- ---- 6. fechar a ficha ---- -->
+      <h2 class="section">Concluir</h2>
+      <div class="card">
+        <div class="btnrow" style="margin-top:0">
+          <button type="button" class="btn primary" id="btn-pd-save">Salvar e voltar ao catálogo</button>
+        </div>
+        <div id="pd-save-msg" style="margin-top:10px"></div>
+        <p class="note" style="margin:10px 0 0">Nome, fotos, categoria, preço e textos já vão sendo salvos a cada tecla. Este botão fecha a ficha — e, se você mexeu nos números de <b>Produção e custo</b> sem gravar, ele grava antes de sair.</p>
+        <div class="orline" style="margin:18px 0 12px"><span>outras ações</span></div>
+        <div class="btnrow" style="margin-top:0">
+          <button type="button" class="btn" id="btn-pd-dup">Duplicar</button>
+          <button type="button" class="btn danger" id="btn-pd-del">Excluir</button>
+        </div>
       </div>
     </section>
 
@@ -3652,7 +3675,7 @@ var HELP = {
   waped:{t:'WhatsApp que recebe o pedido', d:'Quando o cliente termina de marcar as quantidades, o botão da vitrine abre o WhatsApp com o pedido já escrito. Ponha o número com DDD; o app completa o 55 do Brasil. Deixe em branco e o botão passa a copiar o pedido para a pessoa colar onde quiser.', e:'(41) 99999-0000'},
   linkpub:{t:'Link público', d:'Um endereço na internet com os produtos que você escolher: foto, vídeo, descrição, preço e um marcador de quantidade. Ele fica no ar até você tirar. Não é uma loja — não cobra nem processa pagamento; o pedido chega pelo WhatsApp e a venda continua na conversa, como já é hoje.', e:''},
   margem:{t:'Margem × Markup', d:'Margem é a fatia do PREÇO que sobra pra você. Markup é o quanto você soma EM CIMA do custo. Os dois números são diferentes — 50% de markup dá só 33% de margem.', e:'Custo R$ 29,03\n50% de markup → R$ 43,55\n50% de margem → R$ 58,06'},
-  calcnaficha:{t:'Calcular o preço aqui', d:'A mesma conta da calculadora, dentro da ficha do produto: mude o peso, o tempo, as mesas, a quantidade ou a margem e o custo, o preço sugerido e o lucro aparecem na hora, sem precisar abrir a calculadora e voltar. Enquanto você não tocar em "Usar este cálculo no produto", nada é gravado — o que está na tela é uma simulação. Os outros números do produto (desperdício, falhas, preparo, acabamento e insumos) continuam vindo do que está salvo; para mexer neles, abra na calculadora.', e:''},
+  calcnaficha:{t:'Produção e custo', d:'A mesma conta da calculadora, dentro da ficha do produto: mude o peso, o tempo, as mesas, a quantidade ou a margem e o custo, o preço sugerido e o lucro aparecem na hora, sem precisar abrir a calculadora e voltar. Enquanto você não tocar em "Gravar no produto", nada fica gravado — o que está na tela é uma simulação, e o botão fica marcado enquanto houver mudança pendente. Se você sair pelo "Salvar e voltar ao catálogo" com o cálculo pendente, ele é gravado antes de fechar. Os outros números do produto (desperdício, falhas, preparo, acabamento e insumos) continuam vindo do que está salvo; para mexer neles, use "Abrir na calculadora", no fim do bloco.', e:''},
   precofinal:{t:'Preço que eu vou cobrar', d:'O app sugere um preço matemático. Aqui você grava o preço redondo que realmente vai praticar (R$ 49,90 em vez de R$ 48,38). A conferência recalcula o lucro real com o SEU preço, e ele fica salvo no produto.', e:''},
   gramas:{t:'Gramas da peça', d:'O número que o fatiador mostra depois de fatiar. Se o valor for da mesa cheia, marque "a mesa toda" abaixo que o app divide pela quantidade.', e:''},
   escopo:{t:'1 peça ou a mesa toda', d:'Se você fatiou uma peça só, deixe em "1 peça". Se fatiou a mesa cheia com várias, marque "a mesa toda" — o app divide gramas e horas pela quantidade.', e:''},
@@ -7359,7 +7382,7 @@ function renderParams(p){
     '<div class="kv"><span>Mão de obra</span><span class="v">'+dec(num(p.prep),0)+' min lote + '+dec(num(p.finish),0)+' min '+unitWord(1, pParts)+'</span></div>'+
     ((p.extras||[]).length ? '<div class="kv"><span>Insumos</span><span class="v">'+brl(extrasTotal(p.extras))+'</span></div>' : '')+
     (src ? '<div class="kv"><span>Modelo</span><span class="v"><a class="srcpill" href="'+esc(safeUrl(p.stlUrl))+'" target="_blank" rel="noopener noreferrer">'+esc(src)+'</a></span></div>' : '')+
-    '<p class="note">Para atualizar estes números, mande o arquivo fatiado, cole os do Handy ou <b>digite na mão</b> o peso e o tempo do Bambu Studio logo abaixo — ou toque em <b>Abrir na calculadora</b>, ajuste e salve de novo.</p>';
+    '<p class="note">Estes são os números <b>gravados</b> hoje. Para mudá-los, edite os campos deste bloco e toque em <b>Gravar no produto</b>. Desperdício, falhas, preparo, acabamento e insumos só se mexem em <b>Abrir na calculadora</b>.</p>';
 }
 function renderGallery(elId, target, after){
   var el = $(elId);
@@ -7454,34 +7477,13 @@ function fillProductFromCalc(p){
   return p;
 }
 
-/* ---- atualizar a ficha pelo arquivo fatiado ---- */
-/* Os números do produto e o preço nascem da calculadora — refazer a conta aqui
-   seria uma segunda verdade, que um dia discorda da primeira. Então o arquivo
-   entra pelo caminho de sempre: o produto vai para a calculadora, recebe as
-   gramas e o tempo lidos e volta para a ficha com custo e preço refeitos. */
-var PD_GC = {drop:'pd-gc-drop', box:'pd-gc-msg', apply:applySlicedToProduct};
-function applySlicedToProduct(res, fileName, box){
-  var p = S.products.filter(function(x){ return x.id === pdId; })[0];
-  if(!p){ gcErr('Abra um produto antes de mandar o arquivo.', box); return; }
-  if(!res || (!res.items.length && !(res.seconds > 0))){
-    gcErr('Não achei gramas nem tempo aqui. Isso saiu mesmo do fatiador?', box);
-    return;
-  }
-  /* produto em várias mesas: o arquivo é uma placa, então ele SOMA uma mesa em
-     vez de apagar o que as outras já disseram */
-  var addsMesa = plateSet(p.plates).n > 0;
-  if(!confirm(addsMesa
-      ? 'Somar este arquivo como MAIS UMA MESA de "' + (p.name || 'sem nome') + '"? O peso e o tempo dele entram na lista de mesas.'
-      : 'Atualizar "' + (p.name || 'sem nome') + '" com estes números? As gramas, o tempo e as cores salvas são substituídas.')){
-    gcMsgHtml('', box);
-    return;
-  }
-  loadProduct(p);                    /* os parâmetros salvos vão para a tela */
-  applySliced(res, fileName, box);   /* e o que veio do fatiador sobrescreve */
-  fillProductFromCalc(p);
-  persist();
-  openProduct(p.id);                 /* volta para a ficha, já atualizada */
-}
+/* ---- o arquivo do fatiador NÃO entra pela ficha do produto ---- */
+/* A ficha tinha o mesmo retângulo de arrastar arquivo que a calculadora, e ele
+   confundia mais do que ajudava: quem abria o produto para mudar o preço
+   esbarrava num campo de importação que, no celular, quase nunca chega a
+   funcionar (o seletor esconde o .gcode). A importação continua existindo, em
+   um lugar só — a calculadora —, e a ficha resolve o que ela precisa resolver
+   com o peso e o tempo digitados logo abaixo. */
 
 /* ---- calcular na própria ficha ---- */
 /* Nem todo mundo tem o arquivo à mão: no Handy ele nem existe, e no Studio o
@@ -7606,7 +7608,7 @@ function renderPdPreview(){
   var el = $('pd-prev');
   if(!el) return;
   var p = S.products.filter(function(x){ return x.id === pdId; })[0];
-  if(!p){ el.innerHTML = ''; return; }
+  if(!p){ el.innerHTML = ''; pdDirtyUi(); return; }
   var lm = $('lbl-pd-margin');
   if(lm) lm.innerHTML = (pdMode === 'markup' ? 'Markup sobre o custo' : 'Margem sobre o preço') + ' <span class="hint">%</span>';
   var tot = $('pd-plate-tot');
@@ -7617,7 +7619,8 @@ function renderPdPreview(){
     '<span>Preparo <b>'+dec(r.prep*(set.n || 1),0)+' min</b></span>';
 
   if(!(r.g > 0) && !(r.h > 0)){
-    el.innerHTML = '<p class="note" style="margin:14px 0 0">Digite o <b>peso</b> e o <b>tempo</b> acima — ou mande o arquivo do fatiador — e o custo, o preço sugerido e o lucro aparecem aqui.</p>';
+    el.innerHTML = '<p class="note" style="margin:14px 0 0">Digite o <b>peso</b> e o <b>tempo</b> acima e o custo, o preço sugerido e o lucro aparecem aqui.</p>';
+    pdDirtyUi();
     return;
   }
   var saved = num(p.cost), diff = saved > 0 ? r.cost - saved : 0;
@@ -7639,7 +7642,7 @@ function renderPdPreview(){
     (r.price > 0 && r.profit < 0 ? '<div class="alert" style="margin-top:12px">Neste preço o produto sai no prejuízo.</div>' : '')+
     '<details class="fold" style="margin:12px 0 0"><summary>Como o custo se forma</summary><div class="body">'+
       '<div class="fx">'+fxHtml(r)+'</div>'+
-      '<p class="note" style="margin:10px 0 0">Desperdício, reserva de falhas, preparo, acabamento e insumos são os que estão salvos no produto. Para mexer neles, use <b>Abrir na calculadora</b>.</p>'+
+      '<p class="note" style="margin:10px 0 0">Desperdício, reserva de falhas, preparo, acabamento e insumos são os que estão salvos no produto. Para mexer neles, use <b>Abrir na calculadora</b>, no fim deste bloco.</p>'+
     '</div></details>'+
     '<p class="note" style="margin:12px 0 0">'+
       /* o peso daqui vem do fatiador, que já contou brim, suporte e purga:
@@ -7653,7 +7656,19 @@ function renderPdPreview(){
       (saved > 0 && Math.abs(diff) > 0.005
         ? 'O custo salvo hoje é <b>'+brl(saved)+'</b>: gravar esta conta '+(diff > 0 ? 'sobe' : 'desce')+' o custo em <b>'+brl(Math.abs(diff))+'</b>. '
         : '')+
-      'Nada disto está salvo ainda — toque em <b>Usar este cálculo no produto</b> para gravar.</p>';
+      (pdCalcDirty()
+        ? 'Nada disto está gravado ainda — toque em <b>Gravar no produto</b>, logo abaixo.'
+        : 'Esta conta é a mesma que já está gravada no produto.')+'</p>';
+  pdDirtyUi();
+}
+/* o aviso que falta quando a pessoa muda um número e vai embora: enquanto
+   houver cálculo por gravar, o botão fica marcado e diz que há o que gravar */
+function pdDirtyUi(){
+  var b = $('btn-pd-manual');
+  if(!b) return;
+  var dirty = pdCalcDirty();
+  b.classList.toggle('pend', dirty);
+  b.textContent = dirty ? 'Gravar no produto — há mudanças' : 'Gravar no produto';
 }
 /* a ficha fala a mesma língua da calculadora: montado, "1 peça" vira "1 produto" */
 function pdPartsUi(){
@@ -7697,10 +7712,49 @@ function pdManualFill(p){
   pdMesas = cloneMesas(p.plates);
   setPdMultiPlate(plateSet(pdMesas).n > 0, false);   /* já redesenha a prévia */
 }
-function pdApplyManual(){
-  var box = 'pd-gc-msg';
+/* O que a seção "Produção e custo" está mostrando, comparado com o que está
+   gravado no produto. É esta pergunta que faz o botão do rodapé parar de
+   "clicar e não salvar": se sobrou cálculo por gravar, ele grava antes de
+   fechar a ficha, em vez de sair calado levando os números embora. */
+function pdCalcDirty(){
   var p = S.products.filter(function(x){ return x.id === pdId; })[0];
-  if(!p){ gcErr('Abra um produto antes de digitar os números.', box); return; }
+  if(!p) return false;
+  var set = plateSet(pdMultiPlate ? pdMesas : []);
+  var g   = set.n ? set.g : num($('pd-m-grams').value);
+  var hrs = set.n ? set.h : num($('pd-m-h').value) + num($('pd-m-m').value) / 60;
+  /* ficha ainda sem peso e sem tempo não tem cálculo nenhum a gravar */
+  if(!(g > 0) && !(hrs > 0)) return false;
+  if(Math.abs(g   - num(p.grams)) > 0.05)  return true;
+  if(Math.abs(hrs - num(p.hours)) > 0.005) return true;
+  if(set.n !== plateSet(p.plates).n) return true;
+  if(Math.max(1, Math.round(num($('pd-m-qty').value)) || 1) !==
+     Math.max(1, Math.round(num(p.qty)) || 1)) return true;
+  if((pdParts === 'set' ? Math.max(1, Math.round(num($('pd-m-parts').value)) || 1) : 1) !==
+     Math.max(1, Math.round(num(p.parts)) || 1)) return true;
+  if(Math.abs(num($('pd-m-margin').value) - num(p.margin)) > 0.005) return true;
+  if(pdMode !== (p.mode === 'markup' ? 'markup' : 'margem')) return true;
+  /* máquina e filamento só contam como mudança quando o produto JÁ tinha um
+     salvo: sem isso, um produto antigo sem filamento abriria a ficha já
+     acusando mudança só porque o seletor mostra a primeira opção da lista */
+  var fid = p.filament || ((p.mats || [])[0] || {}).f || '';
+  if(p.printer && $('pd-m-printer').value !== p.printer) return true;
+  if(fid && $('pd-m-filament').value !== fid) return true;
+  /* com a lista de mesas ligada, "cabem por mesa" e o escopo saem da conta:
+     compará-los aí acusaria mudança onde não houve */
+  if(!set.n){
+    if(Math.abs(num($('pd-m-perplate').value) - num(p.perPlate)) > 0.0001) return true;
+    if(pdScope !== (p.scope === 'plate' ? 'plate' : 'unit')) return true;
+  }
+  return false;
+}
+/* opts.force pula a confirmação (o pedido de gravar já veio explícito, do botão
+   do rodapé) e opts.quiet cala o resumo, porque a tela vai fechar em seguida.
+   Devolve true quando gravou. */
+function pdApplyManual(opts){
+  opts = opts || {};
+  var box = 'pd-calc-msg';
+  var p = S.products.filter(function(x){ return x.id === pdId; })[0];
+  if(!p){ gcErr('Abra um produto antes de digitar os números.', box); return false; }
   /* com a lista de mesas ligada, o peso e o tempo são a soma delas */
   var set = plateSet(pdMultiPlate ? pdMesas : []);
   var g = set.n ? set.g : num($('pd-m-grams').value);
@@ -7708,11 +7762,11 @@ function pdApplyManual(){
   if(!(g > 0) && !(hrs > 0)){
     gcErr(set.n ? 'Preencha o peso ou o tempo de pelo menos uma mesa.'
                 : 'Digite pelo menos o peso ou o tempo que o fatiador mostrou.', box);
-    return;
+    return false;
   }
   var had = num(p.grams) > 0 || num(p.hours) > 0;
-  if(had && pdFreshWeight(p, g) &&
-     !confirm('Substituir as gramas, o tempo e as cores salvas de "' + (p.name || 'sem nome') + '" por estes números?')) return;
+  if(!opts.force && had && pdFreshWeight(p, g) &&
+     !confirm('Substituir as gramas, o tempo e as cores salvas de "' + (p.name || 'sem nome') + '" por estes números?')) return false;
 
   var wasMulti = !!p.multi && (p.mats || []).length > 1;
   var qty = Math.max(1, Math.round(num($('pd-m-qty').value)) || 1);
@@ -7753,6 +7807,8 @@ function pdApplyManual(){
   persist();
   openProduct(p.id);              /* volta para a ficha, já com preço refeito */
 
+  if(opts.quiet) return true;
+
   var li = [];
   var np = partsCount();
   li.push(set.n
@@ -7781,14 +7837,15 @@ function pdApplyManual(){
   if(!(g > 0)) li.push('Sem o peso, só o tempo entrou: o filamento continua fora do custo.');
   if(!(hrs > 0)) li.push('Sem o tempo, a máquina e a energia ficam fora do custo — preencha as horas.');
   if(hadWaste) li.push('Desperdício zerado: o peso do fatiador já conta brim, suporte e purga.');
-  if(wasMulti && fresh) li.push('O multicolor saiu: um peso só não separa as cores. Para tê-las de volta, mande o arquivo fatiado ou cole as linhas de cada material.');
+  if(wasMulti && fresh) li.push('O multicolor saiu: um peso só não separa as cores. Para tê-las de volta, abra na calculadora e mande o arquivo fatiado por lá.');
   if(wasMulti && !fresh) li.push('O <b>multicolor continua</b>: o peso não mudou, então as cores salvas seguem as mesmas.');
   li.push('Custo e preço sugerido foram refeitos com estes números.');
-  gcMsgHtml('<div class="gcok"><span class="src">Digitado do fatiador</span>' +
+  gcMsgHtml('<div class="gcok"><span class="src">Gravado no produto</span>' +
     (g > 0 ? '<b>' + dec(g, 1) + ' g</b>' : '') +
     (g > 0 && hrs > 0 ? ' · ' : '') +
     (hrs > 0 ? '<b>' + dec(Math.floor(hrs), 0) + ' h ' + dec(Math.round(hrs * 60) % 60, 0) + ' min</b>' : '') +
     '<ul><li>' + li.join('</li><li>') + '</li></ul></div>', box);
+  return true;
 }
 
 /* ---- salvar a ficha ---- */
@@ -9950,12 +10007,6 @@ function bindPasteBox(ta, btn, to){
   btn.addEventListener('click', read);
   ta.addEventListener('paste', function(){ setTimeout(read, 0); });
 }
-function bindProductImport(){
-  var drop = $('pd-gc-drop'), inp = $('pd-gc-file');
-  if(!drop || !inp) return;
-  bindDrop(drop, inp, PD_GC);
-  bindPasteBox($('pd-gc-text'), $('btn-pd-gc-text'), PD_GC);
-}
 function bindImport(){
   var drop = $('gc-drop'), inp = $('gc-file');
   if(!drop || !inp) return;
@@ -9966,26 +10017,25 @@ function bindImport(){
     if(!t) return false;
     return Array.prototype.indexOf.call(t, 'Files') > -1;
   };
-  /* o arquivo cai onde a pessoa está: na ficha do produto ele atualiza o
-     produto; em qualquer outra tela, a calculadora */
-  var here = function(){ return current === 'productdetail' && pdId ? $('pd-gc-drop') : drop; };
+  /* o arquivo do fatiador tem um destino só: a calculadora. Soltar em qualquer
+     outra tela leva a tela junto, em vez de importar escondido onde a pessoa
+     não está olhando */
   ['dragenter','dragover'].forEach(function(ev){
     document.addEventListener(ev, function(e){
       if(!hasFile(e)) return;
       e.preventDefault();
-      if(current === 'calc' || current === 'productdetail') here().classList.add('over');
+      if(current === 'calc') drop.classList.add('over');
     });
   });
   document.addEventListener('dragleave', function(e){
-    if(!e.relatedTarget){ drop.classList.remove('over'); if($('pd-gc-drop')) $('pd-gc-drop').classList.remove('over'); }
+    if(!e.relatedTarget) drop.classList.remove('over');
   });
   document.addEventListener('drop', function(e){
     if(!hasFile(e)) return;
     e.preventDefault();
-    here().classList.remove('over');
+    drop.classList.remove('over');
     var f = e.dataTransfer.files && e.dataTransfer.files[0];
     if(!f) return;
-    if(current === 'productdetail' && pdId){ importSliced(f, PD_GC); return; }
     /* soltar o arquivo é um pedido de calcular: a tela vai junto */
     if(current !== 'calc') go('calc');
     importSliced(f);
@@ -10153,7 +10203,12 @@ function bindProducts(){
     if(!el) return;
     el.addEventListener(el.tagName === 'SELECT' ? 'change' : 'input', renderPdPreview);
   });
-  $('btn-pd-manual').addEventListener('click', pdApplyManual);
+  $('btn-pd-manual').addEventListener('click', function(){ pdApplyManual(); });
+  /* O botão do rodapé é o único "salvar" da ficha, e ele salva a ficha INTEIRA:
+     se ficou cálculo por gravar lá em cima, ele grava antes de fechar. Era daqui
+     que vinha o "cliquei e não salvou" — os campos de texto gravam a cada tecla,
+     mas os números do cálculo só existiam na tela até alguém tocar no outro
+     botão, e sair da ficha os jogava fora sem avisar. */
   $('btn-pd-save').addEventListener('click', function(){
     var p = S.products.filter(function(x){return x.id===pdId;})[0];
     if(!p) return;
@@ -10163,17 +10218,28 @@ function bindProducts(){
       $('pd-name').focus();
       return;
     }
+    var calcSaved = pdCalcDirty() && pdApplyManual({force:true, quiet:true});
+    /* pdApplyManual reabre a ficha: o produto tem de ser relido depois dela */
+    p = S.products.filter(function(x){return x.id===pdId;})[0] || p;
     persist();
     $('pd-save-msg').innerHTML = '';
     productMsg('<div class="gcok"><b>' + esc(p.name) + '</b> salvo no catálogo.' +
+      (calcSaved ? ' O cálculo que estava na tela foi gravado junto: custo e preço sugerido refeitos.' : '') +
       (num(p.grams) > 0 || num(p.hours) > 0 ? '' :
-        ' Ainda sem gramas e tempo — abra a ficha e digite os números do fatiador para o preço sair.') +
+        ' Ainda sem gramas e tempo — abra a ficha e digite o peso e o tempo do fatiador para o preço sair.') +
       '</div>');
     go('products');
   });
+  /* Abrir a calculadora não é salvar — mas também não pode ser perder: o que
+     estava digitado no bloco de produção vai gravado antes da troca de tela. */
   $('btn-pd-calc').addEventListener('click', function(){
     var p = S.products.filter(function(x){return x.id===pdId;})[0];
-    if(p){ pdCommitFields(p); persist(); loadProduct(p); }
+    if(!p) return;
+    pdCommitFields(p);
+    if(pdCalcDirty()) pdApplyManual({force:true, quiet:true});
+    p = S.products.filter(function(x){return x.id===pdId;})[0] || p;
+    persist();
+    loadProduct(p);
   });
   $('btn-pd-dup').addEventListener('click', function(){
     var p = S.products.filter(function(x){return x.id===pdId;})[0];
@@ -12171,7 +12237,6 @@ bindEmptyActions();
 bindCalc();
 bindQuick();
 bindImport();
-bindProductImport();
 bindOrder();
 bindProducts();
 bindShare();
