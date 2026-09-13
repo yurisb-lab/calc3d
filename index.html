@@ -724,14 +724,23 @@ select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns=
   background:linear-gradient(160deg,var(--panel-a) 0%,var(--panel-b) 78%);
   color:var(--on-panel);border-radius:var(--r);
   padding:14px 16px;margin-bottom:18px;
-  display:flex;align-items:center;justify-content:space-between;gap:12px;
   box-shadow:var(--sh-4);
   border:1px solid var(--panel-line);
 }
+.strip-top{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .strip .lbl{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--on-panel-2);display:block}
 .strip .big{font-size:27px;font-weight:600;letter-spacing:-.025em;color:var(--hot-panel);display:block;line-height:1.15}
 .strip .sub{font-size:13px;color:var(--on-panel-3);text-align:right}
 .strip .sub b{color:var(--teal-panel);font-weight:600}
+/* o pedido inteiro, embaixo do preço de uma só: a linha existe para que
+   ninguém confunda os dois — e some quando a quantidade é 1, porque aí os
+   dois números são o mesmo e repetir só atrapalha */
+.strip-ord{
+  display:flex;align-items:baseline;justify-content:space-between;gap:10px;
+  margin-top:11px;padding-top:10px;border-top:1px solid var(--panel-line);
+  font-size:12.5px;color:var(--on-panel-2);
+}
+.strip-ord b{font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:600;color:var(--on-panel)}
 
 /* ---------- collapsible ---------- */
 details.fold{
@@ -829,7 +838,16 @@ details.fold>summary span.tag{font-size:12px;font-weight:500;color:var(--ink3);m
 
 /* ---------- insumos ---------- */
 h2.section.amtrow{display:flex;align-items:center;gap:8px}
-h2.section .amt{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;color:var(--ink);letter-spacing:0;text-transform:none}
+h2.section .amt{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;color:var(--ink);letter-spacing:0;text-transform:none;white-space:nowrap}
+h2.section .amt .per{font-size:10.5px;color:var(--ink3)}
+/* a etiqueta de escopo: diz de quantas peças o bloco inteiro está falando.
+   Sem ela, um quadro de números por peça em cima de um pedido de 10 é uma
+   armadilha — e era exatamente essa a leitura errada mais fácil de fazer. */
+h2.section .scope{
+  margin-left:auto;font-size:11px;font-weight:600;letter-spacing:0;text-transform:none;
+  color:var(--ink3);background:var(--surface2);border:1px solid var(--line);
+  border-radius:999px;padding:3px 9px;white-space:nowrap;
+}
 .suphint{font-size:12.5px;color:var(--ink3);margin:0 0 10px}
 .chips button.preset{display:flex;align-items:baseline;gap:6px;padding:8px 12px;min-height:40px;font-size:13px;font-weight:600}
 .chips button.preset .cat{font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);font-weight:700;white-space:nowrap}
@@ -1745,7 +1763,7 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
 .verdict-in.empty .vs{margin-top:7px}
 
 .qtiles{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:0 0 12px}
-@media (min-width:560px){.qtiles{grid-template-columns:repeat(4,1fr)}}
+@media (min-width:560px){.qtiles{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}}
 .qtiles div{
   background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);
   padding:11px 12px;box-shadow:var(--sh-1),var(--sh-lip);min-width:0;
@@ -1926,9 +1944,16 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
 </header>
 
 <main id="main">
+  <!-- a faixa responde as duas perguntas na mesma ordem em que elas aparecem:
+       quanto custa UMA, e quanto dá o pedido inteiro. Cada número traz a
+       palavra do que ele está medindo — era a falta dela que fazia o preço de
+       uma peça ser lido como o total do pedido. -->
   <div class="strip" id="strip">
-    <div><span class="lbl">Preço por <span id="lbl-price-unit">peça</span> <span id="r-tag"></span></span><span class="big mono" id="r-price">—</span></div>
-    <div class="sub">Lucro<br><b class="mono" id="r-profit">—</b></div>
+    <div class="strip-top">
+      <div><span class="lbl">Preço por <span id="lbl-price-unit">peça</span> <span id="r-tag"></span></span><span class="big mono" id="r-price">—</span></div>
+      <div class="sub">Lucro por <span id="lbl-profit-unit">peça</span><br><b class="mono" id="r-profit">—</b></div>
+    </div>
+    <div class="strip-ord" id="strip-ord" hidden></div>
   </div>
 
   <div id="col-a">
@@ -2166,6 +2191,7 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
       </div>
 
       <h2 class="section">Lucro</h2>
+      <p class="suphint">Duas maneiras de chegar ao preço, e elas não brigam: a margem faz o app <b>sugerir</b> um valor; o preço que você escrever embaixo <b>manda</b> e vira o preço da peça.</p>
       <div class="card">
         <div class="field">
           <div class="seg" id="seg-mode">
@@ -2177,6 +2203,7 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
           <label for="f-margin"><span id="lbl-margin">Margem</span> <span class="hint">%</span><button type="button" class="help" id="help-mm" data-h="margem" aria-label="O que é isso?">?</button></label>
           <input id="f-margin" type="text" inputmode="decimal">
           <div class="chips" id="chips-margin"></div>
+          <p class="note" id="margin-note" style="margin:10px 0 0" hidden></p>
         </div>
 
         <div class="pricebox">
@@ -3036,26 +3063,30 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
   <!-- ============ RESULTADO ============ -->
   <div id="col-b">
     <div id="r-alert"></div>
+    <!-- O quadro inteiro fala de UMA unidade, e diz isso em cada cabeçalho. A
+         ordem é a da pergunta: para onde vai o dinheiro (camadas), o que sobra
+         (conferência), como o custo foi montado (memória) e só então os
+         números de comparação, que são os menos urgentes. -->
     <div class="card" id="r-card">
-      <h2 class="section" style="margin-top:0">Camadas do preço<button type="button" class="help" data-h="camadas" aria-label="O que é isso?">?</button></h2>
+      <h2 class="section amtrow" style="margin-top:0">Camadas do preço<button type="button" class="help" data-h="camadas" aria-label="O que é isso?">?</button><span class="scope" id="r-scope1">por peça</span></h2>
       <div class="stackwrap">
         <div class="stack" id="stack"></div>
         <div class="legend" id="legend"></div>
       </div>
-      <div class="mini">
-        <div><span class="k">Preço por grama</span><span class="v" id="r-pg">—</span></div>
-        <div><span class="k">Preço por hora</span><span class="v" id="r-ph">—</span></div>
-        <div><span class="k">Lucro / hora<button type="button" class="help" data-h="lucrohora" aria-label="O que é isso?">?</button></span><span class="v" id="r-lph">—</span></div>
-        <div><span class="k">Pedido</span><span class="v" id="r-total">—</span></div>
-        <div id="mini-pp" hidden><span class="k">Preço por peça</span><span class="v" id="r-pp">—</span></div>
-        <div id="mini-cp" hidden><span class="k">Custo por peça</span><span class="v" id="r-cp">—</span></div>
-      </div>
+      <h2 class="section amtrow">Conferência<button type="button" class="help" data-h="conferencia" aria-label="O que é isso?">?</button><span class="scope" id="r-scope2">por peça</span></h2>
+      <div class="check" id="check"></div>
       <details class="fold" id="fold-fx" style="margin:14px 0 0">
         <summary>Como esse custo foi montado</summary>
         <div class="body"><div class="fx" id="fx"></div></div>
       </details>
-      <h2 class="section">Conferência<button type="button" class="help" data-h="conferencia" aria-label="O que é isso?">?</button></h2>
-      <div class="check" id="check"></div>
+      <h2 class="section">Números de referência</h2>
+      <div class="mini">
+        <div><span class="k">Preço por grama</span><span class="v" id="r-pg">—</span></div>
+        <div><span class="k">Preço por hora</span><span class="v" id="r-ph">—</span></div>
+        <div><span class="k">Lucro / hora<button type="button" class="help" data-h="lucrohora" aria-label="O que é isso?">?</button></span><span class="v" id="r-lph">—</span></div>
+        <div id="mini-pp" hidden><span class="k">Preço por peça</span><span class="v" id="r-pp">—</span></div>
+        <div id="mini-cp" hidden><span class="k">Custo por peça</span><span class="v" id="r-cp">—</span></div>
+      </div>
     </div>
     <h2 class="section">Preço por faixa de quantidade<button type="button" class="help" data-h="faixas" aria-label="O que é isso?">?</button></h2>
     <div class="card">
@@ -3693,8 +3724,8 @@ var HELP = {
   kwh:{t:'Tarifa de energia', d:'O valor do kWh na SUA conta de luz, já com impostos e bandeira — não a tarifa "seca" da ANEEL. Divida o total da conta pelo consumo em kWh para achar.', e:''},
   hora:{t:'Valor da sua hora', d:'Quanto vale uma hora do seu trabalho. Só conta o tempo com a mão na peça — a impressora imprime sozinha e não precisa de você ao lado.', e:''},
   taxa:{t:'Taxa sobre a venda', d:'Percentual que a maquininha, o Pix taxado ou o marketplace tiram do preço. Deixe 0 para venda direta no Pix ou dinheiro. O app calcula por divisão, porque a taxa incide sobre o preço final.', e:''},
-  camadas:{t:'Camadas do preço', d:'O preço empilhado como as camadas de uma impressão. Cada faixa é proporcional ao que ela representa no preço. Bateu o olho, você vê pra onde o dinheiro está indo.', e:''},
-  conferencia:{t:'Conferência', d:'O caminho de volta do dinheiro: do preço de etiqueta, tira a taxa, tira o custo real, e sobra o lucro líquido. É esse painel que dá confiança no número.', e:''},
+  camadas:{t:'Camadas do preço', d:'O preço empilhado como as camadas de uma impressão. Cada faixa é proporcional ao que ela representa no preço. Bateu o olho, você vê pra onde o dinheiro está indo. Este quadro inteiro fala de <b>uma unidade</b> — é o que diz a etiqueta ao lado do título. O total do pedido fica na faixa do preço, lá em cima, e o do orçamento no fim da calculadora.', e:''},
+  conferencia:{t:'Conferência', d:'O caminho de volta do dinheiro: do preço de etiqueta, tira a taxa, tira o custo real, e sobra o lucro líquido. É esse painel que dá confiança no número. Como as camadas logo acima, ele fala de <b>uma unidade</b>, não do pedido.', e:''},
   stl:{t:'Link do modelo', d:'Onde você baixou ou comprou o STL: MakerWorld, Printables, Thingiverse, Cults, Patreon. Serve pra reimprimir sem caçar o arquivo e pra conferir a licença antes de vender.', e:''},
   filurl:{t:'Link do filamento', d:'A página onde você comprou esse rolo. Quando acabar, é um toque pra recomprar exatamente o mesmo — e dá pra conferir se o preço mudou.', e:''},
   nf:{t:'Nº da nota / pedido', d:'Guarde o número da nota fiscal ou do pedido junto com a foto do comprovante. É o que salva na hora da garantia, da troca e do fechamento do mês.', e:''},
@@ -4500,13 +4531,16 @@ function renderQuick(){
   var r = quickCompute();
   $('q-verdict').innerHTML = verdictHtml(r);
 
+  /* sem taxa de recebimento, o piso É o custo: duas caixinhas com o mesmo
+     número e nomes diferentes fazem qualquer um procurar a diferença que não
+     existe. O piso só aparece quando a taxa o afasta do custo. */
   var tiles = [
     {k:'Custo da peça', v:r.filled ? brl(r.cost) : '—'},
-    {k:'Preço mínimo', v:r.filled ? brl(r.floor) : '—', h:'qminimo'},
+    r.feeR > 0 ? {k:'Preço mínimo', v:r.filled ? brl(r.floor) : '—', h:'qminimo'} : null,
     {k:(mode === 'margem' ? 'Sugerido · ' : 'Sugerido · +') + dec(margin,0) + '%', v:(r.filled && r.suggested > 0) ? brl(r.suggested) : '—'},
     {k:'Lucro / hora', v:(r.price > 0 && r.h > 0) ? brl(r.profitHour) + '/h' : '—', h:'lucrohora',
      c:(r.price > 0 && r.h > 0) ? (r.profitHour >= 0 ? 'pos' : 'neg') : ''}
-  ];
+  ].filter(Boolean);
   $('q-tiles').innerHTML = tiles.map(function(t){
     return '<div><span class="k">' + t.k + (t.h ? helpBtn(t.h) : '') + '</span>' +
            '<span class="v ' + (t.c || '') + '">' + t.v + '</span></div>';
@@ -4877,14 +4911,30 @@ function render(){
   $('r-ph').textContent    = r.h > 0 ? brl(r.price/r.h) : '—';
   $('r-lph').textContent   = r.h > 0 && r.price > 0 ? brl(r.profitHour) + '/h' : '—';
   $('r-lph').className     = 'v' + (r.h > 0 && r.price > 0 ? (r.profitHour >= 0 ? ' pos' : ' neg') : '');
-  $('r-total').textContent = brl(r.price * r.qty);
 
   /* produto montado: o número grande é o do conjunto, e dizer "por peça" em
      cima dele é o jeito mais rápido de errar o preço em quatro vezes. A
      palavra acompanha o campo, e o custo de cada peça ganha lugar próprio —
      ninguém deveria precisar de calculadora para usar a calculadora. */
+  var one = unitWord(1, r.parts);
   var lpu = $('lbl-price-unit');
-  if(lpu) lpu.textContent = unitWord(1, r.parts);
+  if(lpu) lpu.textContent = one;
+  var lpr = $('lbl-profit-unit');
+  if(lpr) lpr.textContent = one;
+  each(qsa(document,'#r-scope1, #r-scope2'), function(e){ e.textContent = 'por ' + one; });
+
+  /* o total do pedido mora colado no preço de uma unidade, que é onde a
+     confusão nascia. Com quantidade 1 os dois números são iguais e a linha
+     desaparece: repetir o mesmo valor com outro nome é o que confunde. */
+  var so = $('strip-ord');
+  if(so){
+    var many = r.qty > 1 && r.price > 0;
+    so.hidden = !many;
+    if(many){
+      so.innerHTML = '<span>Total de ' + r.qty + ' ' + unitWord(r.qty, r.parts) + '</span>' +
+                     '<b>' + brl(r.price * r.qty) + '</b>';
+    }
+  }
   var perPiece = r.parts > 1;
   $('mini-pp').hidden = !perPiece;
   $('mini-cp').hidden = !perPiece;
@@ -4913,6 +4963,19 @@ function render(){
   each(qsa($('chips-final'),'[data-fn]'), function(b){
     b.addEventListener('click', function(){ $('f-final').value = dec(+b.getAttribute('data-fn'),2); render(); });
   });
+  /* com um preço escrito na mão, a margem lá de cima deixa de ser o que você
+     cobra e vira só o ponto de partida. Dizer isso no lugar onde a margem
+     aparece evita a leitura de que o app está cobrando dois preços. */
+  var mn = $('margin-note');
+  if(mn){
+    mn.hidden = !r.usedChosen;
+    if(r.usedChosen){
+      mn.innerHTML = 'Quem manda agora é o <b>preço que eu vou cobrar</b>, ali embaixo: ' +
+        brl(r.price) + ' por ' + unitWord(1, r.parts) + '. Esta margem só sugere — a que está valendo é a real, de <b>' +
+        dec(r.realMargin*100,1) + '%</b>.';
+    }
+  }
+
   if(r.usedChosen && r.suggested > 0){
     var d = r.chosen - r.suggested;
     $('final-note').innerHTML = 'Sugerido pelo app: <b>'+brl(r.suggested)+'</b> · você está '+
@@ -4925,6 +4988,7 @@ function render(){
   }
 
   paintMulti(r);
+  paintSupTotal();
   renderParts(r);
   paintPlates(r);
   renderPerPlate(r);
@@ -5276,10 +5340,19 @@ function renderOrder(){
     $('btn-ord-add').addEventListener('click', orderAdd);
   }
 
-  var rows = '<div class="kv"><span>Subtotal'+(t.n > 1 ? ' &middot; '+t.qty+' peças' : '')+'</span><span class="v">'+brl(t.sub)+'</span></div>';
+  /* o subtotal só existe para mostrar de onde o desconto e o frete saíram:
+     sem nenhum dos dois ele repete o total, palavra diferente e mesmo número —
+     e duas linhas iguais fazem qualquer um procurar a diferença que não há.
+     A contagem de peças passa para o total, que é a linha que fica. */
+  var qtyLbl = t.qty > 1 ? ' &middot; '+pieceWord(t.qty) : '';
+  var rows = '';
+  if(t.disc > 0 || t.ship > 0){
+    rows += '<div class="kv"><span>Subtotal'+qtyLbl+'</span><span class="v">'+brl(t.sub)+'</span></div>';
+    qtyLbl = '';
+  }
   if(t.disc > 0) rows += '<div class="kv"><span>Desconto'+(o.discountType === 'pct' ? ' ('+pctLabel(o.discount)+'%)' : '')+'</span><span class="v">&minus;'+brl(t.disc)+'</span></div>';
   if(t.ship > 0) rows += '<div class="kv"><span>Frete / entrega</span><span class="v">'+brl(t.ship)+'</span></div>';
-  rows += '<div class="kv tot"><span>Total do pedido</span><span class="v">'+brl(t.total)+'</span></div>';
+  rows += '<div class="kv tot"><span>Total do pedido'+qtyLbl+'</span><span class="v">'+brl(t.total)+'</span></div>';
   if(t.total > 0){
     rows += '<p class="note" style="margin:10px 0 0">Lucro estimado <b>'+brl(t.profit)+'</b>'+
       (t.hours > 0 ? ' &middot; <b>'+dec(Math.ceil(t.hours),0)+' h</b> de impressão' : '')+
@@ -5542,10 +5615,18 @@ function renderSupplyPresets(){
     });
   });
 }
+/* o total dos insumos é de UMA unidade, e o cabeçalho não dizia: ao lado de um
+   pedido de 10 peças, um "R$ 1,55" solto é lido como o valor do pedido todo. */
+function paintSupTotal(){
+  var el = $('sup-total');
+  if(!el) return;
+  var t = extrasTotal(extras);
+  el.innerHTML = esc(brl(t)) + (t > 0 ? '<span class="per">/' + esc(unitWord(1, partsCount())) + '</span>' : '');
+}
 function refreshExtraRow(i){
   var row = $('extras').children[i];
   if(row){ var sub = row.querySelector('.sub'); if(sub) sub.textContent = brl(exSub(extras[i])); }
-  $('sup-total').textContent = brl(extrasTotal(extras));
+  paintSupTotal();
 }
 function renderExtras(){
   $('extras').innerHTML = extras.map(function(x,i){
@@ -5586,7 +5667,7 @@ function renderExtras(){
   each(qsa($('extras'),'[data-exdel]'), function(b){
     b.addEventListener('click', function(){ extras.splice(+b.getAttribute('data-exdel'),1); renderExtras(); render(); });
   });
-  $('sup-total').textContent = brl(extrasTotal(extras));
+  paintSupTotal();
 }
 
 /* ============ multicolor: a lista de cores na tela ============ */
@@ -11995,7 +12076,7 @@ var TOUR = [
 
   {view:'calc', sel:'#strip',
    t:'O preço aparece aqui',
-   d:'Esta faixa acompanha você enquanto digita: o <b>preço por peça</b> e o lucro que sobra. Se você preferir cobrar um valor redondo, escreva em “preço que eu vou cobrar” e o app recalcula o lucro real.'},
+   d:'Esta faixa acompanha você enquanto digita: o <b>preço de uma peça</b> e o lucro que sobra nela. Quando a quantidade passa de 1, aparece embaixo o <b>total do pedido</b> — os dois juntos, para nunca trocar um pelo outro. Se você preferir cobrar um valor redondo, escreva em “preço que eu vou cobrar” e o app recalcula o lucro real.'},
 
   {view:'calc', sel:'#r-card',
    t:'Camadas do preço e conferência',
