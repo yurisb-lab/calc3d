@@ -1317,3 +1317,82 @@ o caminho para trazer um arquivo é a calculadora. Gravar o cálculo sozinho, a
 cada tecla, também fica de fora: mudar o peso muda o custo e o preço sugerido de
 um produto que já está no catálogo e pode já ter sido vendido, e isso é uma
 decisão, não um efeito colateral de digitar.
+
+---
+
+# Adendo — v13 (setembro/2026)
+
+A calculadora fazia a conta certa e contava ela mal. Num pedido de 10 peças, a
+mesma tela mostrava **R$ 29,67** com quatro nomes — *preço por peça*, *Preço*,
+*preço de venda* e a primeira linha da tabela por faixa — e **R$ 296,72** com
+outros três: *Pedido*, *Subtotal* e *Total do pedido*. Nenhum deles dizia de
+quantas peças estava falando. Uma caixinha escrita **Pedido** no meio de um
+quadro de números por peça é uma armadilha, e o erro que ela produz não é de
+centavos: é vender dez peças pelo preço de uma, ou cobrar de uma o preço de dez.
+
+Nesta versão nenhuma conta mudou. Mudou o que a tela diz sobre os números que
+ela já calculava.
+
+## 52. O que entrou
+
+### 52.1 Cada número diz de quantas peças ele fala
+
+- A **faixa do preço** passa a trazer as duas perguntas juntas e nomeadas:
+  **Preço por peça** e **Lucro por peça** em cima; **Total de 10 peças**
+  embaixo, depois de um traço. Com quantidade 1 a linha de baixo some — os dois
+  números seriam o mesmo, e repetir é justamente o que confunde.
+- O quadro do resultado ganhou uma **etiqueta de escopo** — *por peça*, ou *por
+  produto* quando o produto é montado — no título de **Camadas do preço** e de
+  **Conferência**. É a resposta para a pergunta que a coluna inteira provocava.
+- O total de **Insumos e acessórios**, no cabeçalho da seção, virou
+  `R$ 1,55/peça`. Ele sempre foi por unidade; sozinho ao lado de um pedido de
+  dez, era lido como o valor do pedido.
+
+### 52.2 O mesmo número, uma vez só
+
+- A caixinha **Pedido** saiu do quadro de resultado. O total do pedido tem um
+  lugar só na coluna agora: a faixa do preço, colado ao preço de uma unidade,
+  que é onde a confusão entre os dois nascia.
+- No orçamento, a linha **Subtotal** só aparece quando existe **desconto ou
+  frete** — é para isso que ela serve. Sem nenhum dos dois ela repetia o total
+  com outro nome, e duas linhas iguais fazem qualquer um procurar a diferença
+  que não existe. A contagem de peças passou para o total, que é a linha que
+  fica. O texto do WhatsApp já fazia assim desde sempre.
+- No **cálculo rápido**, *Preço mínimo* só aparece quando existe taxa de
+  recebimento. Sem taxa o piso **é** o custo, e eram duas caixinhas com o mesmo
+  valor e nomes diferentes.
+
+### 52.3 A ordem da leitura
+
+O quadro do resultado passa a ser lido na ordem da pergunta: para onde vai o
+dinheiro (**camadas**), o que sobra (**conferência**), como o custo foi montado
+(a memória, dobrada) e, por último, os **números de referência** — preço por
+grama, preço por hora, lucro por hora. Esses três servem para comparar peças,
+não para fechar um preço; estavam sentados bem no meio do caminho entre o preço
+e o lucro.
+
+O total da legenda continua se chamando **Preço**: ele é a soma das faixas
+empilhadas logo acima, e quem diz de que unidade ele fala é a etiqueta do bloco.
+
+### 52.4 Margem e preço escolhido não brigam
+
+A seção *Lucro* tem dois caminhos para o mesmo preço e não dizia qual vale.
+Agora diz, em uma linha embaixo do título: a margem **sugere**, o preço que
+você escreve **manda**. E quando existe um preço escolhido, uma nota embaixo da
+margem conta que ela virou ponto de partida — com a margem real que está
+valendo, para ninguém ler "40%" achando que é o que está sendo cobrado.
+
+## 53. Compatibilidade
+
+Nenhum dado muda e nenhuma fórmula muda. `computeCore` devolve os mesmos
+campos, `orderTotals` os mesmos totais, e um orçamento ou produto salvo antes
+abre exatamente com os mesmos valores — só com os rótulos novos. O único nó que
+saiu do DOM é o `#r-total` da caixinha *Pedido*, que nada além da pintura do
+resultado usava.
+
+## 54. Continua fora do escopo
+
+Tudo o que já estava fora. E, aqui: o total do pedido **não** vira o número
+grande da faixa. O que se negocia, o que se digita e o que o cliente pergunta é
+o preço de uma unidade; o total é consequência dele, e trocar os dois de tamanho
+só inverteria a confusão que este adendo existe para desfazer.
