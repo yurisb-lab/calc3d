@@ -731,7 +731,10 @@ select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns=
 .strip .lbl{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--on-panel-2);display:block}
 .strip .big{font-size:27px;font-weight:600;letter-spacing:-.025em;color:var(--hot-panel);display:block;line-height:1.15}
 .strip .sub{font-size:13px;color:var(--on-panel-3);text-align:right}
-.strip .sub b{color:var(--teal-panel);font-weight:600}
+.strip .sub b{color:var(--on-panel);font-weight:600;font-size:15px}
+.strip .sub .sub2{display:block;font-size:12px;margin-top:1px}
+.strip .sub .sub2 .mono{color:var(--teal-panel);font-weight:600}
+.strip .sub .sub2 .mono.neg{color:var(--hot-panel)}
 /* o pedido inteiro, embaixo do preço de uma só: a linha existe para que
    ninguém confunda os dois — e some quando a quantidade é 1, porque aí os
    dois números são o mesmo e repetir só atrapalha */
@@ -741,6 +744,8 @@ select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns=
   font-size:12.5px;color:var(--on-panel-2);
 }
 .strip-ord b{font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:600;color:var(--on-panel)}
+.strip-ord .ov{display:block;text-align:right;font-size:12px;margin-top:1px}
+.strip-ord .ov .mono{font-family:'IBM Plex Mono',monospace}
 
 /* ---------- collapsible ---------- */
 details.fold{
@@ -1366,7 +1371,6 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
 .pricebox .rowb{display:flex;gap:8px;align-items:flex-end}
 .pricebox .rowb .field{flex:1;margin-bottom:0}
 .pricebox .chips{margin-top:10px}
-.strip .big.set{color:var(--on-panel)}
 .tagset{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;background:var(--hot);color:#fff;border-radius:5px;padding:2px 6px;margin-left:7px;vertical-align:2px}
 
 /* trilho segmentado usado dentro de uma tela (ordenação do catálogo).
@@ -1944,14 +1948,16 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
 </header>
 
 <main id="main">
-  <!-- a faixa responde as duas perguntas na mesma ordem em que elas aparecem:
-       quanto custa UMA, e quanto dá o pedido inteiro. Cada número traz a
+  <!-- o número grande é o CUSTO: ele é o fato, sai das gramas e do tempo. O
+       preço de venda é decisão que vem depois, então fica no canto, menor,
+       como sugestão. A faixa responde na mesma ordem: quanto custa UMA, e
+       quanto dá o pedido inteiro. Cada número traz a
        palavra do que ele está medindo — era a falta dela que fazia o preço de
        uma peça ser lido como o total do pedido. -->
   <div class="strip" id="strip">
     <div class="strip-top">
-      <div><span class="lbl">Preço por <span id="lbl-price-unit">peça</span> <span id="r-tag"></span></span><span class="big mono" id="r-price">—</span></div>
-      <div class="sub">Lucro por <span id="lbl-profit-unit">peça</span><br><b class="mono" id="r-profit">—</b></div>
+      <div><span class="lbl">Custo por <span id="lbl-cost-unit">peça</span></span><span class="big mono" id="r-costbig">—</span></div>
+      <div class="sub"><span id="lbl-price-kind">Venda sugerida</span> <span id="r-tag"></span><br><b class="mono" id="r-price">—</b><span class="sub2">lucro <span class="mono" id="r-profit">—</span></span></div>
     </div>
     <div class="strip-ord" id="strip-ord" hidden></div>
   </div>
@@ -4868,10 +4874,13 @@ function render(){
   var r = compute();
   last = r;
 
+  /* custo em destaque; o preço é sugestão até alguém escolher um */
+  $('r-costbig').textContent = r.cost > 0 ? brl(r.cost) : '—';
+  $('lbl-price-kind').textContent = r.usedChosen ? 'Venda' : 'Venda sugerida';
   $('r-price').textContent  = r.price > 0 ? brl(r.price) : '—';
-  $('r-price').className    = 'big mono' + (r.usedChosen ? ' set' : '');
   $('r-tag').innerHTML      = r.usedChosen ? '<span class="tagset">escolhido</span>' : '';
   $('r-profit').textContent = r.price > 0 ? brl(r.profit) : '—';
+  $('r-profit').className   = 'mono' + (r.price > 0 && r.profit < 0 ? ' neg' : '');
 
   $('r-alert').innerHTML =
     (r.warn ? '<div class="alert bad">'+esc(r.warn)+'</div>'
@@ -4886,7 +4895,7 @@ function render(){
      coluna cinza vazia e uma fileira de travessões parecem tela quebrada */
   var wrap = document.querySelector('#r-card .stackwrap');
   wrap.classList.toggle('empty', !shown.length);
-  $('strip').classList.toggle('idle', !(r.price > 0));
+  $('strip').classList.toggle('idle', !(r.cost > 0));
   if(!shown.length){
     wrap.innerHTML = '<div class="stackempty">'+
       '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="2.5" width="16" height="19" rx="2.5"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="12" x2="8" y2="12.01"/><line x1="12" y1="12" x2="12" y2="12.01"/><line x1="16" y1="12" x2="16" y2="12.01"/></svg>'+
@@ -4917,10 +4926,8 @@ function render(){
      palavra acompanha o campo, e o custo de cada peça ganha lugar próprio —
      ninguém deveria precisar de calculadora para usar a calculadora. */
   var one = unitWord(1, r.parts);
-  var lpu = $('lbl-price-unit');
-  if(lpu) lpu.textContent = one;
-  var lpr = $('lbl-profit-unit');
-  if(lpr) lpr.textContent = one;
+  var lcu = $('lbl-cost-unit');
+  if(lcu) lcu.textContent = one;
   each(qsa(document,'#r-scope1, #r-scope2'), function(e){ e.textContent = 'por ' + one; });
 
   /* o total do pedido mora colado no preço de uma unidade, que é onde a
@@ -4928,11 +4935,12 @@ function render(){
      desaparece: repetir o mesmo valor com outro nome é o que confunde. */
   var so = $('strip-ord');
   if(so){
-    var many = r.qty > 1 && r.price > 0;
+    var many = r.qty > 1 && r.cost > 0;
     so.hidden = !many;
     if(many){
-      so.innerHTML = '<span>Total de ' + r.qty + ' ' + unitWord(r.qty, r.parts) + '</span>' +
-                     '<b>' + brl(r.price * r.qty) + '</b>';
+      so.innerHTML = '<span>Custo de ' + r.qty + ' ' + unitWord(r.qty, r.parts) + '</span>' +
+                     '<span><b>' + brl(r.cost * r.qty) + '</b>' +
+                     (r.price > 0 ? '<span class="ov">venda <span class="mono">' + brl(r.price * r.qty) + '</span></span>' : '') + '</span>';
     }
   }
   var perPiece = r.parts > 1;
@@ -12075,8 +12083,8 @@ var TOUR = [
    d:'<b>Margem</b> é a fatia do preço que sobra para você; <b>markup</b> é o quanto você soma em cima do custo. Não são a mesma coisa — 50% de markup dá só 33% de margem.'},
 
   {view:'calc', sel:'#strip',
-   t:'O preço aparece aqui',
-   d:'Esta faixa acompanha você enquanto digita: o <b>preço de uma peça</b> e o lucro que sobra nela. Quando a quantidade passa de 1, aparece embaixo o <b>total do pedido</b> — os dois juntos, para nunca trocar um pelo outro. Se você preferir cobrar um valor redondo, escreva em “preço que eu vou cobrar” e o app recalcula o lucro real.'},
+   t:'O custo aparece aqui',
+   d:'Esta faixa acompanha você enquanto digita: em destaque, o <b>custo de uma peça</b> — o que ela gasta de verdade. No canto, menor, a venda sugerida e o lucro que sobraria nela, porque o preço é decisão sua. Quando a quantidade passa de 1, aparece embaixo o <b>custo do pedido inteiro</b>, com a venda ao lado. Se você preferir cobrar um valor redondo, escreva em “preço que eu vou cobrar” e o app recalcula o lucro real.'},
 
   {view:'calc', sel:'#r-card',
    t:'Camadas do preço e conferência',
