@@ -1999,6 +1999,10 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
           </div>
         </div>
         <div class="field" style="margin:14px 0 0">
+          <label for="q-perplate">Peças na mesa <span class="hint">— se os números forem da mesa cheia</span><button type="button" class="help" data-h="qmesa" aria-label="O que é isso?">?</button></label>
+          <input id="q-perplate" type="text" inputmode="decimal" placeholder="1">
+        </div>
+        <div class="field" style="margin:14px 0 0">
           <label for="q-price">Preço que vão pagar <span class="hint">R$ por peça</span><button type="button" class="help" data-h="qpreco" aria-label="O que é isso?">?</button></label>
           <input id="q-price" type="text" inputmode="decimal" placeholder="0,00">
           <div class="chips" id="q-chips"></div>
@@ -3719,6 +3723,7 @@ var HELP = {
   desperdicio:{t:'Desperdício', d:'Purga, brim, raft, suporte e torre de purga. Não vira peça, mas você pagou. Referência de mercado: 5% a 10%. Em multicolor com AMS, use o valor real do fatiador.', e:'82 g + 8% = 88,56 g cobrados'},
   falhas:{t:'Reserva de falhas', d:'Peça que soltou da mesa, rolo embolado, arquivo com defeito. Referência: 5% a 15%. O app DIVIDE (custo ÷ 0,92), não soma — é assim que a peça boa paga a peça perdida.', e:'R$ 26,71 ÷ 0,92 = R$ 29,03'},
   preparo:{t:'Preparo (por lote)', d:'Minutos para fatiar, limpar a mesa, trocar filamento e ligar. É gasto uma vez por MESA, não por pedido: o app conta quantas mesas o lote precisa usando o campo "cabem por mesa" e divide pela quantidade de peças.', e:''},
+  qmesa:{t:'Peças na mesa', d:'Se você fatiou a mesa cheia, com várias peças, digite aqui quantas são: as gramas e o tempo acima são divididos por esse número e tudo abaixo — custo, preço e veredicto — passa a ser de UMA peça. Deixe em branco se os números já são de uma peça só.', e:'Mesa com 8 chaveiros: 80 g e 4 h\nCada chaveiro: 10 g e 30 min'},
   pormesa:{t:'Cabem por mesa', d:'Quantas peças DESTAS cabem juntas na mesa da impressora. É o campo que decide se o preço cai no lote: o preparo — fatiar, limpar a mesa, trocar o filamento e ligar — custa igual para uma mesa com 1 peça ou com 24. Se só uma cabe, um pedido de 30 são 30 mesas e 30 preparos, e o preço por peça não cai nada. Deixe em branco para não controlar: o app volta a contar um preparo só para o lote inteiro, como fazia antes.', e:'Chaveiro: cabem 24 por mesa\nVaso grande: cabe 1 por mesa'},
   multimesa:{t:'Quantas mesas o produto usa', d:'Um vaso pequeno sai numa mesa só. Um dragão de 40 cm, uma luminária ou um kit grande saem em duas, três, cinco mesas — cada uma com o seu peso e o seu tempo. Marque "Mais de uma mesa" e liste as mesas: o app soma o peso e o tempo de todas para chegar ao produto inteiro e, mais importante, cobra o PREPARO uma vez por mesa. Fatiar, limpar a mesa, trocar o filamento e ligar custa igual em cada uma das três — somar tudo num número só faz esse custo desaparecer. Com a lista ligada, "cabem por mesa" sai da conta: quem já ocupa mesas inteiras não divide nenhuma com outro produto, e o preço deixa de cair no lote (porque na impressora ele não cai mesmo).', e:'Dragão grande: mesa 1 com 120 g e 4 h, mesa 2 com 80 g e 3 h, mesa 3 com 200 g e 6 h\nVaso pequeno: uma mesa só'},
   multipeca:{t:'Produto montado com várias peças', d:'Marque quando UM produto pronto só existe depois de juntar VÁRIAS peças impressas: caixa e tampa, boneco articulado, organizador em módulos. O app passa a separar duas coisas que até aqui eram a mesma: peça é o que ocupa lugar na mesa, produto é o que o cliente compra. Gramas, tempo e preço continuam sendo os do produto INTEIRO — o conjunto todo, com todas as peças —, e a quantidade passa a ser de produtos. O que muda na conta é a mesa: um produto de 5 peças ocupa 5 lugares, então ele enche a mesa cinco vezes mais rápido e o preparo se dilui bem menos. Deixe em "peça única" quando o que sai da mesa já é o produto pronto. O custo de UMA peça não some: o quadro do resultado mostra <b>custo por peça</b> e <b>preço por peça</b> ao lado dos do conjunto, e a memória de cálculo repete a divisão. É média do conjunto — serve para reimprimir a peça que quebrou ou conferir a mesa, não para vender uma solta.', e:'Caixa com tampa: 2 peças por produto\nDragão articulado: 5 peças por produto'},
@@ -4465,10 +4470,18 @@ function compute(){ return computeCore(calcInput()); }
 function qPrinter(){ return S.printers.filter(function(x){return x.id===$('q-printer').value;})[0] || S.printers[0] || {watts:0,price:0,life:1,maint:0,hoursYear:1,override:''}; }
 function qFilament(){ return S.filaments.filter(function(x){return x.id===$('q-filament').value;})[0] || S.filaments[0] || {spoolPrice:0,spoolWeight:1000}; }
 
+function quickFit(){
+  var k = Math.round(num($('q-perplate').value));
+  return k > 1 ? Math.min(k, 100000) : 1;
+}
 function quickCompute(){
   var p = qPrinter(), f = qFilament(), st = S.settings;
-  var g = Math.max(0, num($('q-grams').value));
-  var h = Math.max(0, num($('q-h').value) + num($('q-m').value)/60);
+  /* fatiou a mesa cheia: as gramas e o tempo são da mesa, e cada peça leva a
+     sua parte. Vazio ou 1 é o de antes — os números já são de uma peça. */
+  var n = quickFit();
+  var gAll = Math.max(0, num($('q-grams').value));
+  var hAll = Math.max(0, num($('q-h').value) + num($('q-m').value)/60);
+  var g = gAll/n, h = hAll/n;
 
   var waste   = Math.max(0, num(st.waste))/100;
   var perGram = num(f.spoolWeight) > 0 ? num(f.spoolPrice)/num(f.spoolWeight) : 0;
@@ -4494,7 +4507,7 @@ function quickCompute(){
   var profit = price - fee - cost;
 
   return {
-    g:g, h:h, perGram:perGram,
+    g:g, h:h, n:n, gAll:gAll, hAll:hAll, perGram:perGram,
     material:material, energy:energy, machine:machine, overhead:overhead,
     subtotal:subtotal, reserve:cost - subtotal, cost:cost,
     floor:floor, suggested:suggested,
@@ -4575,7 +4588,11 @@ function renderQuick(){
     });
   });
 
-  var fx = fxRow('Filamento', dec(r.g,1) + ' g' + (r.waste > 0 ? ' + ' + dec(r.waste*100,0) + '% desperdício' : '') +
+  var fx = r.n > 1
+    ? '<div class="r"><span class="nm">Mesa com ' + dec(r.n,0) + ' peças<span class="f">' + dec(r.gAll,1) + ' g / ' +
+      hmWord(r.hAll) + ' ÷ ' + dec(r.n,0) + '</span></span><span class="vl">' + dec(r.g,1) + ' g · ' + hmWord(r.h) + '</span></div>'
+    : '';
+  fx += fxRow('Filamento', dec(r.g,1) + ' g' + (r.waste > 0 ? ' + ' + dec(r.waste*100,0) + '% desperdício' : '') +
                  ' × ' + brl(r.perGram) + '/g', r.material) +
            fxRow('Energia', '(' + dec(r.watts,0) + ' W ÷ 1000) × ' + dec(r.h,2) + ' h × ' + brl(r.kwh) + '/kWh', r.energy) +
            fxRow('Máquina', brl(r.machineHour) + '/h × ' + dec(r.h,2) + ' h  (depreciação + manutenção)', r.machine);
@@ -4587,7 +4604,7 @@ function renderQuick(){
 }
 
 function bindQuick(){
-  ['q-grams','q-h','q-m','q-price'].forEach(function(id){
+  ['q-grams','q-h','q-m','q-perplate','q-price'].forEach(function(id){
     $(id).addEventListener('input', renderQuick);
   });
   ['q-printer','q-filament'].forEach(function(id){
@@ -4597,11 +4614,14 @@ function bindQuick(){
      se perder quando a conversa vira um orçamento de verdade */
   $('btn-q-full').addEventListener('click', function(){
     setMulti(false);
-    scope = 'unit'; setSeg('seg-scope','unit');
+    /* a mesa cheia vai como mesa cheia: a calculadora divide do mesmo jeito */
+    var n = quickFit();
+    scope = n > 1 ? 'plate' : 'unit'; setSeg('seg-scope', scope);
+    $('f-perplate').value = n > 1 ? String(n) : '';
     $('f-grams').value = $('q-grams').value;
     $('f-h').value     = $('q-h').value;
     $('f-m').value     = $('q-m').value;
-    $('f-qty').value   = '1';
+    $('f-qty').value   = String(n);
     $('f-final').value = $('q-price').value;
     if($('q-printer').value)  $('f-printer').value  = $('q-printer').value;
     if($('q-filament').value) $('f-filament').value = $('q-filament').value;
@@ -4610,7 +4630,7 @@ function bindQuick(){
     go('calc');
   });
   $('btn-q-clear').addEventListener('click', function(){
-    ['q-grams','q-h','q-m','q-price'].forEach(function(id){ $(id).value = ''; });
+    ['q-grams','q-h','q-m','q-perplate','q-price'].forEach(function(id){ $(id).value = ''; });
     renderQuick();
     $('q-grams').focus();
   });
