@@ -3714,8 +3714,8 @@ var HELP = {
   margem:{t:'Margem × Markup', d:'Margem é a fatia do PREÇO que sobra pra você. Markup é o quanto você soma EM CIMA do custo. Os dois números são diferentes — 50% de markup dá só 33% de margem.', e:'Custo R$ 29,03\n50% de markup → R$ 43,55\n50% de margem → R$ 58,06'},
   calcnaficha:{t:'Produção e custo', d:'A mesma conta da calculadora, dentro da ficha do produto: mude o peso, o tempo, as mesas, a quantidade ou a margem e o custo, o preço sugerido e o lucro aparecem na hora, sem precisar abrir a calculadora e voltar. Enquanto você não tocar em "Gravar no produto", nada fica gravado — o que está na tela é uma simulação, e o botão fica marcado enquanto houver mudança pendente. Se você sair pelo "Salvar e voltar ao catálogo" com o cálculo pendente, ele é gravado antes de fechar. Os outros números do produto (desperdício, falhas, preparo, acabamento e insumos) continuam vindo do que está salvo; para mexer neles, use "Abrir na calculadora", no fim do bloco.', e:''},
   precofinal:{t:'Preço que eu vou cobrar', d:'O app sugere um preço matemático. Aqui você grava o preço redondo que realmente vai praticar (R$ 49,90 em vez de R$ 48,38). A conferência recalcula o lucro real com o SEU preço, e ele fica salvo no produto.', e:''},
-  gramas:{t:'Gramas da peça', d:'O número que o fatiador mostra depois de fatiar. Se o valor for da mesa cheia, marque "a mesa toda" abaixo que o app divide pela quantidade.', e:''},
-  escopo:{t:'1 peça ou a mesa toda', d:'Se você fatiou uma peça só, deixe em "1 peça". Se fatiou a mesa cheia com várias, marque "a mesa toda" — o app divide gramas e horas pela quantidade.', e:''},
+  gramas:{t:'Gramas da peça', d:'O número que o fatiador mostra depois de fatiar. Se o valor for da mesa cheia, marque "a mesa toda" abaixo que o app divide por quantas cabem na mesa.', e:''},
+  escopo:{t:'1 peça ou a mesa toda', d:'Se você fatiou uma peça só, deixe em "1 peça". Se fatiou a mesa cheia com várias, marque "a mesa toda" e diga em "cabem por mesa" quantas peças ela tem — o app divide gramas e horas por esse número. Com "cabem por mesa" em branco, divide pela quantidade.', e:''},
   desperdicio:{t:'Desperdício', d:'Purga, brim, raft, suporte e torre de purga. Não vira peça, mas você pagou. Referência de mercado: 5% a 10%. Em multicolor com AMS, use o valor real do fatiador.', e:'82 g + 8% = 88,56 g cobrados'},
   falhas:{t:'Reserva de falhas', d:'Peça que soltou da mesa, rolo embolado, arquivo com defeito. Referência: 5% a 15%. O app DIVIDE (custo ÷ 0,92), não soma — é assim que a peça boa paga a peça perdida.', e:'R$ 26,71 ÷ 0,92 = R$ 29,03'},
   preparo:{t:'Preparo (por lote)', d:'Minutos para fatiar, limpar a mesa, trocar filamento e ligar. É gasto uma vez por MESA, não por pedido: o app conta quantas mesas o lote precisa usando o campo "cabem por mesa" e divide pela quantidade de peças.', e:''},
@@ -4239,6 +4239,18 @@ function platesFor(qty, perPlate, parts){
   var p = parts > 1 ? parts : 1;
   return perPlate > 0 ? Math.ceil(q*p/perPlate) : 1;
 }
+/* por quanto os números "da mesa toda" se dividem. A mesa fatiada tem as peças
+   que CABEM nela, não as do pedido: uma mesa com 8 chaveiros dividida por um
+   pedido de 1 cobrava a mesa inteira por um chaveiro, e dizer que cabem 8 não
+   baixava nada. Com "cabem por mesa" preenchido é ele que divide (em produtos:
+   8 peças de um conjunto de 2 são 4 produtos); em branco, vale a quantidade. */
+function plateDiv(scope, qty, perPlate, parts){
+  if(scope !== 'plate') return 1;
+  var k = Math.round(num(perPlate));
+  var p = Math.max(1, Math.round(num(parts)) || 1);
+  if(k > 0) return k/p;
+  return Math.max(1, Math.round(num(qty)) || 1);
+}
 function plateWord(k){ return k === 1 ? '1 mesa' : dec(k,0) + ' mesas'; }
 /* peça e produto só são a mesma palavra enquanto o produto for de uma peça */
 function unitWord(n, parts){
@@ -4309,7 +4321,7 @@ function computeCore(inp){
   var hAll = set.n ? set.h : num(inp.hours);
   /* "a mesa toda" só é pergunta quando existe uma mesa só: quem listou as mesas
      já escreveu o produto inteiro */
-  var div = (inp.scope === 'plate' && !set.n) ? qty : 1;
+  var div = set.n ? 1 : plateDiv(inp.scope, qty, inp.perPlate, inp.parts);
   var g = gAll/div;
   var h = hAll/div;
 
@@ -4842,7 +4854,7 @@ function paintPlates(r){
    soma das mesas volta para os campos únicos */
 function mesaSeed(){
   if(plateSet(mesas).n) return;
-  var q = scope === 'plate' ? Math.max(1, Math.round(num($('f-qty').value)) || 1) : 1;
+  var q = plateDiv(scope, $('f-qty').value, plateFit(), partsCount());
   var g = (multi ? matGramsTotal() + purgeGrams() : num($('f-grams').value))/q;
   var h = (num($('f-h').value) + num($('f-m').value)/60)/q;
   var mins = Math.round(h*60);
@@ -5689,7 +5701,7 @@ function paintMulti(r){
   var modeled = matGramsTotal(), pg = purgeGrams(), tot = modeled + pg;
   /* com a lista de mesas, o escopo é sempre o produto inteiro */
   var plate = scope === 'plate' && !multiPlate;
-  var mult = plate ? r.qty : 1;
+  var mult = plate ? plateDiv('plate', r.qty, r.perPlate, r.parts) : 1;
   $('mat-tot').innerHTML =
     '<span>'+(plate ? 'Total da mesa' : 'Total por '+unitWord(1, r.parts))+': <b>'+dec(tot,1)+' g</b>'+
       (pg > 0 ? ' <span style="color:var(--ink3)">('+dec(modeled,1)+' g de peça + '+dec(pg,1)+
@@ -7112,9 +7124,9 @@ var BOXSVG = '<svg viewBox="0 0 24 24"><path d="M12 2.8l8.2 4.6v9.2L12 21.2 3.8 
 
 function productPrice(p){ return num(p.priceSet) > 0 ? num(p.priceSet) : num(p.price); }
 /* horas POR PEÇA: o produto pode ter sido salvo com os números da mesa cheia */
+function productDiv(p){ return plateDiv(p.scope, p.qty, p.perPlate, p.parts); }
 function productHours(p){
-  var q = Math.max(1, Math.round(num(p.qty)) || 1);
-  return p.scope === 'plate' ? num(p.hours)/q : num(p.hours);
+  return num(p.hours)/productDiv(p);
 }
 /* o número que decide o que vale a pena imprimir: lucro dividido pelo recurso
    escasso, que é hora de impressora — não dinheiro */
@@ -7138,8 +7150,7 @@ function productMoney(p){ return productMoneyAt(p, productPrice(p)); }
 /* gramas POR PECA, igual ao productHours: o produto pode ter sido salvo com os
    numeros da mesa cheia */
 function productGrams(p){
-  var q = Math.max(1, Math.round(num(p.qty)) || 1);
-  return p.scope === 'plate' ? num(p.grams)/q : num(p.grams);
+  return num(p.grams)/productDiv(p);
 }
 /* os materiais que aparecem no orcamento e no PDF, lidos do que o produto
    guardou — o mesmo texto que itemMaterial monta a partir da calculadora */
@@ -7165,7 +7176,7 @@ function productMaterial(p){
    Ele sai sempre no escopo de UMA peca: um produto salvo "da mesa toda" com 4
    por mesa, vendido em 3 unidades, viraria 3 mesas se o escopo viajasse junto. */
 function productCalc(p, qty, unitPrice){
-  var div = p.scope === 'plate' ? Math.max(1, Math.round(num(p.qty)) || 1) : 1;
+  var div = productDiv(p);
   return {
     piece: p.name || '',
     grams: productGrams(p),
@@ -7197,7 +7208,7 @@ function productCalc(p, qty, unitPrice){
 /* gramas cobradas de cada rolo, por peca, ja com desperdicio e purga — a mesma
    conta que o compute() faz, lida dos numeros salvos do produto */
 function productUse(p){
-  var div = p.scope === 'plate' ? Math.max(1, Math.round(num(p.qty)) || 1) : 1;
+  var div = productDiv(p);
   var waste = Math.max(0, num(p.waste)/100);
   var rows = (p.multi && (p.mats||[]).length) ? p.mats : null;
   var out = [];
@@ -7435,7 +7446,6 @@ function renderParams(p){
   var src = hostOf(p.stlUrl);
   /* peça e produto deixam de ser sinônimos quando o produto é montado */
   var pParts = Math.max(1, Math.round(num(p.parts)) || 1);
-  var pq = Math.max(1, Math.round(num(p.qty)) || 1);
   var pSet = plateSet(p.plates);
   var pr = S.printers.filter(function(x){return x.id===p.printer;})[0];
   var fl = S.filaments.filter(function(x){return x.id===p.filament;})[0];
@@ -7446,7 +7456,7 @@ function renderParams(p){
        uma mesa com 4 peças passa por peça única e o preço sai pelo quádruplo */
     '<div class="kv"><span>Estes números são</span><span class="v">'+
       (p.scope === 'plate'
-        ? 'da mesa toda, com ' + dec(pq,0) + ' ' + unitWord(pq, pParts) + (pParts > 1 ? ' (' + pieceWord(pq * pParts) + ')' : '')
+        ? (function(d){ return 'da mesa toda, com ' + dec(d, d % 1 ? 1 : 0) + ' ' + unitWord(d, pParts) + (pParts > 1 ? ' (' + pieceWord(d * pParts) + ')' : ''); })(productDiv(p))
         : 'de 1 ' + unitWord(1, pParts) + (pParts > 1 ? ' (' + pieceWord(pParts) + ')' : ''))+'</span></div>'+
     /* mesas do produto: o que o preço cobra de preparo sai daqui */
     (pSet.n
@@ -7629,7 +7639,8 @@ function setPdMultiPlate(on, seed){
   setSeg('seg-pd-plates', pdMultiPlate ? 'many' : 'one');
   if(pdMultiPlate){
     if(seed !== false && !plateSet(pdMesas).n){
-      var q = pdScope === 'plate' ? Math.max(1, Math.round(num($('pd-m-qty').value)) || 1) : 1;
+      var q = plateDiv(pdScope, $('pd-m-qty').value, $('pd-m-perplate').value,
+                       pdParts === 'set' ? $('pd-m-parts').value : 1);
       var g = num($('pd-m-grams').value)/q;
       var mins = Math.round((num($('pd-m-h').value) + num($('pd-m-m').value)/60)*60/q);
       pdMesas = [{g: g > 0 ? dec(g,1) : '', h: mins >= 60 ? String(Math.floor(mins/60)) : '',
@@ -7903,8 +7914,8 @@ function pdApplyManual(opts){
   li.push(set.n
     ? 'Somados de <b>' + plateWord(set.n) + '</b>, que é o que cada ' + unitWord(1, np) + ' usa.'
     : (scope === 'plate'
-        ? 'Contados como a <b>mesa toda</b>, com ' + qty + ' ' + unitWord(qty, np) +
-          (np > 1 ? ' — ' + pieceWord(qty * np) + ' impressas.' : '.')
+        ? (function(d){ return 'Contados como a <b>mesa toda</b>, com ' + dec(d, d % 1 ? 1 : 0) + ' ' + unitWord(d, np) +
+            (np > 1 ? ' — ' + pieceWord(d * np) + ' impressas.' : '.'); })(plateDiv('plate', qty, plateFit(), np))
         : 'Contados como <b>1 ' + unitWord(1, np) + '</b>.'));
   if(np > 1) li.push('Produto <b>montado com ' + pieceWord(np) + '</b>: o peso e o tempo acima valem pelo conjunto inteiro, e na mesa ele ocupa ' + pieceWord(np) + '.');
   var fit = plateFit();
@@ -8485,7 +8496,7 @@ var jobClientFilter = '';
 function jobItems(j){
   if(Array.isArray(j.items) && j.items.length) return j.items;
   var q = Math.max(1, Math.round(num(j.qty)) || 1);
-  var div = (j.scope === 'plate') ? q : 1;   /* o valor antigo era da mesa toda */
+  var div = plateDiv(j.scope, q, j.perPlate, j.parts);   /* o valor antigo era da mesa toda */
   var c = {
     piece:j.piece || '', grams:num(j.grams), hours:num(j.hours), qty:q,
     waste:num(j.waste), fail:num(j.fail), prep:num(j.prep), finish:num(j.finish),
