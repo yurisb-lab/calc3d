@@ -5892,7 +5892,11 @@ function parseGcodeText(txt){
   res.name = find(/;\s*model name\s*[:=]\s*([^\r\n]*)/i) || find(/;\s*name\s*[:=]\s*([^\r\n]*)/i);
 
   var types  = find(/;\s*filament_type\s*[:=]\s*([^\r\n]*)/i).split(/[;,]/);
-  var colors = find(/;\s*(?:filament_colour|filament_color|extruder_colour)\s*[:=]\s*([^\r\n]*)/i).split(/[;,]/);
+  /* uma busca por vez: numa regra só, quem vence é a linha que vem antes no
+     arquivo — e no Bambu e no Orca a extruder_colour (a cor do bico, não do
+     rolo) vem antes da filament_colour, em ordem alfabética */
+  var colors = (find(/;\s*filament_colou?r\s*[:=]\s*([^\r\n]*)/i) ||
+                find(/;\s*extruder_colou?r\s*[:=]\s*([^\r\n]*)/i)).split(/[;,]/);
   var dens   = gcNums(find(/;\s*filament_density\s*[:=]\s*([^\r\n]*)/i));
   var diam   = gcNums(find(/;\s*filament_diameter\s*[:=]\s*([^\r\n]*)/i));
 
@@ -5910,25 +5914,36 @@ function parseGcodeText(txt){
     if(cura) mm = gcNums(cura).map(function(v){ return v * 1000; });
   }
 
+  /* O Bambu só lista os filamentos usados: com o AMS cheio e a peça nos rolos
+     2 e 4, "total filament weight [g] : 24.31,4.36" é do 2 e do 4, não do 1 e
+     do 2. Quais são vem em "; filament: 2,4". Prusa e Orca escrevem um valor
+     por rolo, com zero nos que não entram — aí a posição já é o rolo. */
   var n = Math.max(grams.length, mm.length);
+  var used = find(/;\s*filament\s*:\s*([0-9][0-9, \t]*)$/im).split(',')
+    .map(function(x){ return parseInt(x, 10); }).filter(function(x){ return x > 0; })
+    .sort(function(a, b){ return a - b; });
+  if(used.length !== n) used = null;
   for(var i = 0; i < n; i++){
-    var type = (types[i] || types[0] || '').trim();
+    var k = used ? used[i] - 1 : i;
+    var type = (types[k] || types[0] || '').trim();
     var g = grams[i] || 0;
     var derived = false;
     if(!(g > 0) && mm[i] > 0){
       /* sem gramas no arquivo: volume × densidade. Cura só dá o comprimento. */
-      var d = diam[i] || diam[0] || 1.75;
-      var dn = dens[i] || dens[0] || gcDensity(type);
+      var d = diam[k] || diam[0] || 1.75;
+      var dn = dens[k] || dens[0] || gcDensity(type);
       g = mm[i] * (Math.PI * d * d / 4) / 1000 * dn;
       derived = true;
     }
     if(!(g > 0)) continue;
-    res.items.push({g:g, mm:mm[i] || 0, type:type, color:gcHex(colors[i]), derived:derived, slot:i + 1});
+    res.items.push({g:g, mm:mm[i] || 0, type:type, color:gcHex(colors[k]), derived:derived, slot:k + 1});
   }
 
-  /* total maior que a soma das cores = purga que o fatiador contou à parte */
-  var tot = parseFloat(find(/;\s*total filament used\s*\[g\]\s*[:=]\s*([0-9.]+)/i) ||
-                       find(/;\s*total filament weight\s*\[g\]\s*[:=]\s*([0-9.]+)/i) || '0');
+  /* total maior que a soma das cores = purga que o fatiador contou à parte.
+     No Bambu essa linha é a lista por rolo, então soma tudo o que vier nela. */
+  var tot = gcNums(find(/;\s*total filament used\s*\[g\]\s*[:=]\s*([^\r\n]*)/i) ||
+                   find(/;\s*total filament weight\s*\[g\]\s*[:=]\s*([^\r\n]*)/i))
+    .reduce(function(a, x){ return a + x; }, 0);
   var sum = res.items.reduce(function(a,x){ return a + x.g; }, 0);
   if(isFinite(tot) && tot > sum + 0.05 && sum > 0) res.purge = tot - sum;
   return res;
