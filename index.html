@@ -2089,6 +2089,7 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
             <p class="note"><b>No iPhone:</b> escolha <b>Procurar</b> e vá em <b>No meu iPhone</b> ou <b>iCloud Drive</b> — a pasta onde o app de download salvou.</p>
             <p class="note"><b>Se o arquivo aparecer apagado</b>, era filtro do seletor: o app agora aceita qualquer arquivo e confere o conteúdo depois. Se o nome tiver chegado sem extensão, pode mandar assim mesmo — o app reconhece o arquivo pelo que tem dentro.</p>
             <p class="note">Bambu Studio e Orca exportam <b>.gcode.3mf</b>: serve. Já o <b>.stl</b> não serve — ele é o modelo, ainda sem gramas nem tempo.</p>
+            <p class="note"><b>Projeto com várias placas no Bambu:</b> o .gcode é de uma placa só. Use <b>Arquivo › Exportar › Exportar todos os arquivos fatiados</b>: o .gcode.3mf traz todas, e o app soma o peso, o tempo e as cores de cada uma.</p>
             <p class="note">Sem o arquivo à mão, digite gramas e tempo logo abaixo. O cálculo é o mesmo.</p>
           </div>
         </details>
@@ -2098,7 +2099,7 @@ textarea{min-height:104px;font-family:'IBM Plex Mono',monospace;font-size:13px;l
             <p class="note">O <b>Handy não exporta arquivo</b>: ele manda a impressão direto para a impressora e guarda o fatiamento na nuvem. Não existe .gcode dele para arrastar aqui — mas os números você tem.</p>
             <p class="note"><b>O caminho curto:</b> na tela de preparar a impressão (e depois na tarefa em andamento e no histórico) o Handy mostra o <b>peso em gramas</b> e o <b>tempo previsto</b>. Digite os dois nos campos logo abaixo: a conta sai igualzinha.</p>
             <p class="note"><b>Se o modelo veio do MakerWorld:</b> baixe o <b>perfil de impressão</b> — o .3mf já fatiado, não o .stl nem o 3MF só do modelo. Ele cai em Downloads e aí sim o app lê gramas, tempo e cores sozinho.</p>
-            <p class="note"><b>No computador:</b> abra o projeto no Bambu Studio, fatie e use <b>Exportar placa fatiada</b> (.gcode.3mf). Mande para o celular pelo WhatsApp ou Drive e arraste aqui.</p>
+            <p class="note"><b>No computador:</b> abra o projeto no Bambu Studio, fatie e use <b>Exportar arquivo fatiado em placas</b> (.gcode.3mf). Mande para o celular pelo WhatsApp ou Drive e arraste aqui.</p>
             <p class="note"><b>Multicolor:</b> o peso que o Handy mostra é o da mesa inteira, purga incluída. Copiando também a linha de cada material (<b>PLA 21g</b>, <b>PLA 11g</b>), o app já separa as cores sozinho.</p>
           </div>
         </details>
@@ -5949,37 +5950,62 @@ function parseGcodeText(txt){
   return res;
 }
 /* Bambu e Orca guardam o resultado do fatiamento em XML dentro do 3MF —
-   uma linha por filamento, com gramas e cor, e o tempo previsto da mesa */
+   uma linha por filamento, com gramas e cor, e o tempo previsto da mesa.
+   "Exportar todos os arquivos fatiados" põe TODAS as placas no mesmo 3MF: um
+   Pikachu em quatro placas é um produto só, então as placas entram todas —
+   cada uma vira uma mesa e as cores somam por rolo. */
 function parseSliceInfo(xml){
-  var res = {source:'Bambu / Orca (3MF)', name:'', seconds:0, items:[], purge:0, notes:[]};
-  var plates = String(xml).split(/<plate[\s>]/i).slice(1), best = null;
+  var res = {source:'Bambu / Orca (3MF)', name:'', seconds:0, items:[], purge:0, notes:[], plates:[]};
+  var plates = String(xml).split(/<plate[\s>]/i).slice(1), full = [], whole = null;
   plates.forEach(function(pl){
     var items = [], re = /<filament\b([^>]*)>/gi, m;
     while((m = re.exec(pl))){
       var at = m[1];
-      var val = function(k){ var v = new RegExp(k + '\\s*=\\s*"([^"]*)"', 'i').exec(at); return v ? v[1] : ''; };
+      var val = function(k){ var v = new RegExp('(?:^|\\s)' + k + '\\s*=\\s*"([^"]*)"', 'i').exec(at); return v ? v[1] : ''; };
       var g = parseFloat(val('used_g')) || 0;
       if(g > 0) items.push({g:g, mm:(parseFloat(val('used_m')) || 0)*1000, type:val('type'),
                             color:gcHex(val('color')), derived:false, slot:parseInt(val('id'),10) || items.length+1});
     }
     var meta = function(k){ var v = new RegExp('key\\s*=\\s*"' + k + '"\\s+value\\s*=\\s*"([^"]*)"', 'i').exec(pl); return v ? v[1] : ''; };
     var weight = parseFloat(meta('weight')) || 0, seconds = gcTime(meta('prediction'));
-    if(items.length){ if(!best || best.whole) best = {items:items, seconds:seconds, weight:weight}; return; }
+    var idx = parseInt(meta('index'), 10) || 0;
+    if(items.length){ full.push({index:idx, items:items, seconds:seconds, weight:weight}); return; }
     /* perfil baixado do MakerWorld às vezes traz só o peso e o tempo da mesa,
        sem a linha de cada filamento: um peso certo vale mais que um erro. Só
        vale como segunda opção — mesa com as cores discriminadas vem antes. */
-    if(best || !(weight > 0 || seconds > 0)) return;
-    if(weight > 0) items.push({g:weight, mm:0, type:'', color:'', derived:false, slot:1, whole:true});
-    best = {items:items, seconds:seconds, weight:weight, whole:true};
+    if(whole || !(weight > 0 || seconds > 0)) return;
+    whole = {index:idx, seconds:seconds, weight:weight,
+             items: weight > 0 ? [{g:weight, mm:0, type:'', color:'', derived:false, slot:1, whole:true}] : []};
   });
-  if(!best) return null;
-  res.items = best.items;
-  res.seconds = best.seconds;
-  var sum = best.items.reduce(function(a,x){ return a + x.g; }, 0);
-  if(best.weight > sum + 0.05) res.purge = best.weight - sum;
-  if(best.whole && best.items.length)
-    res.notes.push('O arquivo trouxe só o peso total da mesa, sem a divisão por cor: confira o filamento escolhido.');
-  if(plates.length > 1) res.notes.push('O arquivo tem ' + plates.length + ' mesas; li a primeira com ' + (best.whole ? 'peso.' : 'peças.'));
+  if(!full.length && !whole) return null;
+  if(!full.length){
+    res.items = whole.items;
+    res.seconds = whole.seconds;
+    if(whole.items.length)
+      res.notes.push('O arquivo trouxe só o peso total da mesa, sem a divisão por cor: confira o filamento escolhido.');
+    if(plates.length > 1) res.notes.push('O arquivo tem ' + plates.length + ' mesas; li a primeira com peso.');
+    return res;
+  }
+  /* mesmo rolo em placas diferentes vira uma cor só, com o peso somado */
+  var bySlot = {}, order = [], weight = 0;
+  full.forEach(function(pl){
+    var sum = pl.items.reduce(function(a, x){ return a + x.g; }, 0);
+    var w = pl.weight > sum ? pl.weight : sum;
+    weight += w;
+    res.seconds += pl.seconds;
+    res.plates.push({index:pl.index, g:w, seconds:pl.seconds});
+    pl.items.forEach(function(it){
+      var k = it.slot + '|' + it.color + '|' + it.type;
+      if(!bySlot[k]){ bySlot[k] = {g:0, mm:0, type:it.type, color:it.color, derived:false, slot:it.slot}; order.push(k); }
+      bySlot[k].g += it.g;
+      bySlot[k].mm += it.mm;
+    });
+  });
+  res.items = order.map(function(k){ return bySlot[k]; })
+    .sort(function(a, b){ return a.slot - b.slot; });
+  var tot = res.items.reduce(function(a, x){ return a + x.g; }, 0);
+  if(weight > tot + 0.05) res.purge = weight - tot;
+  if(res.plates.length < 2) res.plates = [];
   return res;
 }
 function parse3mf(buf){
@@ -6132,13 +6158,20 @@ function addMesaFromSliced(res, fileName, box){
     (mins > 0 ? ' · <b>' + Math.floor(mins/60) + ' h ' + (mins % 60) + ' min</b>' : '') +
     '<ul><li>' + li.join('</li><li>') + '</li></ul></div>', box);
 }
+/* gramas com até duas casas, como o fatiador mostra: arredondar cada cor em
+   0,1 g fazia sete cores de 208,08 g virarem 208,2 g */
+function gcG(v){ return (Math.round(num(v)*100)/100).toLocaleString('pt-BR', {maximumFractionDigits:2}); }
 function applySliced(res, fileName, box){
   if(!res || (!res.items.length && !(res.seconds > 0))){
     gcErr('Não achei gramas nem tempo neste arquivo. Ele foi mesmo gerado pelo fatiador?', box);
     return;
   }
+  /* 3MF com todas as placas do projeto: é o produto inteiro, não "mais uma
+     mesa". Cada placa vira uma linha da lista (o preparo é pago por placa) e
+     as cores, somadas, vão para o multicolor. */
+  var platesIn = res.plates && res.plates.length > 1 ? res.plates : null;
   /* com a lista de mesas ligada o arquivo não sobrescreve nada: ele é uma mesa */
-  if(multiPlate){ addMesaFromSliced(res, fileName, box); return; }
+  if(multiPlate && !platesIn){ addMesaFromSliced(res, fileName, box); return; }
   var items = res.items.slice(0, 16);
   var lost = [], derived = false;
 
@@ -6156,9 +6189,9 @@ function applySliced(res, fileName, box){
       var f = matchFilament(it);
       if(!f){ lost.push(it); f = S.filaments.filter(function(x){ return x.id === defaultMatId(); })[0] || S.filaments[0]; }
       if(it.derived) derived = true;
-      return {f: f ? f.id : '', g: dec(it.g,1)};
+      return {f: f ? f.id : '', g: gcG(it.g)};
     });
-    purgeStr = res.purge > 0 ? dec(res.purge,1) : '';
+    purgeStr = res.purge > 0 ? gcG(res.purge) : '';
     $('f-purge').value = purgeStr;
     setSeg('seg-multi', 'multi');
     renderMats();
@@ -6166,7 +6199,7 @@ function applySliced(res, fileName, box){
     multi = false;
     setSeg('seg-multi', 'one');
     if(items[0].derived) derived = true;
-    $('f-grams').value = dec(items[0].g + (res.purge || 0), 1);
+    $('f-grams').value = gcG(items[0].g + (res.purge || 0));
     var f1 = matchFilament(items[0]);
     if(f1) $('f-filament').value = f1.id;
     else if(items[0].color || items[0].type) lost.push(items[0]);
@@ -6177,7 +6210,7 @@ function applySliced(res, fileName, box){
   var hadWaste = num($('f-waste').value) > 0;
   if(items.length) $('f-waste').value = 0;
   /* o resumo tem que bater com o que foi escrito nos campos, não com o número
-     cheio do arquivo: os campos são arredondados em 0,1 g */
+     cheio do arquivo (os campos guardam até 0,01 g, como o fatiador) */
   var totalG = multi ? matGramsTotal() + purgeGrams() : num($('f-grams').value);
 
   if(!$('f-piece').value){
@@ -6185,7 +6218,17 @@ function applySliced(res, fileName, box){
     if(nm) $('f-piece').value = nm;
   }
 
+  if(platesIn){
+    mesas = platesIn.map(function(pl){
+      var mi = Math.round(pl.seconds/60);
+      return {g: pl.g > 0 ? dec(pl.g,1) : '', h: mi >= 60 ? String(Math.floor(mi/60)) : '',
+              m: mi % 60 ? String(mi % 60) : ''};
+    });
+    setMultiPlate(true, false);
+  }
+
   var li = [];
+  if(platesIn) li.push('O arquivo tem <b>' + platesIn.length + ' placas</b>: cada uma entrou como uma mesa da lista, e o peso e o tempo acima são a soma de todas.');
   if(items.length > 1) li.push('Multicolor ligado com <b>' + items.length + ' cores</b>' +
       (res.purge > 0 ? ' e <b>' + dec(res.purge,1) + ' g</b> de purga (' + dec(totalG > 0 ? res.purge/totalG*100 : 0,0) + '% do peso)' : '') + '.');
   if(res.purge > 0 && items.length === 1) li.push('A purga de ' + dec(res.purge,1) + ' g entrou nas gramas.');
@@ -6194,10 +6237,18 @@ function applySliced(res, fileName, box){
   if(lost.length) li.push('Não achei filamento cadastrado com a cor/material de ' + lost.length +
       (lost.length === 1 ? ' item' : ' itens') + ': confira a seleção.');
   if(!(res.seconds > 0)) li.push('Não veio o tempo — preencha horas e minutos na mão.');
+  /* o .gcode do Bambu é de UMA placa e não diz quantas o projeto tem: quem
+     fatiou um boneco em quatro placas e exportou só a aberta via 4 g no lugar
+     de 208 g e achava que o app tinha lido errado */
+  if(/^Bambu Studio/.test(res.source || '') && !platesIn)
+    li.push('O Bambu grava <b>uma placa por arquivo</b>: estes números são só da placa que estava aberta ao exportar. ' +
+      'Se o projeto tem mais placas, exporte todas de uma vez em <b>Arquivo › Exportar › Exportar todos os arquivos fatiados</b> (sai um .gcode.3mf) ' +
+      'ou ligue <b>Mais de uma mesa</b> e mande o arquivo de cada placa.');
   (res.notes || []).forEach(function(t){ li.push(esc(t)); });
   /* mesa de produto montado: a quantidade que interessa é de produtos, e as
      peças do conjunto não podem virar preço unitário cada uma */
-  li.push(partsCount() > 1
+  if(platesIn) li.push('Os valores são do <b>produto inteiro</b>, com as ' + platesIn.length + ' placas: a quantidade aqui é de <b>produtos</b>.');
+  else li.push(partsCount() > 1
     ? 'Os valores são da <b>mesa toda</b>. Como o produto é <b>montado com ' + pieceWord(partsCount()) +
       '</b>, a quantidade aqui é de <b>produtos</b>: uma mesa com as peças de um conjunto só é <b>1</b>.'
     : 'Os valores são da <b>mesa toda</b>: confira a quantidade de peças'+
