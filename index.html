@@ -7619,6 +7619,19 @@ function loadProduct(p){
   activeProductId = p.id;
   renderExtras(); render(); go('calc');
 }
+/* zera os campos da peça; impressora, filamento, margem, desperdício e falhas
+   são do jeito de trabalhar, não da peça, e ficam como estão */
+function clearCalc(){
+  ['f-piece','f-grams','f-h','f-m','f-perplate','f-prep','f-finish','f-final','f-purge'].forEach(function(id){ $(id).value=''; });
+  $('f-qty').value = 1; extras = []; activeProductId = null; editingItemId = null;
+  multi = false; mats = []; purgeStr = '';
+  setSeg('seg-multi', 'one');
+  scope = 'unit'; setSeg('seg-scope', scope);
+  setParts(0);
+  mesas = []; setMultiPlate(false, false);
+  $('save-msg').innerHTML = ''; $('gc-msg').innerHTML = '';
+  renderMats(); renderExtras(); render();
+}
 function fillProductFromCalc(p){
   var r = compute();
   var set = plateSet(plateList());
@@ -9966,6 +9979,7 @@ function bindCalc(){
       fillProductFromCalc(existing);
       if($('f-piece').value) existing.name = $('f-piece').value;
       persist();
+      clearCalc();
       openProduct(existing.id);
       return;
     }
@@ -9974,8 +9988,10 @@ function bindCalc(){
     fillProductFromCalc(p);
     if(!(num(p.priceSet) > 0) && r.suggested > 0) p.priceSet = Math.round(r.suggested*100)/100;
     S.products.push(p);
-    activeProductId = p.id;
     persist();
+    /* o produto já está gravado: a calculadora volta em branco para o próximo
+       cálculo não nascer com os números deste — nem atualizar este sem querer */
+    clearCalc();
     openProduct(p.id);
   });
 
@@ -9986,14 +10002,7 @@ function bindCalc(){
 
   $('btn-clear').addEventListener('click', function(){
     if(!confirm('Limpar os campos da calculadora? Os itens já adicionados ao orçamento continuam lá.')) return;
-    ['f-piece','f-grams','f-h','f-m','f-perplate','f-prep','f-finish','f-final','f-purge'].forEach(function(id){ $(id).value=''; });
-    $('f-qty').value = 1; extras = []; activeProductId = null; editingItemId = null;
-    multi = false; mats = []; purgeStr = '';
-    setSeg('seg-multi', 'one');
-    setParts(0);
-    mesas = []; setMultiPlate(false, false);
-    $('save-msg').innerHTML = ''; $('gc-msg').innerHTML = '';
-    renderMats(); renderExtras(); render();
+    clearCalc();
   });
 
   $('btn-add-printer').addEventListener('click', function(){
