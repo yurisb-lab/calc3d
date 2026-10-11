@@ -800,6 +800,12 @@ h2.section::before{
 h2.section:first-child{margin-top:4px}
 .cadhint + h2.section{margin-top:6px}
 .viewintro + h2.section{margin-top:2px}
+/* o número do passo da calculadora: a ordem em que a conta acontece */
+h2.section .stepn{
+  flex:none;width:22px;height:22px;border-radius:999px;display:inline-flex;
+  align-items:center;justify-content:center;font-size:12px;font-weight:700;
+  background:var(--ink);color:var(--surface);letter-spacing:0;
+}
 
 .card{
   background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
@@ -2195,6 +2201,13 @@ textarea{min-height:104px;font-family:var(--code);font-size:13px;line-height:1.5
     <!-- ============ CALCULAR ============ -->
     <section class="view" id="v-calc">
       <div id="active-banner"></div>
+      <!-- a tela é uma receita em passos: o que todo mundo preenche fica
+           aberto, numerado, na ordem em que a conta acontece. O que só vale
+           para alguns casos (várias cores, peças montadas, várias mesas, a
+           ajuda do arquivo) mora em sanfonas fechadas, que abrem sozinhas
+           quando o caso aparece. Ninguém precisa decidir três chaves antes
+           de digitar as gramas. -->
+      <h2 class="section"><span class="stepn">1</span>A peça</h2>
       <div class="card">
         <div class="field">
           <label for="f-piece">Peça <span class="hint">— opcional</span></label>
@@ -2210,35 +2223,41 @@ textarea{min-height:104px;font-family:var(--code);font-size:13px;line-height:1.5
             <select id="f-filament"></select>
           </div>
         </div>
-        <div class="field" style="margin:14px 0 0">
-          <label>Cores da peça<button type="button" class="help" data-h="multicolor" aria-label="O que é isso?">?</button></label>
-          <div class="seg" id="seg-multi">
-            <button type="button" data-v="one" aria-pressed="true">1 filamento</button>
-            <button type="button" data-v="multi" aria-pressed="false">Multicolor / AMS</button>
-          </div>
-        </div>
-        <div class="field" style="margin:14px 0 0">
-          <label>Como o produto é montado<button type="button" class="help" data-h="multipeca" aria-label="O que é isso?">?</button></label>
-          <div class="seg" id="seg-parts">
-            <button type="button" data-v="single" aria-pressed="true">Peça única</button>
-            <button type="button" data-v="set" aria-pressed="false">Montado com várias peças</button>
-          </div>
-        </div>
-        <div class="field" id="fld-parts" style="margin:12px 0 0" hidden>
-          <label for="f-parts">Peças por produto <span class="hint">peças impressas</span></label>
-          <input id="f-parts" type="text" inputmode="decimal" placeholder="quantas peças formam um produto">
-          <p class="note" id="parts-note" style="margin:8px 0 0"></p>
-        </div>
-        <div class="field" style="margin:14px 0 0">
-          <label>Quantas mesas o produto usa<button type="button" class="help" data-h="multimesa" aria-label="O que é isso?">?</button></label>
-          <div class="seg" id="seg-plates">
-            <button type="button" data-v="one" aria-pressed="true">Uma mesa só</button>
-            <button type="button" data-v="many" aria-pressed="false">Mais de uma mesa</button>
-          </div>
-        </div>
       </div>
+      <details class="fold" id="fold-shape">
+        <summary>Várias cores, peças ou mesas? <span class="tag" id="shape-tag"></span></summary>
+        <div class="body">
+          <p class="note" style="margin:0 0 14px">Só mexa aqui se a peça for <b>multicolor</b>, se o produto for <b>montado com várias peças</b> ou se ele ocupar <b>mais de uma mesa</b>. Na maioria das vezes, deixe como está.</p>
+          <div class="field" style="margin:0">
+            <label>Cores da peça<button type="button" class="help" data-h="multicolor" aria-label="O que é isso?">?</button></label>
+            <div class="seg" id="seg-multi">
+              <button type="button" data-v="one" aria-pressed="true">1 filamento</button>
+              <button type="button" data-v="multi" aria-pressed="false">Multicolor / AMS</button>
+            </div>
+          </div>
+          <div class="field" style="margin:14px 0 0">
+            <label>Como o produto é montado<button type="button" class="help" data-h="multipeca" aria-label="O que é isso?">?</button></label>
+            <div class="seg" id="seg-parts">
+              <button type="button" data-v="single" aria-pressed="true">Peça única</button>
+              <button type="button" data-v="set" aria-pressed="false">Montado com várias peças</button>
+            </div>
+          </div>
+          <div class="field" id="fld-parts" style="margin:12px 0 0" hidden>
+            <label for="f-parts">Peças por produto <span class="hint">peças impressas</span></label>
+            <input id="f-parts" type="text" inputmode="decimal" placeholder="quantas peças formam um produto">
+            <p class="note" id="parts-note" style="margin:8px 0 0"></p>
+          </div>
+          <div class="field" style="margin:14px 0 0">
+            <label>Quantas mesas o produto usa<button type="button" class="help" data-h="multimesa" aria-label="O que é isso?">?</button></label>
+            <div class="seg" id="seg-plates">
+              <button type="button" data-v="one" aria-pressed="true">Uma mesa só</button>
+              <button type="button" data-v="many" aria-pressed="false">Mais de uma mesa</button>
+            </div>
+          </div>
+        </div>
+      </details>
 
-      <h2 class="section">Do fatiador</h2>
+      <h2 class="section"><span class="stepn">2</span>Peso e tempo</h2>
       <div class="card">
         <div class="drop" id="gc-drop" role="button" tabindex="0">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4"/><path d="M8 8l4-4 4 4"/><path d="M4 15v3a2 2 0 002 2h12a2 2 0 002-2v-3"/></svg>
@@ -2250,37 +2269,6 @@ textarea{min-height:104px;font-family:var(--code);font-size:13px;line-height:1.5
              filtro (só no computador) é o bindImport. -->
         <input type="file" id="gc-file" hidden>
         <div id="gc-msg"></div>
-        <details class="fold" id="gc-help" style="margin:0 0 14px">
-          <summary>Não estou achando o arquivo no celular</summary>
-          <div class="body">
-            <p class="note"><b>Primeiro:</b> o fatiador roda no computador, então o arquivo precisa chegar ao celular. Mande para você mesmo pelo WhatsApp, Google Drive, Telegram ou e-mail, ou ligue o cabo. Depois de baixado ele fica em <b>Downloads</b>.</p>
-            <p class="note"><b>No Android:</b> o seletor abre em <b>Recentes</b>, que quase só mostra foto. Toque no menu <b>☰</b> (ou nos três pontinhos) e escolha <b>Downloads</b>, <b>Drive</b> ou o nome do aparelho para ver todos os arquivos.</p>
-            <p class="note"><b>No iPhone:</b> escolha <b>Procurar</b> e vá em <b>No meu iPhone</b> ou <b>iCloud Drive</b> — a pasta onde o app de download salvou.</p>
-            <p class="note"><b>Se o arquivo aparecer apagado</b>, era filtro do seletor: o app agora aceita qualquer arquivo e confere o conteúdo depois. Se o nome tiver chegado sem extensão, pode mandar assim mesmo — o app reconhece o arquivo pelo que tem dentro.</p>
-            <p class="note">Bambu Studio e Orca exportam <b>.gcode.3mf</b>: serve. Já o <b>.stl</b> não serve — ele é o modelo, ainda sem gramas nem tempo.</p>
-            <p class="note"><b>Projeto com várias placas no Bambu:</b> o .gcode é de uma placa só. Use <b>Arquivo › Exportar › Exportar todos os arquivos fatiados</b>: o .gcode.3mf traz todas, e o app soma o peso, o tempo e as cores de cada uma.</p>
-            <p class="note">Sem o arquivo à mão, digite gramas e tempo logo abaixo. O cálculo é o mesmo.</p>
-          </div>
-        </details>
-        <details class="fold" id="gc-handy" style="margin:0 0 14px">
-          <summary>Imprimo pelo celular, no Bambu Handy</summary>
-          <div class="body">
-            <p class="note">O <b>Handy não exporta arquivo</b>: ele manda a impressão direto para a impressora e guarda o fatiamento na nuvem. Não existe .gcode dele para arrastar aqui — mas os números você tem.</p>
-            <p class="note"><b>O caminho curto:</b> na tela de preparar a impressão (e depois na tarefa em andamento e no histórico) o Handy mostra o <b>peso em gramas</b> e o <b>tempo previsto</b>. Digite os dois nos campos logo abaixo: a conta sai igualzinha.</p>
-            <p class="note"><b>Se o modelo veio do MakerWorld:</b> baixe o <b>perfil de impressão</b> — o .3mf já fatiado, não o .stl nem o 3MF só do modelo. Ele cai em Downloads e aí sim o app lê gramas, tempo e cores sozinho.</p>
-            <p class="note"><b>No computador:</b> abra o projeto no Bambu Studio, fatie e use <b>Exportar arquivo fatiado em placas</b> (.gcode.3mf). Mande para o celular pelo WhatsApp ou Drive e arraste aqui.</p>
-            <p class="note"><b>Multicolor:</b> o peso que o Handy mostra é o da mesa inteira, purga incluída. Copiando também a linha de cada material (<b>PLA 21g</b>, <b>PLA 11g</b>), o app já separa as cores sozinho.</p>
-          </div>
-        </details>
-        <details class="fold" id="gc-paste" style="margin:0 0 14px">
-          <summary>Colar os números do Handy ou do fatiador</summary>
-          <div class="body">
-            <p class="note">Sem arquivo, dá para copiar o que a tela mostra e colar aqui: peso, tempo e material, na ordem que vier. O app acha o que interessa e preenche os campos.</p>
-            <textarea id="gc-text" placeholder="Mesa&#10;1.9h&#10;0.4mm&#10;32g&#10;PLA 21g&#10;PLA 11g"></textarea>
-            <div class="btnrow" style="margin-top:10px"><button type="button" class="btn" id="btn-gc-text">Ler o texto colado</button></div>
-            <p class="note" style="margin-top:10px">Serve também para o cabeçalho do G-code copiado do fatiador. O peso maior é entendido como o total da mesa e a diferença para a soma das cores vira purga.</p>
-          </div>
-        </details>
         <div class="row" id="row-gh">
           <div class="field" id="fld-grams">
             <label for="f-grams">Gramas<button type="button" class="help" data-h="gramas" aria-label="O que é isso?">?</button></label>
@@ -2314,22 +2302,70 @@ textarea{min-height:104px;font-family:var(--code);font-size:13px;line-height:1.5
           </div>
           <div class="mattot" id="mat-tot"></div>
         </div>
-        <div class="field">
-          <label id="lbl-qty" for="f-qty">Quantidade de peças</label>
-          <input id="f-qty" type="text" inputmode="decimal" value="1">
-        </div>
-        <div class="field" id="fld-scope">
-          <label>Os valores acima são para<button type="button" class="help" data-h="escopo" aria-label="O que é isso?">?</button></label>
+        <div class="field" id="fld-scope" style="margin:14px 0 0">
+          <label>Esse peso e esse tempo são de<button type="button" class="help" data-h="escopo" aria-label="O que é isso?">?</button></label>
           <div class="seg" id="seg-scope">
             <button type="button" data-v="unit" aria-pressed="true">1 peça</button>
             <button type="button" data-v="plate" aria-pressed="false">A mesa toda</button>
           </div>
         </div>
-        <div class="field" id="fld-perplate" style="margin-bottom:0">
+        <details class="fold" id="gc-more" style="margin:14px 0 0">
+          <summary>Sem arquivo ou com dúvida no arquivo</summary>
+          <div class="body">
+            <details class="fold" id="gc-help" style="margin:0 0 10px">
+              <summary>Não estou achando o arquivo no celular</summary>
+              <div class="body">
+                <p class="note"><b>Primeiro:</b> o fatiador roda no computador, então o arquivo precisa chegar ao celular. Mande para você mesmo pelo WhatsApp, Google Drive, Telegram ou e-mail, ou ligue o cabo. Depois de baixado ele fica em <b>Downloads</b>.</p>
+                <p class="note"><b>No Android:</b> o seletor abre em <b>Recentes</b>, que quase só mostra foto. Toque no menu <b>☰</b> (ou nos três pontinhos) e escolha <b>Downloads</b>, <b>Drive</b> ou o nome do aparelho para ver todos os arquivos.</p>
+                <p class="note"><b>No iPhone:</b> escolha <b>Procurar</b> e vá em <b>No meu iPhone</b> ou <b>iCloud Drive</b> — a pasta onde o app de download salvou.</p>
+                <p class="note"><b>Se o arquivo aparecer apagado</b>, era filtro do seletor: o app agora aceita qualquer arquivo e confere o conteúdo depois. Se o nome tiver chegado sem extensão, pode mandar assim mesmo — o app reconhece o arquivo pelo que tem dentro.</p>
+                <p class="note">Bambu Studio e Orca exportam <b>.gcode.3mf</b>: serve. Já o <b>.stl</b> não serve — ele é o modelo, ainda sem gramas nem tempo.</p>
+                <p class="note"><b>Projeto com várias placas no Bambu:</b> o .gcode é de uma placa só. Use <b>Arquivo › Exportar › Exportar todos os arquivos fatiados</b>: o .gcode.3mf traz todas, e o app soma o peso, o tempo e as cores de cada uma.</p>
+                <p class="note">Sem o arquivo à mão, digite gramas e tempo logo abaixo. O cálculo é o mesmo.</p>
+              </div>
+            </details>
+            <details class="fold" id="gc-handy" style="margin:0 0 10px">
+              <summary>Imprimo pelo celular, no Bambu Handy</summary>
+              <div class="body">
+                <p class="note">O <b>Handy não exporta arquivo</b>: ele manda a impressão direto para a impressora e guarda o fatiamento na nuvem. Não existe .gcode dele para arrastar aqui — mas os números você tem.</p>
+                <p class="note"><b>O caminho curto:</b> na tela de preparar a impressão (e depois na tarefa em andamento e no histórico) o Handy mostra o <b>peso em gramas</b> e o <b>tempo previsto</b>. Digite os dois nos campos logo abaixo: a conta sai igualzinha.</p>
+                <p class="note"><b>Se o modelo veio do MakerWorld:</b> baixe o <b>perfil de impressão</b> — o .3mf já fatiado, não o .stl nem o 3MF só do modelo. Ele cai em Downloads e aí sim o app lê gramas, tempo e cores sozinho.</p>
+                <p class="note"><b>No computador:</b> abra o projeto no Bambu Studio, fatie e use <b>Exportar arquivo fatiado em placas</b> (.gcode.3mf). Mande para o celular pelo WhatsApp ou Drive e arraste aqui.</p>
+                <p class="note"><b>Multicolor:</b> o peso que o Handy mostra é o da mesa inteira, purga incluída. Copiando também a linha de cada material (<b>PLA 21g</b>, <b>PLA 11g</b>), o app já separa as cores sozinho.</p>
+              </div>
+            </details>
+            <details class="fold" id="gc-paste" style="margin:0 0 10px">
+              <summary>Colar os números do Handy ou do fatiador</summary>
+              <div class="body">
+                <p class="note">Sem arquivo, dá para copiar o que a tela mostra e colar aqui: peso, tempo e material, na ordem que vier. O app acha o que interessa e preenche os campos.</p>
+                <textarea id="gc-text" placeholder="Mesa&#10;1.9h&#10;0.4mm&#10;32g&#10;PLA 21g&#10;PLA 11g"></textarea>
+                <div class="btnrow" style="margin-top:10px"><button type="button" class="btn" id="btn-gc-text">Ler o texto colado</button></div>
+                <p class="note" style="margin-top:10px">Serve também para o cabeçalho do G-code copiado do fatiador. O peso maior é entendido como o total da mesa e a diferença para a soma das cores vira purga.</p>
+              </div>
+            </details>
+          </div>
+        </details>
+      </div>
+
+      <h2 class="section"><span class="stepn">3</span>Quantidade</h2>
+      <div class="card">
+        <div class="field" id="fld-qty" style="margin:0">
+          <label id="lbl-qty" for="f-qty">Quantidade de peças</label>
+          <input id="f-qty" type="text" inputmode="decimal" value="1">
+        </div>
+        <div class="field" id="fld-perplate" style="margin:14px 0 0">
           <label for="f-perplate">Cabem por mesa <span class="hint" id="lbl-perplate-hint">peças — opcional</span><button type="button" class="help" data-h="pormesa" aria-label="O que é isso?">?</button></label>
           <input id="f-perplate" type="text" inputmode="decimal" placeholder="quantas cabem de uma vez">
           <p class="note" id="perplate-note" style="margin:8px 0 0"></p>
         </div>
+      </div>
+
+      <h2 class="section amtrow"><span class="stepn">4</span>Insumos e acessórios<button type="button" class="help" data-h="insumos" aria-label="O que é isso?">?</button><span class="amt" id="sup-total">R$ 0,00</span></h2>
+      <div class="card">
+        <p class="suphint">Toque para somar da lista — os preços são sugestões, ajuste para o seu custo. A quantidade é por peça.</p>
+        <div class="chips" id="sup-presets"></div>
+        <div id="extras" style="margin-top:14px"></div>
+        <button type="button" class="btn ghost" id="btn-extra">+ Item personalizado</button>
       </div>
 
       <details class="fold" id="fold-fine">
@@ -2358,15 +2394,7 @@ textarea{min-height:104px;font-family:var(--code);font-size:13px;line-height:1.5
         </div>
       </details>
 
-      <h2 class="section amtrow">Insumos e acessórios<button type="button" class="help" data-h="insumos" aria-label="O que é isso?">?</button><span class="amt" id="sup-total">R$ 0,00</span></h2>
-      <div class="card">
-        <p class="suphint">Toque para somar da lista — os preços são sugestões, ajuste para o seu custo. A quantidade é por peça.</p>
-        <div class="chips" id="sup-presets"></div>
-        <div id="extras" style="margin-top:14px"></div>
-        <button type="button" class="btn ghost" id="btn-extra">+ Item personalizado</button>
-      </div>
-
-      <h2 class="section">Lucro</h2>
+      <h2 class="section"><span class="stepn">5</span>Preço de venda</h2>
       <p class="suphint">Duas maneiras de chegar ao preço, e elas não brigam: a margem faz o app <b>sugerir</b> um valor; o preço que você escrever embaixo <b>manda</b> e vira o preço da peça.</p>
       <div class="card">
         <div class="field">
@@ -2400,7 +2428,7 @@ textarea{min-height:104px;font-family:var(--code);font-size:13px;line-height:1.5
         <button type="button" class="btn ghost" id="btn-clear">Limpar campos</button>
       </div>
 
-      <h2 class="section amtrow">Orçamento<button type="button" class="help" data-h="orcamento" aria-label="O que é isso?">?</button><span class="amt" id="ord-total">R$ 0,00</span></h2>
+      <h2 class="section amtrow"><span class="stepn">6</span>Orçamento<button type="button" class="help" data-h="orcamento" aria-label="O que é isso?">?</button><span class="amt" id="ord-total">R$ 0,00</span></h2>
       <div class="card" id="ord-card">
         <div id="ord-items"></div>
         <div class="btnrow" id="ord-addrow" style="margin-top:10px"></div>
@@ -5057,6 +5085,24 @@ function paintPlates(r){
   }
   el.innerHTML = txt;
 }
+/* a sanfona "várias cores, peças ou mesas" fica fechada no caso comum. A
+   etiqueta diz o que está ligado sem precisar abrir (e some no caso comum, que
+   não tem nada a dizer), e a sanfona abre sozinha
+   quando um caso especial acaba de ligar (um arquivo multicolor, um produto
+   do catálogo montado) — ligar escondido seria pior que mostrar demais. */
+var shapeWas = '';
+function paintShape(){
+  var tag = $('shape-tag'), fold = $('fold-shape');
+  if(!tag || !fold) return;
+  var parts = partsCount(), on = [];
+  if(multi) on.push('multicolor');
+  if(parts > 1) on.push('montado, ' + parts + ' peças');
+  if(multiPlate) on.push('várias mesas');
+  var now = on.join(' · ');
+  tag.textContent = now;
+  if(now && now !== shapeWas && !shapeWas) fold.open = true;
+  shapeWas = now;
+}
 /* entrar e sair do modo sem perder o que já está na tela: a primeira mesa nasce
    com o peso e o tempo que já estavam digitados, e ao voltar para uma mesa só a
    soma das mesas volta para os campos únicos */
@@ -5194,6 +5240,7 @@ function render(){
   '<p style="font-size:12.5px;color:var(--ink3);margin:12px 0 0">Equivale a <b>'+dec(r.realMarkup*100,0)+'% de markup</b> sobre o custo e <b>'+dec(r.realMargin*100,0)+'% de margem</b> sobre o preço.</p>';
 
   $('fine-tag').textContent = dec(num($('f-waste').value),0)+'% desp · '+dec(num($('f-fail').value),0)+'% falhas';
+  paintShape();
   $('fx').innerHTML = fxHtml(r);
 
   /* preço escolhido */
@@ -12376,7 +12423,7 @@ var TOUR = [
 
   {view:'calc', sel:'#gc-drop',
    t:'Comece pelo arquivo fatiado',
-   d:'Arraste aqui o <b>.gcode</b> ou <b>.3mf</b> do Prusa, Orca, Bambu ou Cura. O app lê gramas, tempo e cores sozinho e preenche os campos. Sem erro de digitação. Imprime pelo Bambu Handy, que não exporta arquivo? Cole os números da tela dele em <b>Colar os números</b>.'},
+   d:'Arraste aqui o <b>.gcode</b> ou <b>.3mf</b> do Prusa, Orca, Bambu ou Cura. O app lê gramas, tempo e cores sozinho e preenche os campos. Sem erro de digitação. Imprime pelo Bambu Handy, que não exporta arquivo? Cole os números da tela dele em <b>Sem arquivo ou com dúvida no arquivo</b>, logo abaixo das gramas.'},
 
   {view:'calc', sel:'#fld-grams',
    t:'Ou digite na mão',
@@ -12520,6 +12567,11 @@ function tourGo(i){
     return '<i class="' + (k === i ? 'on' : (k < i ? 'done' : '')) + '"></i>';
   }).join('');
 
+  /* o alvo pode morar numa sanfona fechada: abre antes de procurar */
+  each([].concat(st.sel || []), function(q){
+    var t = document.querySelector(q), d = t && t.closest && t.closest('details:not([open])');
+    if(d) d.open = true;
+  });
   var el = tourTarget(st.sel);
   if(el){
     var tall = el.getBoundingClientRect().height > window.innerHeight * 0.5;

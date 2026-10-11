@@ -1396,3 +1396,39 @@ Tudo o que já estava fora. E, aqui: o total do pedido **não** vira o número
 grande da faixa. O que se negocia, o que se digita e o que o cliente pergunta é
 o preço de uma unidade; o total é consequência dele, e trocar os dois de tamanho
 só inverteria a confusão que este adendo existe para desfazer.
+
+---
+
+# Adendo — A calculadora em seis passos
+
+## 55. O problema
+
+A calculadora fazia a conta certa, mas a tela pedia decisões na ordem errada.
+Antes de digitar as gramas, a pessoa tinha que passar por **três chaves**
+(cores, peça montada, mesas) que quase nunca mudam, e entre o arquivo fatiado e
+os campos de gramas e tempo havia **três sanfonas de ajuda** seguidas. A
+pergunta "esses números são de uma peça ou da mesa toda?" estava longe dos
+números de que ela fala, misturada com a quantidade.
+
+## 56. O que entrou
+
+- A tela virou **seis passos numerados**, na ordem em que a conta acontece:
+  **1 A peça**, **2 Peso e tempo**, **3 Quantidade**, **4 Insumos e
+  acessórios** (com o *Ajuste fino* logo abaixo), **5 Preço de venda** (era
+  *Lucro*) e **6 Orçamento**.
+- As três chaves foram para uma sanfona fechada, **Várias cores, peças ou
+  mesas?**. Ela abre sozinha quando um desses casos liga (um arquivo
+  multicolor, um produto montado do catálogo), e a etiqueta do título diz o que
+  está ligado sem precisar abrir. No caso comum a etiqueta fica vazia.
+- No passo 2, os campos de gramas e tempo vêm logo depois do arquivo, e a
+  pergunta **Esse peso e esse tempo são de: 1 peça / A mesa toda** fica colada
+  neles. As três ajudas (celular, Bambu Handy, colar os números) ficaram juntas
+  numa sanfona só, **Sem arquivo ou com dúvida no arquivo**, no fim do passo.
+- O passo 3 fica só com **Quantidade** e **Cabem por mesa**.
+- O tutorial abre a sanfona quando o passo dele aponta para algo que está
+  dentro de uma fechada.
+
+## 57. Compatibilidade
+
+Nenhum campo, fórmula ou dado muda: os mesmos `id`s estão na tela, só em outra
+ordem, e a conta sai igual. Nenhum orçamento ou produto salvo muda de valor.
