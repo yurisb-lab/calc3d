@@ -3164,8 +3164,10 @@ function num(v){
   if(s.indexOf(',') > -1){
     /* em pt-BR a vírgula é sempre o decimal; os pontos são separador de milhar */
     s = s.replace(/\./g,'').replace(',', '.');
-  } else if(/^-?\d{1,3}(\.\d{3})+$/.test(s)){
-    /* "2.500" e "1.234.567" são milhares, não decimais. "0.75" e "10.00" continuam decimais. */
+  } else if(/^-?[1-9]\d{0,2}(\.\d{3})+$/.test(s)){
+    /* "2.500" e "1.234.567" são milhares, não decimais. "0.75" e "10.00" continuam decimais.
+       Milhar nunca começa com zero: "0.856" (a tarifa do kWh com três casas) é
+       0,856 e não 856 — mil vezes a conta de luz dentro do preço. */
     s = s.replace(/\./g,'');
   }
   var n = parseFloat(s);
@@ -3173,6 +3175,13 @@ function num(v){
 }
 var fmtBRL = new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'});
 function brl(n){ return fmtBRL.format(isFinite(n)?n:0); }
+/* valor unitário (R$/g, R$/h, R$/kWh) com as casas que a conta usa de verdade.
+   Com duas casas, R$ 0,625/h aparecia como R$ 0,63/h e quem conferia na
+   calculadora achava 9 h × 0,63 = 5,67 onde o app (certo) dizia 5,63. */
+var fmtRate = new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL',minimumFractionDigits:2,maximumFractionDigits:4});
+function brlRate(n){ return fmtRate.format(isFinite(n)?n:0); }
+/* número de conferência: até 4 casas, sem zeros sobrando (1,0342 h; 0,925; 7,5%) */
+function decx(n){ return (isFinite(n)?n:0).toLocaleString('pt-BR',{maximumFractionDigits:4}); }
 function dec(n,d){ return (isFinite(n)?n:0).toLocaleString('pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d}); }
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
 var ESCMAP = {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','`':'&#96;'};
@@ -4147,10 +4156,10 @@ function machineHourHtml(p){
   var dep = num(p.life) > 0 ? num(p.price)/num(p.life) : 0;
   var mnt = num(p.hoursYear) > 0 ? num(p.maint)/num(p.hoursYear) : 0;
   var manual = (p.override !== '' && p.override != null && num(p.override) > 0);
-  return 'Custo por hora de funcionamento: <b>'+brl(machineHour(p))+'/h</b>'+
+  return 'Custo por hora de funcionamento: <b>'+brlRate(machineHour(p))+'/h</b>'+
     '<span>'+(manual
-      ? 'Valor manual. Pelo cálculo automático daria '+brl(dep+mnt)+'/h.'
-      : 'Depreciação '+brl(dep)+'/h + manutenção '+brl(mnt)+'/h.')+'</span>';
+      ? 'Valor manual. Pelo cálculo automático daria '+brlRate(dep+mnt)+'/h.'
+      : 'Depreciação '+brlRate(dep)+'/h + manutenção '+brlRate(mnt)+'/h.')+'</span>';
 }
 function machineHour(p){
   if(p.override !== '' && p.override != null && num(p.override) > 0) return num(p.override);
@@ -4576,12 +4585,12 @@ function renderQuick(){
     });
   });
 
-  var fx = fxRow('Filamento', dec(r.g,1) + ' g' + (r.waste > 0 ? ' + ' + dec(r.waste*100,0) + '% desperdício' : '') +
-                 ' × ' + brl(r.perGram) + '/g', r.material) +
-           fxRow('Energia', '(' + dec(r.watts,0) + ' W ÷ 1000) × ' + dec(r.h,2) + ' h × ' + brl(r.kwh) + '/kWh', r.energy) +
-           fxRow('Máquina', brl(r.machineHour) + '/h × ' + dec(r.h,2) + ' h  (depreciação + manutenção)', r.machine);
-  if(r.overhead > 0) fx += fxRow('Custo fixo', brl(r.fixedHour) + '/h × ' + dec(r.h,2) + ' h', r.overhead);
-  if(r.reserve > 0)  fx += fxRow('Reserva de falhas', brl(r.subtotal) + ' ÷ ' + dec(1 - r.failR,2) + ' — reserva de ' + dec(r.failR*100,0) + '%', r.reserve);
+  var fx = fxRow('Filamento', decx(r.g) + ' g' + (r.waste > 0 ? ' + ' + decx(r.waste*100) + '% desperdício' : '') +
+                 ' × ' + brlRate(r.perGram) + '/g', r.material) +
+           fxRow('Energia', '(' + decx(r.watts) + ' W ÷ 1000) × ' + decx(r.h) + ' h × ' + brlRate(r.kwh) + '/kWh', r.energy) +
+           fxRow('Máquina', brlRate(r.machineHour) + '/h × ' + decx(r.h) + ' h  (depreciação + manutenção)', r.machine);
+  if(r.overhead > 0) fx += fxRow('Custo fixo', brlRate(r.fixedHour) + '/h × ' + decx(r.h) + ' h', r.overhead);
+  if(r.reserve > 0)  fx += fxRow('Reserva de falhas', brl(r.subtotal) + ' ÷ ' + decx(1 - r.failR) + ' — reserva de ' + decx(r.failR*100) + '%', r.reserve);
   fx += fxRow('<b>Custo da peça</b>', '', r.cost);
   if(r.price > 0 && r.fee > 0) fx += fxRow('Taxa de recebimento', dec(r.feeR*100,1) + '% sobre ' + brl(r.price), -r.fee);
   $('q-fx').innerHTML = fx;
@@ -4644,27 +4653,27 @@ function fxHtml(r){
   }
   if(r.multi){
     r.use.forEach(function(u){
-      out += fxRow('Filamento — '+esc(u.name), dec(u.g,1)+' g × '+brl(u.perGram)+'/g', u.cost);
+      out += fxRow('Filamento — '+esc(u.name), decx(u.g)+' g × '+brlRate(u.perGram)+'/g', u.cost);
     });
     if(r.purge > 0){
       out += '<div class="r"><span class="nm">Torre de purga<span class="f">'+dec(r.purge,1)+
         ' g rateados entre as cores acima ('+dec(r.g > 0 ? r.purge/r.g*100 : 0,0)+'% do peso)</span></span><span class="vl">—</span></div>';
     }
   } else {
-    out += fxRow('Filamento', dec(r.g,1)+' g'+(r.waste > 0 ? ' + '+dec(r.waste*100,0)+'% desperdício' : '')+' × '+brl(r.perGram)+'/g', r.material);
+    out += fxRow('Filamento', decx(r.g)+' g'+(r.waste > 0 ? ' + '+decx(r.waste*100)+'% desperdício' : '')+' × '+brlRate(r.perGram)+'/g', r.material);
   }
-  out += fxRow('Energia', '('+dec(r.watts,0)+' W ÷ 1000) × '+dec(r.h,2)+' h × '+brl(r.kwh)+'/kWh', r.energy);
-  out += fxRow('Máquina', brl(r.machineHour)+'/h × '+dec(r.h,2)+' h  (depreciação + manutenção)', r.machine);
-  if(r.overhead > 0) out += fxRow('Custo fixo', brl(r.fixedHour)+'/h × '+dec(r.h,2)+' h  ('+brl(num(S.settings.fixed))+'/mês ÷ '+dec(num(S.settings.fixedHours),0)+' h)', r.overhead);
+  out += fxRow('Energia', '('+decx(r.watts)+' W ÷ 1000) × '+decx(r.h)+' h × '+brlRate(r.kwh)+'/kWh', r.energy);
+  out += fxRow('Máquina', brlRate(r.machineHour)+'/h × '+decx(r.h)+' h  (depreciação + manutenção)', r.machine);
+  if(r.overhead > 0) out += fxRow('Custo fixo', brlRate(r.fixedHour)+'/h × '+decx(r.h)+' h  ('+brl(num(S.settings.fixed))+'/mês ÷ '+dec(num(S.settings.fixedHours),0)+' h)', r.overhead);
   if(r.labor > 0){
     var f = [];
-    if(r.prep > 0)   f.push(dec(r.prep,0)+' min'+(r.plates > 1 ? ' × '+dec(r.plates,0)+' mesas' : '')+
+    if(r.prep > 0)   f.push(decx(r.prep)+' min'+(r.plates > 1 ? ' × '+dec(r.plates,0)+' mesas' : '')+
                              ' ÷ '+r.qty+' '+unitWord(r.qty, r.parts));
-    if(r.finish > 0) f.push(dec(r.finish,0)+' min/'+unitWord(1, r.parts));
-    out += fxRow('Mão de obra', f.join(' + ')+' × '+brl(r.hourRate)+'/h', r.labor);
+    if(r.finish > 0) f.push(decx(r.finish)+' min/'+unitWord(1, r.parts));
+    out += fxRow('Mão de obra', f.join(' + ')+' × '+brlRate(r.hourRate)+'/h', r.labor);
   }
   if(r.supplies > 0) out += fxRow('Insumos', extras.length+(extras.length === 1 ? ' item da lista' : ' itens da lista'), r.supplies);
-  if(r.reserve > 0)  out += fxRow('Reserva de falhas', brl(r.subtotal)+' ÷ '+dec(1-r.failR,2)+' — reserva de '+dec(r.failR*100,0)+'%', r.reserve);
+  if(r.reserve > 0)  out += fxRow('Reserva de falhas', brl(r.subtotal)+' ÷ '+decx(1-r.failR)+' — reserva de '+decx(r.failR*100)+'%', r.reserve);
   out += fxRow('<b>Custo '+(r.parts > 1 ? 'do produto montado' : 'da peça')+'</b>', '', r.cost);
   /* a conta que todo mundo faz de cabeça depois de ler o total do conjunto */
   if(r.parts > 1){
@@ -6045,15 +6054,23 @@ function parse3mf(buf){
 var PASTE_MAT = 'PLA\\+?|PETG|PET|ABS|ASA|TPU|TPE|PAHT|PA[0-9]*|NYLON|PC|PVA|HIPS|PPS|PP';
 function pasteSeconds(t){
   var s = 0, at = -1;
-  var d = /(\d+)\s*d(?:ias?|ays?)?\b/i.exec(t);
+  /* a unidade termina onde acaba a palavra, não onde começa um espaço: "1h54min"
+     e "1h54m" vêm grudados, e com \b depois do "h" a hora sumia e sobrava 54 min */
+  var d = /(\d+)\s*d(?:ias?|ays?)?(?![a-z])/i.exec(t);
   if(d){ s += (+d[1]) * 86400; at = d.index + d[0].length; }
-  var h = /(\d+(?:[.,]\d+)?)\s*h(?:oras?|rs?|ours?)?\b/i.exec(t);
+  var h = /(\d+(?:[.,]\d+)?)\s*h(?:oras?|rs?|ours?)?(?![a-z])/i.exec(t);
   if(h){ s += parseFloat(h[1].replace(',', '.')) * 3600; at = h.index + h[0].length; }
   /* "1.9h" já traz os minutos na fração; "1h 54min" não. O "mm" do bico não
-     entra: o \b depois do m não fecha no meio de "mm". */
+     entra: depois do m não pode vir outra letra. "2h30", sem unidade, são os
+     minutos colados na hora. */
   if(!(h && /[.,]/.test(h[1]))){
-    var mi = /(\d+)\s*m(?:in(?:utos?|utes?)?)?\b/i.exec(at >= 0 ? t.slice(at) : t);
+    var rest = at >= 0 ? t.slice(at) : t;
+    var mi = /(\d+)\s*m(?:in(?:utos?|utes?)?)?(?![a-z])/i.exec(rest);
     if(mi) s += (+mi[1]) * 60;
+    else if(h){
+      var bare = /^\s*(\d{1,2})(?![\d.,]|\s*[a-z])/i.exec(rest);
+      if(bare && +bare[1] < 60) s += (+bare[1]) * 60;
+    }
   }
   return Math.round(s);
 }
