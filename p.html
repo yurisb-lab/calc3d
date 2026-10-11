@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" media="print" onload="this.media='all';this.onload=null"
-      href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <style>
 /* ============================================================
    CATÁLOGO — a página que o CLIENTE abre.
@@ -91,13 +91,14 @@
 html{-webkit-text-size-adjust:100%}
 body{
   margin:0;background:var(--bg);background-image:var(--bg-grad);color:var(--ink);
-  font-family:'Archivo',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  font-variant-numeric:tabular-nums;
   font-size:15px;line-height:1.55;
   padding-bottom:calc(96px + env(safe-area-inset-bottom));
   -webkit-font-smoothing:antialiased;
 }
 body.locked{overflow:hidden}
-.mono{font-family:'IBM Plex Mono','SFMono-Regular',Consolas,monospace;font-variant-numeric:tabular-nums}
+.mono{font-family:inherit;font-variant-numeric:tabular-nums}
 img{max-width:100%}
 button{font:inherit}
 :focus-visible{outline:2px solid var(--hot);outline-offset:2px}
@@ -247,7 +248,7 @@ button{font:inherit}
 .qty input{
   flex:1;min-width:0;width:100%;height:44px;border:0;
   border-left:1px solid var(--line);border-right:1px solid var(--line);
-  text-align:center;font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:600;
+  text-align:center;font-family:inherit;font-size:15px;font-weight:600;
   background:var(--surface);color:var(--ink);
 }
 .qty input:focus{outline:2px solid var(--hot);outline-offset:-2px}
@@ -290,7 +291,7 @@ button{font:inherit}
 .barin{max-width:1080px;margin:0 auto;display:flex;align-items:center;gap:12px}
 .barin .t{flex:1;min-width:0}
 .barin .k{display:block;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--on-chrome-2)}
-.barin .v{display:block;font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:600;letter-spacing:-.02em}
+.barin .v{display:block;font-family:inherit;font-size:20px;font-weight:600;letter-spacing:-.02em}
 .open{
   flex:none;display:inline-flex;align-items:center;gap:9px;background:var(--hot);color:var(--hot-ink);
   border:0;border-radius:var(--r-sm);padding:14px 18px;font-size:15px;font-weight:700;
@@ -374,7 +375,7 @@ button{font:inherit}
 .price{font-size:22px;font-weight:700;letter-spacing:-.02em}
 .price .un{display:block;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3)}
 .price.ask{font-size:15px;font-weight:600;color:var(--ink2)}
-.line{margin-top:10px;font-size:12.5px;color:var(--teal);font-weight:600;font-family:'IBM Plex Mono',monospace}
+.line{margin-top:10px;font-size:12.5px;color:var(--teal);font-weight:600;font-family:inherit}
 
 /* ---- carrinho ---- */
 .crow{
@@ -399,13 +400,13 @@ button{font:inherit}
   text-decoration:underline;text-underline-offset:3px;padding:4px 2px;font-family:inherit;
 }
 .linky:hover{color:var(--hot)}
-.crow .vl{flex:none;text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:14px}
+.crow .vl{flex:none;text-align:right;font-family:inherit;font-weight:600;font-size:14px}
 .tot{
   display:flex;align-items:baseline;justify-content:space-between;gap:12px;
   margin-top:16px;padding-top:14px;border-top:1px dashed var(--line2);
 }
 .tot .k{font-size:12px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--ink3)}
-.tot .v{font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:600;letter-spacing:-.02em}
+.tot .v{font-family:inherit;font-size:22px;font-weight:600;letter-spacing:-.02em}
 
 /* ---- os dados de quem pede ---- */
 .sect{
@@ -457,7 +458,7 @@ button{font:inherit}
 .done h3{font-size:19px;font-weight:700;letter-spacing:-.02em;margin:0 0 8px}
 .done p{color:var(--ink2);font-size:14px;margin:0 auto;max-width:380px}
 .done .num{
-  display:inline-block;margin-top:14px;font-family:'IBM Plex Mono',monospace;font-size:13px;
+  display:inline-block;margin-top:14px;font-family:inherit;font-size:13px;
   font-weight:600;color:var(--ink2);background:var(--surface2);border:1px solid var(--line);
   border-radius:999px;padding:6px 14px;
 }
