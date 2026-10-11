@@ -911,6 +911,8 @@ select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns=
 .strip-ord b{font-family:var(--num);font-size:15px;font-weight:600;color:var(--on-panel)}
 .strip-ord .ov{display:block;text-align:right;font-size:12px;margin-top:1px}
 .strip-ord .ov .mono{font-family:var(--num)}
+.strip-ord b.pos{color:var(--teal-panel)}
+.strip-ord b.neg{color:var(--hot-panel)}
 
 /* ---------- collapsible ---------- */
 details.fold{
@@ -2126,6 +2128,7 @@ textarea{min-height:104px;font-family:var(--code);font-size:13px;line-height:1.5
       <div class="sub"><span id="lbl-price-kind">Venda sugerida</span> <span id="r-tag"></span><br><b class="mono" id="r-price">—</b><span class="sub2">lucro <span class="mono" id="r-profit">—</span></span></div>
     </div>
     <div class="strip-ord" id="strip-ord" hidden></div>
+    <div class="strip-ord" id="strip-plate" hidden></div>
   </div>
 
   <div id="col-a">
@@ -4588,6 +4591,18 @@ function computeCore(inp){
   var realMargin = price > 0 ? profit/price : 0;
   var realMarkup = cost > 0 ? profit/cost : 0;
 
+  /* a mesa cheia: quem diz que cabem 28 quer saber quanto a impressora rende
+     cada vez que é montada. É a conta de um lote do tamanho da mesa — um
+     preparo só para todas — vendido pelo preço da tela. Em produto montado a
+     mesa leva produtos inteiros: 28 lugares com conjuntos de 2 são 14. */
+  var plateUnits = perPlate > 0 ? Math.floor(perPlate/parts) : 0;
+  var plateCost = 0, plateSale = 0, plateProfit = 0;
+  if(plateUnits > 0){
+    plateCost = (batch*plateUnits + prepTotal*platesFor(plateUnits, perPlate, parts))/(1 - failR);
+    plateSale = price*plateUnits;
+    plateProfit = plateSale*(1 - feeR) - plateCost;
+  }
+
   return {
     g:g, h:h, qty:qty, perGram:perGram,
     material:material, energy:energy, machine:machine, overhead:overhead, labor:labor, supplies:supplies,
@@ -4603,6 +4618,9 @@ function computeCore(inp){
     /* quantas peças cabem juntas, quantas peças formam um produto e quantas
        mesas este lote precisa */
     perPlate:perPlate, parts:parts, plates:plates,
+    /* uma mesa cheia: quantas unidades, quanto custa, vende e sobra */
+    plateUnits:plateUnits, plateCost:plateCost, plateSale:plateSale,
+    plateProfit:plateProfit, plateHours:h*plateUnits,
     /* as mesas do produto, uma a uma: 0 quer dizer "cabe numa mesa só" */
     plateN:set.n, plateRows:set.rows,
     /* multicolor: o que cada rolo entrega nesta peça */
@@ -4872,6 +4890,12 @@ function roundSuggestions(v){
 
 /* a conta do campo, dita em voz alta: 30 peças que só cabem 1 por vez são 30
    mesas e 30 preparos — o número que quase todo mundo esquece de contar */
+/* "28 peças" ou, no produto montado, "14 produtos (28 peças)" */
+function plateUnitsWord(r){
+  return r.parts > 1
+    ? dec(r.plateUnits,0) + ' ' + unitWord(r.plateUnits, r.parts) + ' (' + pieceWord(r.plateUnits*r.parts) + ')'
+    : pieceWord(r.plateUnits);
+}
 function renderPerPlate(r){
   var el = $('perplate-note');
   if(!el) return;
@@ -4885,7 +4909,11 @@ function renderPerPlate(r){
     (r.parts > 1 ? ' (' + pieceWord(r.qty * r.parts) + ')' : '') +
     (r.qty === 1 ? ' dá ' : ' dão ') + '<b>' + plateWord(r.plates) + '</b>';
   el.innerHTML = head + ': ' + conta +
-    (r.prep > 0 ? ' e ' + dec(r.prep * r.plates, 0) + ' min de preparo.' : '.');
+    (r.prep > 0 ? ' e ' + dec(r.prep * r.plates, 0) + ' min de preparo.' : '.') +
+    (r.plateUnits > 0 && r.price > 0 && r.cost > 0
+      ? ' Uma mesa cheia (' + plateUnitsWord(r) + ') vende <b>' + brl(r.plateSale) + '</b> e dá <b>' +
+        brl(r.plateProfit) + '</b> de lucro' + (r.plateHours > 0 ? ' em ' + hmWord(r.plateHours) + ' de máquina.' : '.')
+      : '');
 }
 
 /* ============ produto montado: o campo se explicando ============ */
@@ -5134,6 +5162,19 @@ function render(){
                      '<span><b>' + brl(r.cost * r.qty) + '</b>' +
                      (r.price > 0 ? '<span class="ov">venda <span class="mono">' + brl(r.price * r.qty) + '</span></span>' : '') + '</span>';
     }
+  }
+  /* cabem N por mesa: o que a impressora rende cada vez que é montada. Fica
+     embaixo do pedido porque responde outra pergunta — não "quanto dá este
+     pedido", e sim "quanto ganho cada vez que encho a mesa". */
+  var sp = $('strip-plate');
+  if(sp){
+    var full = r.plateUnits > 0 && r.cost > 0;
+    sp.hidden = !full;
+    if(full) sp.innerHTML = '<span>Mesa cheia · ' + plateUnitsWord(r) + '</span>' +
+      '<span>' + (r.price > 0
+        ? '<b class="' + (r.plateProfit < 0 ? 'neg' : 'pos') + '">lucro ' + brl(r.plateProfit) + '</b>' +
+          '<span class="ov">venda <span class="mono">' + brl(r.plateSale) + '</span> · custo <span class="mono">' + brl(r.plateCost) + '</span></span>'
+        : '<b>custo ' + brl(r.plateCost) + '</b>') + '</span>';
   }
   var perPiece = r.parts > 1;
   $('mini-pp').hidden = !perPiece;
@@ -7997,6 +8038,11 @@ function renderPdPreview(){
       '<div><span class="k">'+(r.usedChosen ? 'Lucro no seu preço' : 'Lucro no sugerido')+'</span><span class="v'+
         (r.profit < 0 ? ' neg' : ' pos')+'">'+brl(r.profit)+'</span></div>'+
       '<div><span class="k">Margem real</span><span class="v'+(r.realMargin < 0 ? ' neg' : '')+'">'+dec(r.realMargin*100,1)+'%</span></div>'+
+      /* cabem N por mesa: quanto rende cada mesa cheia nesse preço */
+      (r.plateUnits > 0 && r.price > 0
+        ? '<div><span class="k">Lucro por mesa · '+plateUnitsWord(r)+'</span><span class="v'+(r.plateProfit < 0 ? ' neg' : ' pos')+'">'+brl(r.plateProfit)+'</span></div>'+
+          '<div><span class="k">Venda por mesa</span><span class="v">'+brl(r.plateSale)+'</span></div>'
+        : '')+
       /* montado: o custo do conjunto sem o de cada peça deixa metade da
          pergunta sem resposta */
       (r.parts > 1
