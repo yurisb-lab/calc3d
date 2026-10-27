@@ -1432,3 +1432,74 @@ números de que ela fala, misturada com a quantidade.
 
 Nenhum campo, fórmula ou dado muda: os mesmos `id`s estão na tela, só em outra
 ordem, e a conta sai igual. Nenhum orçamento ou produto salvo muda de valor.
+
+---
+
+# Adendo — O arquivo fatiado volta para a ficha do produto
+
+Quem abria um produto e queria refazer o peso, o tempo e as cores só podia
+digitar: a importação tinha saído da ficha (seção 49.3) e morava apenas na
+calculadora. O resultado era o produto multicolor que parecia não ter as cores
+lidas — elas estavam gravadas, mas a ficha não mostrava — e o "cabem por mesa"
+sempre digitado à mão, porque nenhum leitor contava as peças da mesa.
+
+## 58. O que entrou
+
+### 58.1 Importar dados do arquivo fatiado, na ficha
+
+- No topo de **Produção e custo** volta o retângulo **Importar dados do arquivo
+  fatiado**, com o *Colar os números do Handy ou do fatiador* logo abaixo e um
+  *ou digite na mão* separando os campos de sempre. Isto revoga a seção 49.3 e o
+  item correspondente da seção 51.
+- O arquivo segue o caminho de sempre (`applySlicedToProduct`): o produto vai
+  para a conta, recebe o que foi lido e volta para a ficha com custo e preço
+  refeitos — uma verdade só. Produto que já tinha números pede confirmação.
+- Produto em várias mesas + arquivo de uma placa: o arquivo **soma uma mesa**.
+  Um `.gcode.3mf` com todas as placas substitui a lista inteira.
+- Soltar um arquivo com a ficha aberta importa nela; em qualquer outra tela,
+  continua indo para a calculadora.
+- O seletor segue sem `accept` no celular, como na calculadora, para o `.gcode`
+  não sumir.
+
+### 58.2 As cores aparecem na ficha
+
+Logo abaixo do peso, a ficha mostra as cores gravadas (bolinha, filamento e
+gramas, mais a purga). Se o peso digitado mudar, elas aparecem riscadas, com o
+aviso de que saem ao gravar — um número só não separa cor.
+
+### 58.3 Quantas peças estão na mesa
+
+O leitor passa a contar as peças da mesa, de onde cada fatiador escreve:
+
+| Fatiador | De onde vem |
+|---|---|
+| PrusaSlicer | `; objects_info = {…}` no cabeçalho |
+| Klipper (Prusa/Orca) | `EXCLUDE_OBJECT_DEFINE NAME=…` |
+| Marlin / Prusa | `M486 A"nome"` |
+| Orca / Prusa | `; printing object nome id:0 copy 1` |
+| Cura | `;MESH:nome` (sem o `NONMESH`) |
+| Bambu (.gcode) | `; start printing object, unique label id: N` — só o número |
+| Bambu/Orca (.3mf) | `<object name="…" skipped="…">` de cada placa, sem as puladas |
+
+- Numa mesa só, o total vai para **Cabem por mesa** (contado em peças, como o
+  campo sempre foi). Com "montado com N peças", o motor já divide em produtos.
+- O resumo diz o que achou: *4 cópias de Gato*, *2 peças de 2 modelos
+  diferentes (Cabeça, Corpo)* — e, quando os modelos são diferentes, sugere
+  marcar **Montado com várias peças**. O app não marca sozinho: dois chaveiros
+  diferentes numa mesa não são um produto montado.
+- No `.gcode.3mf` com várias placas, a contagem é só informada: as mesas já
+  fazem a conta.
+- Sem nenhuma dessas marcas no arquivo (opção de rotular objetos desligada no
+  fatiador), nada muda e o resumo pede o número.
+
+### 58.4 Mais uma mesa num produto multicolor
+
+Com o multicolor ligado o peso sai das cores, não das mesas: somar uma placa
+acrescentava o tempo e perdia as gramas. Agora as gramas da placa nova entram
+também nas cores (no filamento casado, ou no padrão), e a purga dela soma à
+purga do produto.
+
+## 59. Compatibilidade
+
+Nenhum campo novo é gravado: `perPlate`, `mats`, `purge` e `plates` são os de
+sempre. Produtos salvos abrem iguais; só mudam quando recebem um arquivo.
