@@ -1613,6 +1613,7 @@ textarea{min-height:104px;font-family:var(--code);font-size:13px;line-height:1.5
   font-size:12.5px;font-weight:700;color:var(--ink3);
 }
 .gtitle:first-child{margin-top:0;padding-top:0;border-top:0}
+.gtitle .hint{font-weight:400}
 .gsub{font-size:12px;color:var(--ink3);margin:8px 0 0;line-height:1.5}
 .gsub b{color:var(--ink2);font-weight:600}
 /* o formulario da compra abre dentro da propria ficha: registrar o rolo que
@@ -3033,10 +3034,23 @@ textarea{min-height:104px;font-family:var(--code);font-size:13px;line-height:1.5
       <div id="cad-filaments" hidden>
         <h2 class="section ptitle">Filamentos</h2>
         <div class="toolbar">
-          <input id="cad-f-search" type="search" placeholder="Buscar filamento, material ou marca...">
+          <input id="cad-f-search" type="search" placeholder="Buscar marca, material ou linha...">
           <button type="button" class="btn primary" id="btn-add-filament">+ Novo</button>
         </div>
-        <p class="cadhint">Toque num rolo para abrir a ficha. Preço e peso viram o preço por grama; preenchendo o estoque, o app dá baixa sozinho a cada orçamento salvo e avisa quando o rolo está acabando.</p>
+        <p class="cadhint">Cadastre por <b>marca e linha</b>, não por cor: um PLA da mesma marca custa o mesmo em qualquer cor. Só crie um cadastro à parte quando o preço muda — linha premium, silk, dual ou tricolor. Preço e peso viram o preço por grama; preenchendo o estoque, o app dá baixa sozinho a cada orçamento salvo.</p>
+        <datalist id="fil-lines">
+          <option value="Básico"></option>
+          <option value="Premium"></option>
+          <option value="Silk"></option>
+          <option value="Matte"></option>
+          <option value="Dual color"></option>
+          <option value="Tricolor"></option>
+          <option value="Glitter"></option>
+          <option value="Translúcido"></option>
+          <option value="Madeira"></option>
+          <option value="Mármore"></option>
+          <option value="Brilha no escuro"></option>
+        </datalist>
         <div class="cadmsg" id="filament-msg"></div>
         <div id="filament-list"></div>
       </div>
@@ -3456,7 +3470,7 @@ var DEFAULTS = {
   /* ids fixos: dois aparelhos que semeiam o mesmo padrão geram o MESMO documento
      na nuvem em vez de duas cópias. Igual ao que já era feito nas categorias. */
   printers:[{id:'seed-printer',name:'Minha impressora',watts:150,price:2500,life:4000,maint:0,hoursYear:1200,override:'',createdAt:1}],
-  filaments:[{id:'seed-filament',name:'PLA genérico',material:'PLA',color:'#FF6B2C',spoolPrice:110,spoolWeight:1000,brand:'',url:'',stockG:'',lowG:150,createdAt:1}],
+  filaments:[{id:'seed-filament',name:'PLA genérico',material:'PLA',line:'',color:'',spoolPrice:110,spoolWeight:1000,brand:'',store:'',url:'',stockG:'',lowG:150,createdAt:1}],
   categories:[
     {id:'cat-deco', name:'Decoração',     color:'#FF6B2C', createdAt:1},
     {id:'cat-util', name:'Utilidades',    color:'#0F9D8F', createdAt:2},
@@ -3501,6 +3515,11 @@ function migrate(seed){
      quer dizer rolo acabado — por isso ele é texto, como o custo/hora manual. */
   S.filaments.forEach(function(f){
     if(f.brand==null) f.brand='';
+    /* linha (premium, silk, tricolor...) e loja chegaram depois: a marca deixou
+       de dividir o campo com a loja. Quem já tinha cadastro continua com a cor
+       que escolheu; o que mudou é que ela deixou de ser obrigatória. */
+    if(f.line==null) f.line='';
+    if(f.store==null) f.store='';
     if(f.url==null) f.url='';
     if(f.stockG==null) f.stockG='';
     if(f.lowG==null || !isFinite(num(f.lowG))) f.lowG = 150;
@@ -3973,6 +3992,8 @@ var HELP = {
   camadas:{t:'Camadas do preço', d:'O preço empilhado como as camadas de uma impressão. Cada faixa é proporcional ao que ela representa no preço. Bateu o olho, você vê pra onde o dinheiro está indo. Este quadro inteiro fala de <b>uma unidade</b> — é o que diz a etiqueta ao lado do título. O total do pedido fica na faixa do preço, lá em cima, e o do orçamento no fim da calculadora.', e:''},
   conferencia:{t:'Conferência', d:'O caminho de volta do dinheiro: do preço de etiqueta, tira a taxa, tira o custo real, e sobra o lucro líquido. É esse painel que dá confiança no número. Como as camadas logo acima, ele fala de <b>uma unidade</b>, não do pedido.', e:''},
   stl:{t:'Link do modelo', d:'Onde você baixou ou comprou o STL: MakerWorld, Printables, Thingiverse, Cults, Patreon. Serve pra reimprimir sem caçar o arquivo e pra conferir a licença antes de vender.', e:''},
+  fillinha:{t:'Marca e linha', d:'O preço do rolo depende da marca e da linha, não da cor: o PLA branco e o PLA vermelho da mesma marca custam igual. Por isso um cadastro só vale para todas as cores daquela linha. Crie outro cadastro só quando o preço muda — a linha premium, o silk, o dual color ou o tricolor da mesma marca. O apelido se monta sozinho com a marca, o material e a linha, até você trocar por outro. Com o estoque ligado, ele soma todos os rolos dessa linha, de qualquer cor.', e:'Voolt PLA → todas as cores, R$ 99\nVoolt PLA Silk → R$ 129\nVoolt PLA Tricolor → R$ 159'},
+  filcor:{t:'Cor do rolo', d:'Não entra no preço. Deixe em "Qualquer cor" quando o cadastro vale para todas as cores da marca — é o normal. Escolha uma cor só se quiser separar um rolo específico, por exemplo para controlar o estoque dele à parte. Na importação do fatiador, a cor de cada linha do multicolor vem do próprio arquivo.', e:''},
   filurl:{t:'Link do filamento', d:'A página onde você comprou esse rolo. Quando acabar, é um toque pra recomprar exatamente o mesmo — e dá pra conferir se o preço mudou.', e:''},
   nf:{t:'Nº da nota / pedido', d:'Guarde o número da nota fiscal ou do pedido junto com a foto do comprovante. É o que salva na hora da garantia, da troca e do fechamento do mês.', e:''},
   custofixo:{t:'Custo fixo mensal', d:'O que você paga todo mês exista pedido ou não: aluguel do espaço, internet, assinatura do fatiador, energia da máquina parada, contador. O app divide esse total pelas horas impressas no mês e cobra a fatia de cada peça. Deixe 0 se não quiser ratear.', e:'R$ 300/mês ÷ 100 h = R$ 3,00/h\nPeça de 9 h → R$ 27,00 de custo fixo'},
@@ -4096,7 +4117,7 @@ var NAV = [
   ]},
   {g:'Cadastros', items:[
     {id:'printers',  t:'Impressoras',    s:'custo por hora',        kw:'impressora maquina equipamento depreciacao manutencao'},
-    {id:'filaments', t:'Filamentos',     s:'preço por grama',       kw:'filamento rolo bobina pla petg abs estoque material'},
+    {id:'filaments', t:'Filamentos',     s:'preço por grama',       kw:'filamento rolo bobina pla petg abs estoque material marca linha premium silk tricolor'},
     {id:'cats',      t:'Categorias',     s:'grupos do catálogo',    kw:'categoria grupo etiqueta tag'}
   ]},
   {g:'Ajustes', items:[
@@ -5486,7 +5507,11 @@ function calcPayload(){
 }
 function cloneMats(list){
   return (list||[]).map(function(m){
-    return {f:m.f || '', g:(typeof m.g === 'number' ? dec(m.g,1) : (m.g == null ? '' : String(m.g)))};
+    var o = {f:m.f || '', g:(typeof m.g === 'number' ? dec(m.g,1) : (m.g == null ? '' : String(m.g)))};
+    /* a cor que o fatiador deu a esta linha: com o cadastro por marca, é ela
+       que separa "Voolt PLA" branco de "Voolt PLA" vermelho na lista */
+    if(hexColor(m.c)) o.c = m.c;
+    return o;
   });
 }
 /* materiais que aparecem no orçamento e no PDF: com AMS a peça é de mais de um */
@@ -6011,7 +6036,7 @@ function renderMats(){
   el.innerHTML = mats.map(function(m,i){
     var fl = matFil(m);
     return '<div class="matrow">'+
-      '<span class="sw" style="background:'+esc(fl ? safeColor(fl.color,'#5A6672') : '#5A6672')+'"></span>'+
+      '<span class="sw" style="background:'+esc(matSwatch(m))+'"></span>'+
       '<div class="pick"><select data-mat="f" data-i="'+i+'" aria-label="Filamento da cor '+(i+1)+'">'+
         S.filaments.map(function(x){
           return '<option value="'+esc(x.id)+'"'+(x.id === m.f ? ' selected' : '')+'>'+esc(x.name)+'</option>';
@@ -6030,8 +6055,8 @@ function renderMats(){
       if(!mats[i]) return;
       mats[i][inp.getAttribute('data-mat')] = inp.value;
       if(inp.tagName === 'SELECT'){
-        var fl = matFil(mats[i]), sw = inp.closest('.matrow').querySelector('.sw');
-        if(sw) sw.style.background = fl ? safeColor(fl.color,'#5A6672') : '#5A6672';
+        var sw = inp.closest('.matrow').querySelector('.sw');
+        if(sw) sw.style.background = matSwatch(mats[i]);
       }
       render();
     });
@@ -6482,15 +6507,19 @@ function parsePasted(txt){
 /* ---- casar o que veio do fatiador com o que está cadastrado ---- */
 function matchFilament(it){
   var col = gcHex(it.color), ty = String(it.type || '').toUpperCase().replace(/[^A-Z0-9]/g,'');
-  var both = null, byColor = null, byType = null;
+  var both = null, byColor = null, byType = null, byTypeOther = null;
   S.filaments.forEach(function(f){
-    var fc = gcHex(safeColor(f.color,'')), ft = String(f.material || '').toUpperCase().replace(/[^A-Z0-9]/g,'');
+    var fc = gcHex(hexColor(f.color)), ft = String(f.material || '').toUpperCase().replace(/[^A-Z0-9]/g,'');
     var okC = col && fc === col, okT = ty && ft === ty;
     if(okC && okT) both = both || f;
     else if(okC) byColor = byColor || f;
-    else if(okT) byType = byType || f;
+    /* o cadastro por marca vale para qualquer cor: casa pelo material. Um
+       rolo marcado com OUTRA cor só entra se não houver nenhum assim */
+    else if(okT && !fc) byType = byType || f;
+    else if(okT) byTypeOther = byTypeOther || f;
   });
-  return both || byColor || byType || null;
+  /* o material pesa mais que a cor: é ele (com a marca) que dá o preço */
+  return both || byType || byTypeOther || byColor || null;
 }
 /* a mesma leitura serve à calculadora e à ficha do produto: muda a caixa onde
    a mensagem aparece e quem recebe os números */
@@ -6530,9 +6559,10 @@ function addMesaFromSliced(res, fileName, box){
     items.forEach(function(it){
       var f = matchFilament(it) || S.filaments.filter(function(x){ return x.id === defaultMatId(); })[0] || S.filaments[0];
       if(!f) return;
-      var row = mats.filter(function(m){ return m.f === f.id; })[0];
+      var c = hexColor(it.color);
+      var row = mats.filter(function(m){ return m.f === f.id && (hexColor(m.c) || '') === c; })[0];
       if(row) row.g = gcG(num(row.g) + num(it.g));
-      else mats.push({f:f.id, g:gcG(it.g)});
+      else mats.push(c ? {f:f.id, g:gcG(it.g), c:c} : {f:f.id, g:gcG(it.g)});
     });
     if(res.purge > 0){ purgeStr = gcG(purgeGrams() + res.purge); $('f-purge').value = purgeStr; }
     renderMats();
@@ -6590,7 +6620,9 @@ function applySliced(res, fileName, box){
       var f = matchFilament(it);
       if(!f){ lost.push(it); f = S.filaments.filter(function(x){ return x.id === defaultMatId(); })[0] || S.filaments[0]; }
       if(it.derived) derived = true;
-      return {f: f ? f.id : '', g: gcG(it.g)};
+      var row = {f: f ? f.id : '', g: gcG(it.g)};
+      if(hexColor(it.color)) row.c = hexColor(it.color);
+      return row;
     });
     purgeStr = res.purge > 0 ? gcG(res.purge) : '';
     $('f-purge').value = purgeStr;
@@ -6650,7 +6682,7 @@ function applySliced(res, fileName, box){
   if(res.purge > 0 && items.length === 1) li.push('A purga de ' + dec(res.purge,1) + ' g entrou nas gramas.');
   if(hadWaste) li.push('Desperdício zerado: esses números já contam brim, suporte e purga.');
   if(derived) li.push('Veio só o comprimento — o peso foi calculado pela densidade do material.');
-  if(lost.length) li.push('Não achei filamento cadastrado com a cor/material de ' + lost.length +
+  if(lost.length) li.push('Não achei filamento cadastrado com o material de ' + lost.length +
       (lost.length === 1 ? ' item' : ' itens') + ': confira a seleção.');
   if(!(res.seconds > 0)) li.push('Não veio o tempo — preencha horas e minutos na mão.');
   /* o .gcode do Bambu é de UMA placa e não diz quantas o projeto tem: quem
@@ -6938,6 +6970,19 @@ function bindEmptyActions(){
     if(t) t.click();
   });
 }
+/* O preço do rolo sai da marca e da linha, não da cor: um cadastro vale para
+   todas as cores daquela linha. A cor virou opcional — vazia quer dizer
+   "qualquer cor", e a bolinha mostra o arco-íris no lugar de uma cor só. */
+var ANYCOLOR = 'conic-gradient(#FF6B2C,#E4B429,#0F9D8F,#3D7BD9,#8F5BD6,#FF6B2C)';
+function hexColor(c){ return /^#[0-9a-fA-F]{6}$/.test(String(c||'')) ? String(c) : ''; }
+function filHasColor(f){ return !!(f && hexColor(f.color)); }
+function filSwatch(f){ return f ? (hexColor(f.color) || ANYCOLOR) : '#5A6672'; }
+/* a linha do multicolor mostra a cor que veio do fatiador; sem ela, a do cadastro */
+function matSwatch(m){ return hexColor(m && m.c) || filSwatch(matFil(m)); }
+function filAutoName(f){
+  return [f.brand, f.material, f.line].map(function(x){ return String(x||'').trim(); })
+    .filter(Boolean).join(' ');
+}
 /* R$ 0,11/g arredondado esconde a diferenca entre dois rolos: dentro da ficha o
    preco por grama sai com tres casas, que e a precisao com que ele entra na
    conta da peca. */
@@ -7012,7 +7057,7 @@ function filBuyReset(i, f){
   if(d) d.value = todayISO();
   if(q) q.value = '1';
   if(v) v.value = num(f.spoolPrice) > 0 ? dec(num(f.spoolPrice),2) : '';
-  if(lj && !lj.value) lj.value = f.brand || '';
+  if(lj && !lj.value) lj.value = f.store || '';
   filBuyNoteRefresh(i, f);
 }
 function filBuyNoteRefresh(i, f){
@@ -7034,7 +7079,7 @@ function filBuyPanelHtml(f, i){
           '<input id="fbv'+i+'" type="text" inputmode="decimal" placeholder="0,00" value="'+
             esc(num(f.spoolPrice) > 0 ? dec(num(f.spoolPrice),2) : '')+'" data-buyf="'+i+'"></div>'+
         '<div class="field"><label for="fbs'+i+'">Loja / fornecedor</label>'+
-          '<input id="fbs'+i+'" type="text" placeholder="Ex.: 3D Lab" value="'+esc(f.brand||'')+'"></div>'+
+          '<input id="fbs'+i+'" type="text" placeholder="Ex.: 3D Lab" value="'+esc(f.store||'')+'"></div>'+
       '</div>'+
       '<p class="note" id="fbn'+i+'">'+filBuyNote(f, 1, num(f.spoolPrice))+'</p>'+
       '<div class="btnrow">'+
@@ -7059,27 +7104,37 @@ function renderFilaments(){
   paintCadCounts();
   if(busyIn('#filament-list')) { pendingRender.filaments = true; return; }
   var list = withIndex(S.filaments).filter(function(o){
-    return hitsQuery(filamentQuery, [o.x.name||'', o.x.material||'', o.x.brand||'']);
+    return hitsQuery(filamentQuery, [o.x.name||'', o.x.material||'', o.x.brand||'', o.x.line||'', o.x.store||'']);
   });
   el.innerHTML = list.map(function(o){
     var f = o.x, i = o.i, op = cadIsOpen('f', f);
     var u = safeUrl(f.url);
     return '<div class="item'+(op?' open':'')+'" data-id="'+esc(f.id)+'"><div class="head" data-open="f'+i+'" role="button" tabindex="0" aria-expanded="'+(op?'true':'false')+'">'+
-      '<span class="swatch" style="background:'+esc(safeColor(f.color,'#ccc'))+'"></span>'+
+      '<span class="swatch" style="background:'+esc(filSwatch(f))+'"></span>'+
       '<span class="nm">'+esc(f.name||'Sem nome')+'</span>'+
       '<span class="'+filMetaClass(f)+'">'+esc(filMeta(f))+'</span>'+CHEV+'</div>'+
       '<div class="body" id="body-f'+i+'"'+(op?'':' hidden')+'>'+
-        '<p class="gtitle">O rolo</p>'+
+        '<p class="gtitle">Marca e linha</p>'+
+        '<div class="row">'+pField('Marca','','fb'+i,i,'brand',f.brand||'',false,'fillinha')+
+        pField('Material','PLA, PETG, ABS...','fm'+i,i,'material',f.material,false)+'</div>'+
+        '<div class="field"><label for="fi'+i+'">Linha <span class="hint">vazio = a linha comum</span></label>'+
+          '<input id="fi'+i+'" type="text" list="fil-lines" placeholder="Premium, Silk, Tricolor..." value="'+esc(f.line||'')+'" data-list="'+i+'" data-key="line"></div>'+
         pField('Apelido','como ele aparece na calculadora','fn'+i,i,'name',f.name,false)+
-        '<div class="row">'+pField('Material','PLA, PETG, ABS...','fm'+i,i,'material',f.material,false)+
-        '<div class="field"><label for="fc'+i+'">Cor</label><input id="fc'+i+'" type="color" value="'+esc(safeColor(f.color,'#FF6B2C'))+'" data-list="'+i+'" data-key="color" style="padding:4px"></div></div>'+
         '<div class="row">'+pField('Preço do rolo','R$','fp'+i,i,'spoolPrice',f.spoolPrice,true)+
         pField('Peso do rolo','g','fw'+i,i,'spoolWeight',f.spoolWeight,true)+'</div>'+
-        '<p class="gsub">Preço por grama: <b class="pergram">'+esc(perGramStr(f))+'</b> — é este número que entra no preço da peça.</p>'+
+        '<p class="gsub">Preço por grama: <b class="pergram">'+esc(perGramStr(f))+'</b> — é este número que entra no preço da peça, em qualquer cor desta linha.</p>'+
+        '<p class="gtitle">Cor <span class="hint">opcional, não muda o preço</span></p>'+
+        '<div class="field"><label>Este cadastro vale para'+helpBtn('filcor')+'</label>'+
+          '<div class="seg" data-fcolor="'+i+'">'+
+            '<button type="button" data-v="any" aria-pressed="'+(filHasColor(f)?'false':'true')+'">Qualquer cor</button>'+
+            '<button type="button" data-v="one" aria-pressed="'+(filHasColor(f)?'true':'false')+'">Uma cor só</button>'+
+          '</div></div>'+
+        '<div class="field fcpick"'+(filHasColor(f)?'':' hidden')+'><label for="fc'+i+'">Qual cor</label>'+
+          '<input id="fc'+i+'" type="color" value="'+esc(safeColor(f.color,'#3D7BD9'))+'" data-list="'+i+'" data-key="color" style="padding:4px"></div>'+
         '<p class="gtitle">Estoque</p>'+
         stockBoxHtml(f, i)+
         '<p class="gtitle">Onde comprar de novo</p>'+
-        pField('Marca / loja','','fb'+i,i,'brand',f.brand||'',false)+
+        pField('Loja / fornecedor','','fo'+i,i,'store',f.store||'',false)+
         '<div class="field"><label for="fu'+i+'">Link de compra'+helpBtn('filurl')+'</label>'+
           '<div class="linkrow"><div class="field"><input id="fu'+i+'" type="url" inputmode="url" placeholder="https://..." value="'+esc(f.url||'')+'" data-list="'+i+'" data-key="url"></div>'+
           '<a class="go" '+(u ? 'href="'+esc(u)+'" target="_blank" rel="noopener noreferrer"'
@@ -7092,7 +7147,7 @@ function renderFilaments(){
       '</div></div>';
   }).join('') || emptyCad(filamentQuery, S.filaments.length,
       'Nenhum filamento cadastrado',
-      'Cadastre um rolo com preço e peso para o app achar o preço por grama.',
+      'Cadastre a marca do filamento com o preço e o peso do rolo. Um cadastro vale para todas as cores da mesma linha.',
       'btn-add-filament', 'Adicionar filamento', ' filamento');
   wireList(el, 'filaments', renderFilaments, 'f');
   each(qsa(el,'[data-fill-f]'), function(b){
@@ -7105,6 +7160,24 @@ function renderFilaments(){
          a barra de estoque nao se mexia depois do clique */
       b.blur();
       renderFilaments(); render();
+    });
+  });
+  /* cor opcional: "qualquer cor" grava vazio, "uma cor só" grava a do seletor */
+  each(qsa(el,'[data-fcolor]'), function(sg){
+    each(qsa(sg,'button'), function(b){
+      b.addEventListener('click', function(){
+        var f = cardItem('filaments', b), item = sg.closest('.item');
+        if(!f || !item) return;
+        var one = b.getAttribute('data-v') === 'one';
+        var pick = item.querySelector('.fcpick'), inp = pick && pick.querySelector('input');
+        f.color = one ? safeColor(inp && inp.value, '#3D7BD9') : '';
+        f.updatedAt = Date.now();
+        each(qsa(sg,'button'), function(x){ x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+        if(pick) pick.hidden = !one;
+        var sw = item.querySelector('.head .swatch');
+        if(sw) sw.style.background = filSwatch(f);
+        persist(); render();
+      });
     });
   });
   /* abre e fecha o formulario da compra sem sair da ficha */
@@ -7157,7 +7230,7 @@ function renderFilaments(){
     });
   });
 }
-var TXTKEYS = {name:1, material:1, color:1, override:1, brand:1, url:1, stockG:1};
+var TXTKEYS = {name:1, material:1, color:1, override:1, brand:1, url:1, stockG:1, line:1, store:1};
 function wireList(el, coll, rerender, pfx){
   each(qsa(el,'[data-open]'), function(h){
     var toggle = function(){
@@ -7181,12 +7254,22 @@ function wireList(el, coll, rerender, pfx){
       var it = cardItem(coll, inp);
       if(!it) return;
       var k = inp.getAttribute('data-key');
+      /* o apelido do filamento acompanha marca, material e linha enquanto o
+         usuário não escreve outro por cima */
+      var autoNm = pfx === 'f' && (k === 'brand' || k === 'material' || k === 'line');
+      var nmWas = autoNm ? String(it.name||'').trim() : '';
+      var nmFollows = autoNm && (!nmWas || nmWas === 'Novo filamento' || nmWas === filAutoName(it));
       it[k] = TXTKEYS[k] ? inp.value : num(inp.value);
+      if(nmFollows && filAutoName(it)){
+        it.name = filAutoName(it);
+        var nmInp = inp.closest('.item') && inp.closest('.item').querySelector('[data-key="name"]');
+        if(nmInp) nmInp.value = it.name;
+      }
       it.updatedAt = Date.now();
       persist(); fillSelects(); render();
       var item = inp.closest('.item'), head = item && item.querySelector('.head');
       if(!head) return;
-      if(k==='name') head.querySelector('.nm').textContent = inp.value || 'Sem nome';
+      if(k==='name' || (autoNm && nmFollows)) head.querySelector('.nm').textContent = it.name || 'Sem nome';
       if(pfx==='p'){
         head.querySelector('.meta').textContent = brl(machineHour(it))+'/h';
         var hb = item.querySelector('.hourbox');
@@ -7207,7 +7290,7 @@ function wireList(el, coll, rerender, pfx){
           if(fill) fill.textContent = 'Repor estoque (' + dec(num(it.spoolWeight) > 0 ? num(it.spoolWeight) : 1000, 0) + ' g)';
         }
       }
-      if(k==='color') head.querySelector('.swatch').style.background = inp.value;
+      if(k==='color') head.querySelector('.swatch').style.background = filSwatch(it);
       if(k==='url'){
         var a = item.querySelector('a.go'), u = safeUrl(inp.value);
         if(a){
@@ -7675,7 +7758,7 @@ function productCalc(p, qty, unitPrice){
     plates: cloneMesas(p.plates),
     mode: p.mode || 'margem', margin: num(p.margin),
     multi: !!p.multi,
-    mats: cloneMats((p.mats||[]).map(function(m){ return {f:m.f, g:num(m.g)/div}; })),
+    mats: cloneMats((p.mats||[]).map(function(m){ return {f:m.f, g:num(m.g)/div, c:m.c}; })),
     purge: num(p.purge)/div,
     /* de que rolo sai quanto: é o que daria baixa no estoque se um dia esta
        venda passar por lá. Aqui ninguém desconta nada. */
@@ -8241,7 +8324,7 @@ function renderPdMats(p){
     '<span class="k">' + (list.length > 1 ? list.length + ' cores' : '1 cor') + ' no produto</span>' +
     list.map(function(m){
       var f = S.filaments.filter(function(x){ return x.id === m.f; })[0];
-      return '<span class="c"><span class="swatch" style="background:' + esc(f ? safeColor(f.color, '#5A6672') : '#5A6672') + '"></span>' +
+      return '<span class="c"><span class="swatch" style="background:' + esc(hexColor(m.c) || filSwatch(f)) + '"></span>' +
         esc(f ? f.name : 'filamento') + ' <b>' + gcG(m.g) + ' g</b></span>';
     }).join('') +
     (num(p.purge) > 0 ? '<span class="c">purga <b>' + gcG(p.purge) + ' g</b></span>' : '') +
@@ -8659,7 +8742,9 @@ function applyFilamentBuy(f, opt){
   nb.qty = rolls;
   nb.date = opt.date || todayISO();
   nb.desc = rolls + 'x ' + (f.name || 'Filamento') + ' (' + dec(cap,0) + ' g)';
-  nb.supplier = opt.supplier || f.brand || '';
+  nb.supplier = opt.supplier || f.store || f.brand || '';
+  /* a primeira loja informada fica no cadastro, para a próxima compra */
+  if(opt.supplier && !String(f.store||'').trim()) f.store = String(opt.supplier).trim();
   nb.url = f.url || '';
   nb.amount = total;
   S.buys.unshift(nb);
@@ -8725,8 +8810,8 @@ function bnPickFil(f){
   var cap = num(f.spoolWeight) > 0 ? num(f.spoolWeight) : 1000;
   bnStock = true;
   bnPick = {kind:'filamento', fid:f.id, label:f.name || 'Filamento',
-    sub:dec(cap,0)+' g por rolo', color:safeColor(f.color,'#ccc'),
-    unit:num(f.spoolPrice), supplier:f.brand || '', url:f.url || ''};
+    sub:dec(cap,0)+' g por rolo', color:filSwatch(f),
+    unit:num(f.spoolPrice), supplier:f.store || f.brand || '', url:f.url || ''};
 }
 function bnPickSupply(x){
   bnPick = {kind:'insumo', label:x.n, sub:x.mine ? 'você já comprou este' : 'sugestão da lista',
@@ -8751,7 +8836,7 @@ function bnFilRow(f){
   var sub = (pg > 0 ? brl(pg) : 'sem preço no cadastro') +
             (st ? ' · '+dec(stockG(f),0)+' g no rolo' : '');
   return '<button type="button" class="pickrow" data-bnf="'+esc(f.id)+'">'+
-    '<span class="swatch" style="background:'+esc(safeColor(f.color,'#ccc'))+'"></span>'+
+    '<span class="swatch" style="background:'+esc(filSwatch(f))+'"></span>'+
     '<span class="mid"><span class="nm">'+esc(f.name||'Sem nome')+'</span>'+
     '<span class="sb">'+esc(sub)+'</span></span>'+
     (st === 'out' ? '<span class="bntag out">acabou</span>'
@@ -9548,7 +9633,7 @@ function renderDash(){
   if(low.length){
     out += '<h2 class="section">Rolos acabando</h2><div class="card">'+low.map(function(f){
       var st = stockState(f), u = safeUrl(f.url);
-      return '<div class="rollrow"><span class="swatch" style="background:'+esc(safeColor(f.color,'#ccc'))+'"></span>'+
+      return '<div class="rollrow"><span class="swatch" style="background:'+esc(filSwatch(f))+'"></span>'+
         '<span class="mid"><span class="nm"><span class="lowdot'+(st === 'out' ? ' out' : '')+'"></span>'+esc(f.name || 'Sem nome')+'</span>'+
         '<span class="sb">'+dec(stockG(f),0)+' g restantes'+(st === 'out' ? ' · rolo acabado' : '')+'</span></span>'+
         '<button type="button" class="btn ghost swap" data-gobuy="'+esc(f.id)+'">Comprei</button>'+
@@ -10485,11 +10570,13 @@ function bindCalc(){
     openCadItem('p', S.printers.length-1, 'pn');
   });
   $('btn-add-filament').addEventListener('click', function(){
-    S.filaments.push({id:uid(),name:'Novo filamento',material:'PLA',color:'#3D7BD9',spoolPrice:110,spoolWeight:1000,brand:'',url:'',createdAt:Date.now()});
+    /* nasce sem cor: o que decide o preço é a marca e a linha */
+    S.filaments.push({id:uid(),name:'Novo filamento',material:'PLA',line:'',color:'',spoolPrice:110,spoolWeight:1000,
+                      brand:'',store:'',url:'',stockG:'',lowG:150,createdAt:Date.now()});
     persist();
     clearCadSearch('cad-f-search', function(){ filamentQuery = ''; });
     renderFilaments(); fillSelects();
-    openCadItem('f', S.filaments.length-1, 'fn');
+    openCadItem('f', S.filaments.length-1, 'fb');
   });
 }
 

@@ -173,7 +173,7 @@ Tudo o mais (desperdício, mão de obra, insumos, falhas) fica em blocos recolh�
 Cadastro: apelido, potência (W), valor de compra, vida útil em horas, manutenção anual estimada. O app calcula e mostra o **custo/hora** automaticamente — aberto em **depreciação + manutenção**, para a conta não virar um número mágico — e permite sobrescrever manualmente.
 
 ### Aba 3 — Filamentos
-Cadastro: apelido, material (PLA/PETG/ABS/TPU/outro), cor, preço do rolo, peso do rolo. Mostra o **preço por grama** calculado.
+Cadastro por **marca e linha**: marca, material (PLA/PETG/ABS/TPU/outro), linha (comum, premium, silk, dual, tricolor...), apelido, preço do rolo, peso do rolo e cor **opcional**. Mostra o **preço por grama** calculado. Ver seção 60.
 
 ### Aba 4 — Ajustes
 Tarifa do kWh, valor da sua hora, desperdício padrão, taxa de falha padrão, margem padrão, e a lista de **canais de venda** (nome, comissão %, taxa fixa R$, imposto %).
@@ -1503,3 +1503,41 @@ purga do produto.
 
 Nenhum campo novo é gravado: `perPlate`, `mats`, `purge` e `plates` são os de
 sempre. Produtos salvos abrem iguais; só mudam quando recebem um arquivo.
+
+## 60. Filamento cadastrado por marca, não por cor
+
+O preço do rolo depende da **marca** e da **linha**, não da cor: o PLA branco e
+o vermelho da mesma marca custam igual. Cadastrar uma ficha por cor só
+multiplicava o trabalho. Agora um cadastro vale para todas as cores daquela
+linha, e só se cria outro quando o preço muda (premium, silk, dual, tricolor).
+
+- A ficha abre com **Marca e linha**: marca, material, linha (com sugestões:
+  Básico, Premium, Silk, Matte, Dual color, Tricolor...) e o apelido.
+- O **apelido se monta sozinho** com marca + material + linha
+  (*Voolt PLA Silk*) enquanto o usuário não escreve outro por cima.
+- **Cor opcional**: *Qualquer cor* (padrão, grava `color: ''`, a bolinha vira
+  um arco-íris) ou *Uma cor só*, para quem quer separar um rolo e controlar o
+  estoque dele à parte. A cor não entra em conta nenhuma.
+- **Loja / fornecedor** virou campo próprio (`store`), separado da marca. É o
+  que preenche a loja ao registrar uma compra; a primeira loja informada numa
+  compra fica gravada no cadastro.
+- Com o estoque ligado, um cadastro por marca soma os rolos de todas as cores
+  daquela linha.
+
+### 60.1 Multicolor e importação
+
+- Cada linha do multicolor guarda a cor que veio do fatiador (`mats[].c`):
+  duas linhas *Voolt PLA* aparecem com a bolinha branca e a vermelha da peça.
+  O preço continua saindo do cadastro escolhido. Sem cor no arquivo, a bolinha
+  é a do cadastro.
+- O casamento com o cadastro passa a priorizar o **material**: mesma cor e
+  material › mesmo material num cadastro de qualquer cor › mesmo material
+  noutra cor › só a cor. Antes, uma cor igual ganhava de um material igual — e
+  um PETG vermelho podia cair num rolo de PLA vermelho.
+
+### 60.2 Compatibilidade
+
+Campos novos `line` e `store` nascem vazios. Cadastros antigos continuam com a
+cor que tinham e com a marca/loja no campo **Marca** — dá para mudar para
+*Qualquer cor* e mover a loja para o campo novo quando quiser. Produtos,
+orçamentos e pedidos não mudam: guardam o id do cadastro, como sempre.
